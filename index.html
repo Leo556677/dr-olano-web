@@ -142,7 +142,10 @@
     box-shadow:0 0 0 2px rgba(255,255,255,0.25);
   }
   .pulse-step:last-child .pulse-dot{background:var(--gold-soft);}
-  .pulse-label{font-size:.68rem;color:#C9DAE4;margin-top:10px;line-height:1.3;max-width:74px;}
+  .pulse-label{font-size:.68rem;color:#C9DAE4;margin-top:10px;line-height:1.3;max-width:74px;transition:color .4s ease;}
+  .pulse-dot{transition:all .4s ease;}
+  .pulse-dot.lit{background:#fff;box-shadow:0 0 0 6px rgba(255,255,255,0.22),0 0 18px 5px rgba(23,163,152,0.85);transform:scale(1.25);}
+  .pulse-label.lit{color:#fff;font-weight:700;}
   @media (max-width:560px){
     .pulse-steps{flex-wrap:wrap;row-gap:22px;}
     .pulse-step{flex:0 0 33.33%;}
@@ -223,11 +226,20 @@
   .unit-notes{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:6px;}
   .unit-note b{display:block;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--navy);margin-bottom:6px;}
   .unit-note p{font-size:.86rem;color:var(--ink-soft);}
+  .unit-panel{scroll-margin-top:84px;}
   @media (max-width:800px){
     .unit-panel.active{grid-template-columns:1fr;}
     .proc-grid,.unit-notes{grid-template-columns:1fr;}
     .about-grid{grid-template-columns:1fr;}
     .hero-grid{grid-template-columns:1fr;}
+    .unit-side{padding:22px 20px;}
+    .unit-side p{font-size:.86rem;margin-bottom:14px;}
+    .unit-body{padding:22px 18px;}
+    .proc-chip{padding:9px 12px;font-size:.83rem;}
+    .unit-notes{gap:12px;margin-top:0;}
+    #unidades{padding-top:44px;padding-bottom:44px;}
+    .unit-tabs{margin-bottom:22px;gap:8px;}
+    .unit-tab{padding:8px 14px;font-size:.8rem;}
   }
 
   /* MODELO DE ATENCION MOBILE (repeat pulse as vertical on small screens is fine within hero) */
@@ -588,9 +600,30 @@
       tabs.forEach(t=>t.classList.remove('active'));
       panels.forEach(p=>p.classList.remove('active'));
       tab.classList.add('active');
-      document.getElementById(tab.dataset.target).classList.add('active');
+      const target = document.getElementById(tab.dataset.target);
+      target.classList.add('active');
+      // Lleva al usuario directo al inicio de esta unidad, sin buscar con scroll
+      target.scrollIntoView({behavior:'smooth', block:'start'});
     });
   });
+
+  // Animación de "luces" avanzando por el flujo de atención
+  const pulseDots = document.querySelectorAll('.pulse-dot');
+  const pulseLabels = document.querySelectorAll('.pulse-label');
+  let pulseIdx = 0;
+  function lightPulseStep(){
+    pulseDots.forEach(d=>d.classList.remove('lit'));
+    pulseLabels.forEach(l=>l.classList.remove('lit'));
+    if(pulseDots[pulseIdx]){
+      pulseDots[pulseIdx].classList.add('lit');
+      pulseLabels[pulseIdx].classList.add('lit');
+    }
+    pulseIdx = (pulseIdx + 1) % pulseDots.length;
+  }
+  if(pulseDots.length){
+    lightPulseStep();
+    setInterval(lightPulseStep, 1400);
+  }
 </script>
 
 </body>
