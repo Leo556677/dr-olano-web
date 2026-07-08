@@ -121,7 +121,8 @@
   .hero-visual .sub{color:#9FB8C9;font-size:.85rem;margin-bottom:26px;}
 
   /* PULSE FLOW - signature element */
-  .pulse-flow{position:relative;padding:10px 0 6px;}
+  .pulse-flow{position:relative;padding:10px 0 6px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .pulse-inner{min-width:420px;}
   .pulse-track{position:relative;height:3px;background:rgba(255,255,255,0.14);border-radius:3px;margin:0 7px;overflow:hidden;}
   .pulse-fill{height:100%;width:0%;border-radius:3px;background:linear-gradient(90deg, var(--teal), var(--gold-soft));transition:width 1.1s ease;}
   .pulse-steps{display:flex;justify-content:space-between;margin-top:-7px;}
@@ -139,21 +140,24 @@
     width:14px;height:14px;border-radius:50%;
     background:var(--teal);border:3px solid var(--navy-deep);
     box-shadow:0 0 0 2px rgba(255,255,255,0.25);
-    animation:heartbeat 1.7s ease-in-out infinite;
     transition:background .4s ease, box-shadow .4s ease;
   }
   .pulse-step:last-child .pulse-dot{background:var(--gold-soft);}
-  .pulse-step.active .pulse-dot{background:#fff;box-shadow:0 0 0 6px rgba(255,255,255,0.22),0 0 18px 5px rgba(23,163,152,0.9);}
+  .pulse-step.active .pulse-dot{
+    background:#fff;
+    box-shadow:0 0 0 6px rgba(255,255,255,0.22),0 0 18px 5px rgba(23,163,152,0.9);
+    animation:heartbeat 1.1s ease-in-out infinite;
+  }
   .pulse-label{font-size:.68rem;color:#C9DAE4;margin-top:10px;line-height:1.3;max-width:74px;transition:color .4s ease;}
   .pulse-step.active .pulse-label{color:#fff;font-weight:700;}
-  .pulse-icon{margin-top:8px;opacity:.55;transition:opacity .4s ease;}
-  .pulse-icon svg{width:18px;height:18px;stroke:#C9DAE4;}
-  .pulse-step.active .pulse-icon{opacity:1;}
-  .pulse-step.active .pulse-icon svg{stroke:#fff;}
+
+  /* Fila de iconos, propia, debajo de TODOS los puntos */
+  .pulse-icons-row{display:flex;justify-content:space-between;margin-top:18px;}
+  .pulse-icon-slot{flex:1;display:flex;justify-content:center;opacity:.5;transition:opacity .4s ease;}
+  .pulse-icon-slot svg{width:18px;height:18px;stroke:#C9DAE4;transition:stroke .4s ease;}
+  .pulse-icon-slot.active{opacity:1;}
+  .pulse-icon-slot.active svg{stroke:#fff;}
   @media (max-width:560px){
-    .pulse-steps{flex-wrap:wrap;row-gap:22px;}
-    .pulse-step{flex:0 0 33.33%;}
-    .pulse-track{display:none;}
     .hero-visual{padding:28px 20px;}
   }
 
@@ -180,11 +184,11 @@
   .diff-list li:nth-child(4){transition-delay:.24s;}
   .diff-list li:nth-child(5){transition-delay:.32s;}
   .diff-list li:nth-child(6){transition-delay:.4s;}
-  .diff-list li::before{
-    content:'✓';color:#fff;background:var(--teal);
-    width:20px;height:20px;flex:none;border-radius:50%;
-    display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;margin-top:2px;
+  .check-icon{
+    width:20px;height:20px;flex:none;border-radius:50%;background:var(--teal);
+    display:flex;align-items:center;justify-content:center;margin-top:2px;
   }
+  .check-icon svg{width:12px;height:12px;stroke:#fff;}
 
   /* NUESTRA FILOSOFIA - seccion propia */
   .philosophy-card{
@@ -220,6 +224,14 @@
   .meta-card.c-slate .meta-icon{background:rgba(91,122,153,.15);color:#5B7A99;}
   .meta-card b{display:block;font-family:'Fraunces',serif;font-size:1rem;color:var(--navy);margin-bottom:2px;}
   .meta-card span{font-size:.82rem;color:var(--ink-soft);}
+  .payment-content{flex:1;}
+  .payment-subrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+  .pay-badge{
+    display:inline-flex;align-items:center;gap:5px;
+    background:rgba(201,162,39,.12);color:var(--navy);
+    font-size:.72rem;font-weight:700;padding:5px 10px;border-radius:999px;
+  }
+  .pay-badge svg{width:13px;height:13px;stroke:var(--gold);}
   @media (max-width:800px){.meta-grid{grid-template-columns:1fr;}}
 
   /* UNIDADES */
@@ -303,7 +315,7 @@
   .contact .section-head p{color:#9FB8C9;}
   .contact-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:30px;}
   .contact-card{background:rgba(255,255,255,0.06);border-radius:16px;padding:26px;}
-  .contact-card b{display:block;font-family:'Fraunces',serif;font-size:1.05rem;margin-bottom:6px;}
+  .contact-card b{display:flex;align-items:center;gap:8px;font-family:'Fraunces',serif;font-size:1.05rem;margin-bottom:6px;}
   .contact-card p, .contact-card a{color:#C9DAE4;font-size:.92rem;}
   .contact-card a:hover{color:var(--gold-soft);}
   footer{background:var(--navy-deep);border-top:1px solid rgba(255,255,255,0.1);padding:26px 0;color:#7F9AAA;font-size:.82rem;}
@@ -347,7 +359,7 @@
       <h1>Un solo centro para diagnosticar, tratar y acompañar tu recuperación.</h1>
       <p class="lead">Consulta especializada, diagnóstico por bioimpedancia, medicina regenerativa, tratamiento del dolor y medicina estética — todo en un mismo lugar, con seguimiento real por WhatsApp.</p>
       <div class="hero-actions">
-        <a href="https://wa.me/51981214007" target="_blank" class="btn btn-primary">📲 Agendar por WhatsApp</a>
+        <a href="https://wa.me/51981214007" target="_blank" class="btn btn-primary"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.38 8.5 8.5 0 0 1-4-1L3 20l1.12-3.5A8.5 8.5 0 1 1 21 11.5z"></path></svg> Agendar por WhatsApp</a>
         <a href="#unidades" class="btn btn-ghost">Ver unidades y precios</a>
       </div>
       <div class="hero-stats">
@@ -361,37 +373,23 @@
       <h3>Así es tu recorrido en el centro</h3>
       <p class="sub">El mismo flujo, para cualquier unidad que necesites</p>
       <div class="pulse-flow">
-        <div class="pulse-track"><div class="pulse-fill" id="pulseFill"></div></div>
-        <div class="pulse-steps" id="pulseSteps">
-          <div class="pulse-step">
-            <span class="pulse-dot"></span>
-            <span class="pulse-label">Registro e historia clínica</span>
-            <span class="pulse-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"></rect><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"></path><path d="M9 11h6M9 15h4"></path></svg></span>
+        <div class="pulse-inner">
+          <div class="pulse-track"><div class="pulse-fill" id="pulseFill"></div></div>
+          <div class="pulse-steps" id="pulseSteps">
+            <div class="pulse-step"><span class="pulse-dot"></span><span class="pulse-label">Registro e historia clínica</span></div>
+            <div class="pulse-step"><span class="pulse-dot"></span><span class="pulse-label">Triaje y bioimpedancia</span></div>
+            <div class="pulse-step"><span class="pulse-dot"></span><span class="pulse-label">Consulta especializada</span></div>
+            <div class="pulse-step"><span class="pulse-dot"></span><span class="pulse-label">Diagnóstico y plan</span></div>
+            <div class="pulse-step"><span class="pulse-dot"></span><span class="pulse-label">Tratamiento</span></div>
+            <div class="pulse-step"><span class="pulse-dot"></span><span class="pulse-label">Seguimiento por WhatsApp</span></div>
           </div>
-          <div class="pulse-step">
-            <span class="pulse-dot"></span>
-            <span class="pulse-label">Triaje y bioimpedancia</span>
-            <span class="pulse-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 7 4-14 2 7h6"></path></svg></span>
-          </div>
-          <div class="pulse-step">
-            <span class="pulse-dot"></span>
-            <span class="pulse-label">Consulta especializada</span>
-            <span class="pulse-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"></circle><path d="M5 20c0-4 3-6 7-6s7 2 7 6"></path></svg></span>
-          </div>
-          <div class="pulse-step">
-            <span class="pulse-dot"></span>
-            <span class="pulse-label">Diagnóstico y plan</span>
-            <span class="pulse-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M20 20l-4.35-4.35"></path></svg></span>
-          </div>
-          <div class="pulse-step">
-            <span class="pulse-dot"></span>
-            <span class="pulse-label">Tratamiento</span>
-            <span class="pulse-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8 12h8"></path></svg></span>
-          </div>
-          <div class="pulse-step">
-            <span class="pulse-dot"></span>
-            <span class="pulse-label">Seguimiento por WhatsApp</span>
-            <span class="pulse-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.38 8.5 8.5 0 0 1-4-1L3 20l1.12-3.5A8.5 8.5 0 1 1 21 11.5z"></path></svg></span>
+          <div class="pulse-icons-row" id="pulseIconsRow">
+            <div class="pulse-icon-slot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"></rect><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"></path><path d="M9 11h6M9 15h4"></path></svg></div>
+            <div class="pulse-icon-slot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 7 4-14 2 7h6"></path></svg></div>
+            <div class="pulse-icon-slot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"></circle><path d="M5 20c0-4 3-6 7-6s7 2 7 6"></path></svg></div>
+            <div class="pulse-icon-slot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M20 20l-4.35-4.35"></path></svg></div>
+            <div class="pulse-icon-slot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8 12h8"></path></svg></div>
+            <div class="pulse-icon-slot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.38 8.5 8.5 0 0 1-4-1L3 20l1.12-3.5A8.5 8.5 0 1 1 21 11.5z"></path></svg></div>
           </div>
         </div>
       </div>
@@ -405,12 +403,12 @@
     <span class="eyebrow">Quiénes somos</span>
     <h2>Atención centrada en el paciente, desde 2014.</h2>
     <ul class="diff-list">
-      <li>Instalaciones modernas que cumplen criterios de calidad.</li>
-      <li>Personal profesional con formación internacional.</li>
-      <li>Modelo de atención integral: consulta, diagnóstico y tratamiento en un mismo lugar.</li>
-      <li>Diagnóstico por laboratorio e imágenes cuando se requiere.</li>
-      <li>Procedimientos mínimamente invasivos.</li>
-      <li>Seguimiento personalizado y permanente por WhatsApp.</li>
+      <li><span class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span>Instalaciones modernas que cumplen criterios de calidad.</li>
+      <li><span class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span>Personal profesional con formación internacional.</li>
+      <li><span class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span>Modelo de atención integral: consulta, diagnóstico y tratamiento en un mismo lugar.</li>
+      <li><span class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span>Diagnóstico por laboratorio e imágenes cuando se requiere.</li>
+      <li><span class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span>Procedimientos mínimamente invasivos.</li>
+      <li><span class="check-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg></span>Seguimiento personalizado y permanente por WhatsApp.</li>
     </ul>
   </div>
 </section>
@@ -431,7 +429,14 @@
       </div>
       <div class="meta-card c-gold">
         <span class="meta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"></rect><path d="M3 10h18"></path><circle cx="16.5" cy="14" r="1.1"></circle></svg></span>
-        <div><b>Efectivo · Yape · Plin</b><span>Formas de pago</span></div>
+        <div class="payment-content">
+          <b>Formas de pago</b>
+          <div class="payment-subrow">
+            <span class="pay-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2.5"></circle></svg>Efectivo</span>
+            <span class="pay-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"></rect><path d="M11 18h2"></path></svg>Yape</span>
+            <span class="pay-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"></rect><path d="M11 18h2"></path></svg>Plin</span>
+          </div>
+        </div>
       </div>
       <div class="meta-card c-slate">
         <span class="meta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18"></path></svg></span>
@@ -646,15 +651,15 @@
     </div>
     <div class="contact-grid">
       <div class="contact-card">
-        <b>📍 Dirección</b>
+        <b class="contact-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> Dirección</b>
         <p>Prolongación Ignacio Prado Mz C1 lote 7, Carabayllo, Lima <em style="opacity:.7">(confirmar dirección definitiva)</em></p>
       </div>
       <div class="contact-card">
-        <b>🕐 Horario</b>
+        <b class="contact-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg> Horario</b>
         <p>Lunes a sábado<br>9:00 a.m. – 8:00 p.m.</p>
       </div>
       <div class="contact-card">
-        <b>📲 WhatsApp</b>
+        <b class="contact-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.38 8.5 8.5 0 0 1-4-1L3 20l1.12-3.5A8.5 8.5 0 1 1 21 11.5z"></path></svg> WhatsApp</b>
         <p><a href="https://wa.me/51981214007" target="_blank">981 214 007</a><br>Efectivo · Yape · Plin · Transferencia</p>
       </div>
     </div>
@@ -668,7 +673,7 @@
   </div>
 </footer>
 
-<a href="https://wa.me/51981214007" target="_blank" class="wa-float" aria-label="Escríbenos por WhatsApp">💬</a>
+<a href="https://wa.me/51981214007" target="_blank" class="wa-float" aria-label="Escríbenos por WhatsApp"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.38 8.5 8.5 0 0 1-4-1L3 20l1.12-3.5A8.5 8.5 0 1 1 21 11.5z"></path></svg></a>
 
 <script>
   const tabs = document.querySelectorAll('.unit-tab');
@@ -696,13 +701,16 @@
   }, {threshold:0.2});
   revealEls.forEach(el=>io.observe(el));
 
-  // Flujo de atención: latido infinito + camino progresivo + avance por fases
+  // Flujo de atención: latido solo en el punto activo + camino progresivo + iconos en fila propia
   const pulseSteps = document.querySelectorAll('.pulse-step');
+  const pulseIconSlots = document.querySelectorAll('.pulse-icon-slot');
   const pulseFill = document.getElementById('pulseFill');
   let pulseIdx = 0;
   function lightPulseStep(){
     pulseSteps.forEach(s=>s.classList.remove('active'));
+    pulseIconSlots.forEach(s=>s.classList.remove('active'));
     if(pulseSteps[pulseIdx]) pulseSteps[pulseIdx].classList.add('active');
+    if(pulseIconSlots[pulseIdx]) pulseIconSlots[pulseIdx].classList.add('active');
     if(pulseFill){
       const pct = pulseSteps.length > 1 ? (pulseIdx/(pulseSteps.length-1))*100 : 100;
       pulseFill.style.width = pct + '%';
