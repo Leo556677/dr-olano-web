@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Centro Médico Avanzado Dr. Olano | Carabayllo, Lima</title>
+<meta name="description" content="Centro Médico Avanzado Dr. Olano — Consulta especializada, Medicina Regenerativa, Dolor e Intervencionismo Ecoguiado, Medicina Estética, Metabolismo y NOVARE. Carabayllo, Lima.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0B2E4F;
+    --navy-deep:#071E36;
+    --teal:#17A398;
+    --teal-deep:#0E7A72;
+    --gold:#C9A227;
+    --gold-soft:#E4C766;
+    --bg:#F6F8F9;
+    --surface:#FFFFFF;
+    --ink:#142430;
+    --ink-soft:#54666F;
+    --line:#E3E9EB;
+    --radius:14px;
+    --shadow:0 10px 30px -12px rgba(11,46,79,0.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Public Sans', sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{
+    font-family:'Fraunces', serif;
+    color:var(--navy);
+    line-height:1.15;
+    font-weight:600;
+  }
+  a{text-decoration:none;color:inherit;}
+  img{max-width:100%;display:block;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px;}
+  .eyebrow{
+    font-size:.78rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--teal-deep);
+    font-weight:700;
+    display:inline-block;
+    margin-bottom:14px;
+  }
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:14px 28px;
+    border-radius:999px;
+    font-weight:700;
+    font-size:.95rem;
+    cursor:pointer;
+    border:none;
+    transition:transform .18s ease, box-shadow .18s ease;
+  }
+  .btn-primary{background:var(--teal);color:#fff;box-shadow:0 8px 20px -6px rgba(23,163,152,0.55);}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 26px -6px rgba(23,163,152,0.6);}
+  .btn-ghost{background:transparent;color:var(--navy);border:1.5px solid var(--navy);}
+  .btn-ghost:hover{background:var(--navy);color:#fff;}
+
+  /* NAV */
+  header{
+    position:sticky;top:0;z-index:100;
+    background:rgba(246,248,249,0.92);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  nav{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 24px;max-width:1180px;margin:0 auto;
+  }
+  .logo{display:flex;align-items:center;gap:10px;font-family:'Fraunces',serif;font-weight:700;color:var(--navy);font-size:1.15rem;}
+  .logo-mark{
+    width:38px;height:38px;border-radius:50%;
+    background:conic-gradient(from 200deg, var(--teal), var(--navy), var(--gold), var(--teal));
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:.9rem;font-weight:800;font-family:'Public Sans',sans-serif;
+  }
+  .nav-links{display:flex;gap:28px;font-size:.92rem;font-weight:600;color:var(--ink-soft);}
+  .nav-links a:hover{color:var(--teal-deep);}
+  .nav-cta{display:flex;gap:12px;align-items:center;}
+  .burger{display:none;background:none;border:none;font-size:1.6rem;color:var(--navy);cursor:pointer;}
+
+  @media (max-width:860px){
+    .nav-links{display:none;}
+    .burger{display:block;}
+    .nav-cta .btn-ghost{display:none;}
+  }
+
+  /* HERO */
+  .hero{
+    padding:72px 0 40px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero-grid{
+    display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center;
+  }
+  .hero h1{font-size:clamp(2.1rem,4vw,3.1rem);margin-bottom:20px;}
+  .hero p.lead{font-size:1.08rem;color:var(--ink-soft);max-width:520px;margin-bottom:30px;}
+  .hero-actions{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:36px;}
+  .hero-stats{display:flex;gap:32px;flex-wrap:wrap;}
+  .hero-stat b{font-family:'Fraunces',serif;font-size:1.6rem;color:var(--navy);display:block;}
+  .hero-stat span{font-size:.82rem;color:var(--ink-soft);}
+  .hero-visual{
+    background:var(--navy-deep);
+    border-radius:24px;
+    padding:36px 28px;
+    color:#fff;
+    box-shadow:var(--shadow);
+  }
+  .hero-visual h3{color:#fff;font-size:1.1rem;margin-bottom:6px;}
+  .hero-visual .sub{color:#9FB8C9;font-size:.85rem;margin-bottom:26px;}
+
+  /* PULSE FLOW - signature element */
+  .pulse-flow{position:relative;padding:10px 0 6px;}
+  .pulse-line{
+    position:relative;height:2px;background:rgba(255,255,255,0.14);
+    margin:0 6px 0 6px;
+  }
+  .pulse-line::before{
+    content:'';position:absolute;left:0;top:-1px;height:4px;width:100%;
+    background:linear-gradient(90deg, var(--teal), var(--gold-soft));
+    clip-path:polygon(0 50%,8% 20%,12% 80%,18% 0%,24% 100%,30% 50%,100% 50%,100% 52%,0 52%);
+    opacity:.9;
+  }
+  .pulse-steps{display:flex;justify-content:space-between;margin-top:-7px;}
+  .pulse-step{
+    display:flex;flex-direction:column;align-items:center;flex:1;text-align:center;
+  }
+  .pulse-dot{
+    width:14px;height:14px;border-radius:50%;
+    background:var(--teal);border:3px solid var(--navy-deep);
+    box-shadow:0 0 0 2px rgba(255,255,255,0.25);
+  }
+  .pulse-step:last-child .pulse-dot{background:var(--gold-soft);}
+  .pulse-label{font-size:.68rem;color:#C9DAE4;margin-top:10px;line-height:1.3;max-width:74px;}
+
+  /* SECTION GENERIC */
+  section{padding:76px 0;}
+  .section-head{max-width:640px;margin-bottom:44px;}
+  .section-head h2{font-size:clamp(1.6rem,3vw,2.3rem);}
+  .section-head p{color:var(--ink-soft);margin-top:12px;font-size:1.02rem;}
+
+  /* QUIENES SOMOS */
+  .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:52px;align-items:start;}
+  .diff-list{list-style:none;display:grid;gap:14px;margin-top:8px;}
+  .diff-list li{
+    display:flex;gap:12px;align-items:flex-start;
+    background:var(--surface);border:1px solid var(--line);
+    padding:14px 16px;border-radius:12px;font-size:.94rem;color:var(--ink);
+  }
+  .diff-list li::before{
+    content:'✓';color:#fff;background:var(--teal);
+    width:20px;height:20px;flex:none;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;margin-top:2px;
+  }
+  .history-card{
+    background:var(--navy);color:#fff;border-radius:20px;padding:34px;
+  }
+  .history-card .eyebrow{color:var(--gold-soft);}
+  .history-card h3{color:#fff;font-size:1.3rem;margin-bottom:14px;}
+  .history-card p{color:#C9DAE4;font-size:.96rem;margin-bottom:18px;}
+  .history-meta{display:flex;gap:24px;border-top:1px solid rgba(255,255,255,0.18);padding-top:18px;flex-wrap:wrap;}
+  .history-meta div b{display:block;font-family:'Fraunces',serif;font-size:1.15rem;color:var(--gold-soft);}
+  .history-meta div span{font-size:.78rem;color:#9FB8C9;}
+
+  /* UNIDADES */
+  .unidades{background:var(--surface);}
+  .unit-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:36px;}
+  .unit-tab{
+    padding:10px 18px;border-radius:999px;border:1.5px solid var(--line);
+    font-size:.85rem;font-weight:700;color:var(--ink-soft);cursor:pointer;background:#fff;
+    transition:all .15s ease;
+  }
+  .unit-tab.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+  .unit-panels{display:grid;gap:20px;}
+  .unit-panel{
+    display:none;
+    border:1px solid var(--line);border-radius:20px;overflow:hidden;
+    grid-template-columns:.85fr 1.15fr;
+  }
+  .unit-panel.active{display:grid;}
+  .unit-side{
+    background:var(--navy);color:#fff;padding:34px 30px;position:relative;
+  }
+  .unit-panel.novare .unit-side{background:linear-gradient(160deg,var(--navy) 40%, #2a2410 140%);}
+  .unit-badge{
+    display:inline-block;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;
+    background:rgba(255,255,255,0.12);padding:5px 12px;border-radius:999px;color:var(--gold-soft);
+    margin-bottom:16px;font-weight:700;
+  }
+  .unit-side h3{color:#fff;font-size:1.5rem;margin-bottom:12px;}
+  .unit-side p{color:#C9DAE4;font-size:.92rem;margin-bottom:20px;}
+  .unit-price{
+    background:rgba(255,255,255,0.08);border-radius:14px;padding:16px 18px;margin-bottom:10px;
+  }
+  .unit-price .amount{font-family:'Fraunces',serif;font-size:1.5rem;color:#fff;}
+  .unit-price .label{font-size:.76rem;color:#9FB8C9;}
+  .unit-body{padding:34px 32px;}
+  .unit-body h4{font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;color:var(--teal-deep);margin-bottom:14px;}
+  .proc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:26px;}
+  .proc-chip{
+    background:var(--bg);border:1px solid var(--line);border-radius:10px;
+    padding:11px 14px;font-size:.87rem;display:flex;justify-content:space-between;gap:10px;align-items:center;
+  }
+  .proc-chip .p-price{font-size:.78rem;font-weight:700;color:var(--teal-deep);white-space:nowrap;}
+  .proc-chip .p-price.tbd{color:var(--ink-soft);font-weight:600;font-style:italic;}
+  .unit-notes{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:6px;}
+  .unit-note b{display:block;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--navy);margin-bottom:6px;}
+  .unit-note p{font-size:.86rem;color:var(--ink-soft);}
+  @media (max-width:800px){
+    .unit-panel.active{grid-template-columns:1fr;}
+    .proc-grid,.unit-notes{grid-template-columns:1fr;}
+    .about-grid{grid-template-columns:1fr;}
+    .hero-grid{grid-template-columns:1fr;}
+  }
+
+  /* MODELO DE ATENCION MOBILE (repeat pulse as vertical on small screens is fine within hero) */
+
+  /* DOCTOR */
+  .doctor{
+    display:grid;grid-template-columns:.7fr 1.3fr;gap:48px;align-items:center;
+  }
+  .doctor-photo{
+    aspect-ratio:3/4;border-radius:20px;
+    background:linear-gradient(160deg, var(--teal) 0%, var(--navy) 100%);
+    display:flex;align-items:center;justify-content:center;color:#fff;
+    font-family:'Fraunces',serif;font-size:3rem;font-weight:700;
+  }
+  .doctor-copy .eyebrow{color:var(--teal-deep);}
+  @media (max-width:800px){.doctor{grid-template-columns:1fr;}}
+
+  /* CONTACT / FOOTER */
+  .contact{background:var(--navy-deep);color:#fff;}
+  .contact .section-head h2{color:#fff;}
+  .contact .section-head p{color:#9FB8C9;}
+  .contact-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:30px;}
+  .contact-card{background:rgba(255,255,255,0.06);border-radius:16px;padding:26px;}
+  .contact-card b{display:block;font-family:'Fraunces',serif;font-size:1.05rem;margin-bottom:6px;}
+  .contact-card p, .contact-card a{color:#C9DAE4;font-size:.92rem;}
+  .contact-card a:hover{color:var(--gold-soft);}
+  footer{background:var(--navy-deep);border-top:1px solid rgba(255,255,255,0.1);padding:26px 0;color:#7F9AAA;font-size:.82rem;}
+  .footer-row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+
+  .wa-float{
+    position:fixed;bottom:22px;right:22px;z-index:200;
+    background:#25D366;color:#fff;width:60px;height:60px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 10px 24px -6px rgba(0,0,0,0.35);
+    font-size:1.7rem;
+  }
+  .wa-float:hover{transform:scale(1.06);}
+
+  @media (max-width:800px){.contact-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <div class="logo"><span class="logo-mark">DO</span> Dr. Olano</div>
+    <div class="nav-links">
+      <a href="#unidades">Unidades</a>
+      <a href="#modelo">Cómo te atendemos</a>
+      <a href="#doctor">Dr. Olano</a>
+      <a href="#contacto">Contacto</a>
+    </div>
+    <div class="nav-cta">
+      <a href="#contacto" class="btn btn-ghost">Ver dirección</a>
+      <a href="https://wa.me/51981214007" target="_blank" class="btn btn-primary">Agendar cita</a>
+    </div>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">Centro Médico Avanzado · Carabayllo</span>
+      <h1>Un solo centro para diagnosticar, tratar y acompañar tu recuperación.</h1>
+      <p class="lead">Consulta especializada, diagnóstico por bioimpedancia, medicina regenerativa, tratamiento del dolor y medicina estética — todo en un mismo lugar, con seguimiento real por WhatsApp.</p>
+      <div class="hero-actions">
+        <a href="https://wa.me/51981214007" target="_blank" class="btn btn-primary">📲 Agendar por WhatsApp</a>
+        <a href="#unidades" class="btn btn-ghost">Ver unidades y precios</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><b>2014</b><span>Atendiendo en Perú</span></div>
+        <div class="hero-stat"><b>6</b><span>Unidades especializadas</span></div>
+        <div class="hero-stat"><b>Lun–Sáb</b><span>9:00am – 8:00pm</span></div>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <h3>Así es tu recorrido en el centro</h3>
+      <p class="sub">El mismo flujo, para cualquier unidad que necesites</p>
+      <div class="pulse-flow">
+        <div class="pulse-line"></div>
+        <div class="pulse-steps">
+          <div class="pulse-step"><span class="pulse-dot"></span><span class="pulse-label">Registro e historia clínica</span></div>
+          <div class="pulse-step"><span class="pulse-dot"></span><span class="pulse-label">Triaje y bioimpedancia</span></div>
+          <div class="pulse-step"><span class="pulse-dot"></span><span class="pulse-label">Consulta especializada</span></div>
+          <div class="pulse-step"><span class="pulse-dot"></span><span class="pulse-label">Diagnóstico y plan</span></div>
+          <div class="pulse-step"><span class="pulse-dot"></span><span class="pulse-label">Tratamiento</span></div>
+          <div class="pulse-step"><span class="pulse-dot"></span><span class="pulse-label">Seguimiento por WhatsApp</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- QUIENES SOMOS -->
+<section id="modelo">
+  <div class="wrap about-grid">
+    <div>
+      <span class="eyebrow">Quiénes somos</span>
+      <h2>Atención centrada en el paciente, desde 2014.</h2>
+      <ul class="diff-list">
+        <li>Instalaciones modernas que cumplen criterios de calidad.</li>
+        <li>Personal profesional con formación internacional.</li>
+        <li>Modelo de atención integral: consulta, diagnóstico y tratamiento en un mismo lugar.</li>
+        <li>Diagnóstico por laboratorio e imágenes cuando se requiere.</li>
+        <li>Procedimientos mínimamente invasivos.</li>
+        <li>Seguimiento personalizado y permanente por WhatsApp.</li>
+      </ul>
+    </div>
+    <div class="history-card">
+      <span class="eyebrow">Nuestra filosofía</span>
+      <h3>Salvando vidas.</h3>
+      <p>Cada paciente recibe una evaluación individualizada, un diagnóstico clínico y un plan terapéutico personalizado — acompañándolo desde la primera consulta hasta la recuperación y el seguimiento posterior.</p>
+      <div class="history-meta">
+        <div><b>Boleta</b><span>Comprobante de pago</span></div>
+        <div><b>Efectivo · Yape · Plin</b><span>Formas de pago</span></div>
+        <div><b>Con cita previa</b><span>También según disponibilidad</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- UNIDADES -->
+<section id="unidades" class="unidades">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow">Nuestras unidades</span>
+      <h2>6 unidades especializadas, un solo centro médico.</h2>
+      <p>Cada unidad inicia con una consulta médica especializada. El tratamiento y sus sesiones se definen según tu evaluación.</p>
+    </div>
+
+    <div class="unit-tabs" id="unitTabs">
+      <div class="unit-tab active" data-target="u1">Consulta General</div>
+      <div class="unit-tab" data-target="u2">Metabolismo y Obesidad</div>
+      <div class="unit-tab" data-target="u3">Medicina Estética</div>
+      <div class="unit-tab" data-target="u4">Medicina Regenerativa</div>
+      <div class="unit-tab" data-target="u5">Dolor e Intervencionismo</div>
+      <div class="unit-tab" data-target="u6">NOVARE</div>
+    </div>
+
+    <div class="unit-panels">
+
+      <!-- U1 -->
+      <div class="unit-panel active" id="u1">
+        <div class="unit-side">
+          <span class="unit-badge">Punto de partida</span>
+          <h3>Consulta Médica Especializada</h3>
+          <p>Ingreso, historia clínica, triaje digital, bioimpedancia corporal y evaluación médica para un diagnóstico presuntivo o definitivo.</p>
+          <div class="unit-price"><div class="amount">S/ 70</div><div class="label">Consulta · 30 a 45 min</div></div>
+        </div>
+        <div class="unit-body">
+          <h4>Incluye</h4>
+          <div class="proc-grid">
+            <div class="proc-chip">Registro e historia clínica</div>
+            <div class="proc-chip">Triaje con equipos digitales</div>
+            <div class="proc-chip">Bioimpedancia corporal</div>
+            <div class="proc-chip">Evaluación médica especializada</div>
+          </div>
+          <div class="unit-notes">
+            <div class="unit-note"><b>Preparación</b><p>No requiere. Si tienes exámenes anteriores, puedes traerlos.</p></div>
+            <div class="unit-note"><b>Restricciones</b><p>No presenta contraindicaciones.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- U2 -->
+      <div class="unit-panel" id="u2">
+        <div class="unit-side">
+          <span class="unit-badge">Metabolismo</span>
+          <h3>Metabolismo y Obesidad</h3>
+          <p>Evaluación de composición corporal, grasa visceral e hígado graso, con plan nutricional y tratamiento médico para pérdida de peso.</p>
+          <div class="unit-price"><div class="amount">S/ 70</div><div class="label">Consulta · 30 a 45 min</div></div>
+        </div>
+        <div class="unit-body">
+          <h4>Tratamiento disponible</h4>
+          <div class="proc-grid">
+            <div class="proc-chip">Tirzepatida <span class="p-price tbd">Según evaluación</span></div>
+            <div class="proc-chip">Plan nutricional personalizado</div>
+          </div>
+          <div class="unit-notes">
+            <div class="unit-note"><b>Preparación</b><p>Acudir en ayunas.</p></div>
+            <div class="unit-note"><b>Seguimiento</b><p>Aplicación cada 7 días · control médico mensual · seguimiento por WhatsApp.</p></div>
+          </div>
+          <div class="unit-notes" style="margin-top:14px;">
+            <div class="unit-note"><b>Restricciones</b><p>No aplica en pacientes embarazadas.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- U3 -->
+      <div class="unit-panel" id="u3">
+        <div class="unit-side">
+          <span class="unit-badge">Estética</span>
+          <h3>Medicina Estética</h3>
+          <p>Procedimientos faciales y corporales realizados por médicos especialistas y licenciadas en enfermería, con seguimiento personalizado.</p>
+          <div class="unit-price"><div class="amount">S/ 70</div><div class="label">Consulta · 30 min</div></div>
+        </div>
+        <div class="unit-body">
+          <h4>Procedimientos</h4>
+          <div class="proc-grid">
+            <div class="proc-chip">Bótox rostro completo <span class="p-price">S/700</span></div>
+            <div class="proc-chip">PRP en rostro + Hydrafacial <span class="p-price">S/200</span></div>
+            <div class="proc-chip">Limpieza facial <span class="p-price tbd">Consultar</span></div>
+            <div class="proc-chip">Láser facial <span class="p-price tbd">Consultar</span></div>
+            <div class="proc-chip">Armonización facial <span class="p-price tbd">Consultar</span></div>
+            <div class="proc-chip">Rinomodelación <span class="p-price tbd">Consultar</span></div>
+            <div class="proc-chip">Relleno de labios <span class="p-price tbd">Consultar</span></div>
+            <div class="proc-chip">Tensado facial <span class="p-price tbd">Consultar</span></div>
+            <div class="proc-chip">Endolifting / Endoláser <span class="p-price tbd">Consultar</span></div>
+            <div class="proc-chip">Lipólisis / Hidrolipoclasia <span class="p-price tbd">Consultar</span></div>
+          </div>
+          <div class="unit-notes">
+            <div class="unit-note"><b>Preparación</b><p>Para evaluación facial, acudir sin maquillaje.</p></div>
+            <div class="unit-note"><b>Restricciones</b><p>Embarazo. Otras según el procedimiento específico.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- U4 -->
+      <div class="unit-panel" id="u4">
+        <div class="unit-side">
+          <span class="unit-badge">Regenerativa</span>
+          <h3>Medicina Regenerativa</h3>
+          <p>Ingeniería celular aplicada a la recuperación de tejidos: músculos, tendones, ligamentos, articulaciones y huesos.</p>
+          <div class="unit-price"><div class="amount">S/ 70</div><div class="label">Consulta · 30 a 45 min</div></div>
+        </div>
+        <div class="unit-body">
+          <h4>Tratamientos</h4>
+          <div class="proc-grid">
+            <div class="proc-chip">PRP (Plasma Rico en Plaquetas) <span class="p-price tbd">Consultar</span></div>
+            <div class="proc-chip">PRF (Plasma Rico en Fibrina) <span class="p-price tbd">Consultar</span></div>
+            <div class="proc-chip">Ozonoterapia <span class="p-price tbd">Consultar</span></div>
+            <div class="proc-chip">Células madre <span class="p-price tbd">Consultar</span></div>
+            <div class="proc-chip">Factores de crecimiento <span class="p-price tbd">Consultar</span></div>
+            <div class="proc-chip">Exosomas <span class="p-price tbd">Consultar</span></div>
+            <div class="proc-chip">Ácido hialurónico <span class="p-price tbd">Consultar</span></div>
+            <div class="proc-chip">Hidrodisecciones <span class="p-price tbd">Consultar</span></div>
+          </div>
+          <div class="unit-notes">
+            <div class="unit-note"><b>Preparación</b><p>No requiere preparación previa.</p></div>
+            <div class="unit-note"><b>Restricciones</b><p>Embarazo, enfermedades oncológicas o infección activa en la zona a tratar.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- U5 -->
+      <div class="unit-panel" id="u5">
+        <div class="unit-side">
+          <span class="unit-badge">Dolor</span>
+          <h3>Dolor e Intervencionismo Ecoguiado</h3>
+          <p>Procedimientos mínimamente invasivos con guía ecográfica en tiempo real, para tratar la causa del dolor musculoesquelético.</p>
+          <div class="unit-price"><div class="amount">S/ 100</div><div class="label">Consulta · 30 a 45 min</div></div>
+        </div>
+        <div class="unit-body">
+          <h4>Procedimientos</h4>
+          <div class="proc-grid">
+            <div class="proc-chip">Bloqueos nerviosos ecoguiados <span class="p-price tbd">Consultar</span></div>
+            <div class="proc-chip">Infiltraciones ecoguiadas <span class="p-price tbd">Consultar</span></div>
+            <div class="proc-chip">Electrólisis percutánea <span class="p-price tbd">Consultar</span></div>
+            <div class="proc-chip">Neuromodulación <span class="p-price tbd">Consultar</span></div>
+            <div class="proc-chip">Hidrodisección ecoguiada <span class="p-price tbd">Consultar</span></div>
+            <div class="proc-chip">Ozonoterapia ecoguiada <span class="p-price tbd">Consultar</span></div>
+          </div>
+          <div class="unit-notes">
+            <div class="unit-note"><b>Preparación</b><p>No requiere preparación previa.</p></div>
+            <div class="unit-note"><b>Restricciones</b><p>Dependen del procedimiento y de tu evaluación médica individual.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- U6 -->
+      <div class="unit-panel novare" id="u6">
+        <div class="unit-side">
+          <span class="unit-badge">Exclusivo · Técnicas de Brasil</span>
+          <h3>NOVARE — Rejuvenecimiento Facial</h3>
+          <p>Asociación de médicos cirujanos especializados en cirugía plástica, con técnicas modernas de rejuvenecimiento facial ambulatorio.</p>
+          <div class="unit-price"><div class="amount">S/ 100</div><div class="label">Consulta · 30 min</div></div>
+        </div>
+        <div class="unit-body">
+          <h4>Procedimientos exclusivos</h4>
+          <div class="proc-grid">
+            <div class="proc-chip">Minilifting facial</div>
+            <div class="proc-chip">Rinofast</div>
+            <div class="proc-chip">Lipopapada de alta definición</div>
+            <div class="proc-chip">Bichectomía</div>
+            <div class="proc-chip">Lip Lift ambulatorio</div>
+            <div class="proc-chip">Blefaroplastia sup. e inf.</div>
+            <div class="proc-chip">Frontoplastia</div>
+            <div class="proc-chip">Foxy Eyes</div>
+            <div class="proc-chip">Lipofilling facial</div>
+            <div class="proc-chip">Mini lipoescultura ambulatoria</div>
+            <div class="proc-chip">Lifting de cejas (Castañares)</div>
+            <div class="proc-chip">Otoplastia · Lobuloplastia</div>
+          </div>
+          <div class="unit-notes">
+            <div class="unit-note"><b>Preparación</b><p>Acudir sin maquillaje para la evaluación facial.</p></div>
+            <div class="unit-note"><b>Precio de procedimientos</b><p>Se define en consulta, según evaluación médica.</p></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- DOCTOR -->
+<section id="doctor">
+  <div class="wrap doctor">
+    <div class="doctor-photo">DO</div>
+    <div class="doctor-copy">
+      <span class="eyebrow">Médico responsable</span>
+      <h2>Dr. Olano</h2>
+      <p style="color:var(--ink-soft);margin-top:14px;max-width:560px;">Desarrolla una atención médica personalizada orientada al diagnóstico y tratamiento integral de sus pacientes. Cuenta con formación internacional y actualmente continúa una especialidad en Cirugía Plástica Estética y Reconstructiva, y Microcirugía de Miembros Superiores e Inferiores, en Brasil.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACTO -->
+<section id="contacto" class="contact">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow" style="color:var(--gold-soft);">Visítanos</span>
+      <h2>Agenda tu cita hoy</h2>
+      <p>Con cita previa, también atendemos según disponibilidad.</p>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-card">
+        <b>📍 Dirección</b>
+        <p>Prolongación Ignacio Prado Mz C1 lote 7, Carabayllo, Lima <em style="opacity:.7">(confirmar dirección definitiva)</em></p>
+      </div>
+      <div class="contact-card">
+        <b>🕐 Horario</b>
+        <p>Lunes a sábado<br>9:00 a.m. – 8:00 p.m.</p>
+      </div>
+      <div class="contact-card">
+        <b>📲 WhatsApp</b>
+        <p><a href="https://wa.me/51981214007" target="_blank">981 214 007</a><br>Efectivo · Yape · Plin · Transferencia</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap footer-row">
+    <span>© 2026 Centro Médico Avanzado Dr. Olano · Carabayllo, Lima</span>
+    <span>Boleta electrónica disponible</span>
+  </div>
+</footer>
+
+<a href="https://wa.me/51981214007" target="_blank" class="wa-float" aria-label="Escríbenos por WhatsApp">💬</a>
+
+<script>
+  const tabs = document.querySelectorAll('.unit-tab');
+  const panels = document.querySelectorAll('.unit-panel');
+  tabs.forEach(tab=>{
+    tab.addEventListener('click', ()=>{
+      tabs.forEach(t=>t.classList.remove('active'));
+      panels.forEach(p=>p.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.target).classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>
