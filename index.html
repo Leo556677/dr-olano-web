@@ -66,6 +66,30 @@
   .btn-ghost{background:transparent;color:var(--navy);border:1.5px solid var(--navy);}
   .btn-ghost:hover{background:var(--navy);color:#fff;}
 
+  /* Boton "Agendar cita": latido infinito + brillo diagonal tipo vidrio */
+  @keyframes btnHeartbeat{
+    0%,100%{transform:scale(1);}
+    15%{transform:scale(1.06);}
+    30%{transform:scale(1);}
+    45%{transform:scale(1.03);}
+    60%{transform:scale(1);}
+  }
+  @keyframes btnShine{
+    0%{left:-60%;}
+    60%{left:130%;}
+    100%{left:130%;}
+  }
+  .btn-glow{
+    position:relative;overflow:hidden;
+    animation:btnHeartbeat 2s ease-in-out infinite;
+  }
+  .btn-glow::after{
+    content:'';position:absolute;top:0;left:-60%;width:45%;height:100%;
+    background:linear-gradient(115deg, transparent 0%, rgba(255,255,255,.65) 50%, transparent 100%);
+    transform:skewX(-22deg);
+    animation:btnShine 2.8s ease-in-out infinite;
+  }
+
   /* NAV */
   header{
     position:sticky;top:0;z-index:100;
@@ -121,10 +145,10 @@
   .hero-visual .sub{color:#9FB8C9;font-size:.85rem;margin-bottom:26px;}
 
   /* PULSE FLOW - signature element */
-  .pulse-flow{position:relative;padding:10px 0 6px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
-  .pulse-inner{min-width:420px;}
-  .pulse-track{position:relative;height:3px;background:rgba(255,255,255,0.14);border-radius:3px;margin:0 7px;overflow:hidden;}
-  .pulse-fill{height:100%;width:0%;border-radius:3px;background:linear-gradient(90deg, var(--teal), var(--gold-soft));transition:width 1.1s ease;}
+  .pulse-flow{position:relative;padding:10px 0 6px;}
+  .pulse-inner{width:100%;}
+  .pulse-track{height:3px;background:rgba(255,255,255,0.14);border-radius:3px;margin:0 8.3334%;overflow:hidden;}
+  .pulse-fill{height:100%;width:0%;border-radius:3px;background:linear-gradient(90deg, var(--teal), var(--gold-soft));transition:width .9s ease;}
   .pulse-steps{display:flex;justify-content:space-between;margin-top:-7px;}
   .pulse-step{
     display:flex;flex-direction:column;align-items:center;flex:1;text-align:center;
@@ -158,7 +182,10 @@
   .pulse-icon-slot.active{opacity:1;}
   .pulse-icon-slot.active svg{stroke:#fff;}
   @media (max-width:560px){
-    .hero-visual{padding:28px 20px;}
+    .hero-visual{padding:24px 14px;}
+    .pulse-dot{width:11px;height:11px;}
+    .pulse-label{font-size:.6rem;max-width:56px;}
+    .pulse-icon-slot svg{width:15px;height:15px;}
   }
 
   /* SECTION GENERIC */
@@ -346,7 +373,7 @@
     </div>
     <div class="nav-cta">
       <a href="#contacto" class="btn btn-ghost">Ver dirección</a>
-      <a href="https://wa.me/51981214007" target="_blank" class="btn btn-primary">Agendar cita</a>
+      <a href="https://wa.me/51981214007" target="_blank" class="btn btn-primary btn-glow">Agendar cita</a>
     </div>
   </nav>
 </header>
@@ -701,25 +728,28 @@
   }, {threshold:0.2});
   revealEls.forEach(el=>io.observe(el));
 
-  // Flujo de atención: latido solo en el punto activo + camino progresivo + iconos en fila propia
+  // Flujo de atención: el camino avanza primero, el punto se enciende cuando el camino llega
   const pulseSteps = document.querySelectorAll('.pulse-step');
   const pulseIconSlots = document.querySelectorAll('.pulse-icon-slot');
   const pulseFill = document.getElementById('pulseFill');
   let pulseIdx = 0;
-  function lightPulseStep(){
-    pulseSteps.forEach(s=>s.classList.remove('active'));
-    pulseIconSlots.forEach(s=>s.classList.remove('active'));
-    if(pulseSteps[pulseIdx]) pulseSteps[pulseIdx].classList.add('active');
-    if(pulseIconSlots[pulseIdx]) pulseIconSlots[pulseIdx].classList.add('active');
+  const FILL_MS = 900;
+  function advancePulse(){
     if(pulseFill){
       const pct = pulseSteps.length > 1 ? (pulseIdx/(pulseSteps.length-1))*100 : 100;
       pulseFill.style.width = pct + '%';
     }
+    setTimeout(()=>{
+      pulseSteps.forEach(s=>s.classList.remove('active'));
+      pulseIconSlots.forEach(s=>s.classList.remove('active'));
+      if(pulseSteps[pulseIdx]) pulseSteps[pulseIdx].classList.add('active');
+      if(pulseIconSlots[pulseIdx]) pulseIconSlots[pulseIdx].classList.add('active');
+    }, FILL_MS);
     pulseIdx = (pulseIdx + 1) % pulseSteps.length;
   }
   if(pulseSteps.length){
-    lightPulseStep();
-    setInterval(lightPulseStep, 1500);
+    advancePulse();
+    setInterval(advancePulse, 1500);
   }
 </script>
 
