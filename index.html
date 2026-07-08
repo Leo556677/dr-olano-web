@@ -143,6 +143,12 @@
   }
   .pulse-step:last-child .pulse-dot{background:var(--gold-soft);}
   .pulse-label{font-size:.68rem;color:#C9DAE4;margin-top:10px;line-height:1.3;max-width:74px;}
+  @media (max-width:560px){
+    .pulse-steps{flex-wrap:wrap;row-gap:22px;}
+    .pulse-step{flex:0 0 33.33%;}
+    .pulse-line{display:none;}
+    .hero-visual{padding:28px 20px;}
+  }
 
   /* SECTION GENERIC */
   section{padding:76px 0;}
