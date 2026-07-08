@@ -122,34 +122,38 @@
 
   /* PULSE FLOW - signature element */
   .pulse-flow{position:relative;padding:10px 0 6px;}
-  .pulse-line{
-    position:relative;height:2px;background:rgba(255,255,255,0.14);
-    margin:0 6px 0 6px;
-  }
-  .pulse-line::before{
-    content:'';position:absolute;left:0;top:-1px;height:4px;width:100%;
-    background:linear-gradient(90deg, var(--teal), var(--gold-soft));
-    clip-path:polygon(0 50%,8% 20%,12% 80%,18% 0%,24% 100%,30% 50%,100% 50%,100% 52%,0 52%);
-    opacity:.9;
-  }
+  .pulse-track{position:relative;height:3px;background:rgba(255,255,255,0.14);border-radius:3px;margin:0 7px;overflow:hidden;}
+  .pulse-fill{height:100%;width:0%;border-radius:3px;background:linear-gradient(90deg, var(--teal), var(--gold-soft));transition:width 1.1s ease;}
   .pulse-steps{display:flex;justify-content:space-between;margin-top:-7px;}
   .pulse-step{
     display:flex;flex-direction:column;align-items:center;flex:1;text-align:center;
+  }
+  @keyframes heartbeat{
+    0%,100%{transform:scale(1);}
+    15%{transform:scale(1.3);}
+    30%{transform:scale(1);}
+    45%{transform:scale(1.18);}
+    60%{transform:scale(1);}
   }
   .pulse-dot{
     width:14px;height:14px;border-radius:50%;
     background:var(--teal);border:3px solid var(--navy-deep);
     box-shadow:0 0 0 2px rgba(255,255,255,0.25);
+    animation:heartbeat 1.7s ease-in-out infinite;
+    transition:background .4s ease, box-shadow .4s ease;
   }
   .pulse-step:last-child .pulse-dot{background:var(--gold-soft);}
+  .pulse-step.active .pulse-dot{background:#fff;box-shadow:0 0 0 6px rgba(255,255,255,0.22),0 0 18px 5px rgba(23,163,152,0.9);}
   .pulse-label{font-size:.68rem;color:#C9DAE4;margin-top:10px;line-height:1.3;max-width:74px;transition:color .4s ease;}
-  .pulse-dot{transition:all .4s ease;}
-  .pulse-dot.lit{background:#fff;box-shadow:0 0 0 6px rgba(255,255,255,0.22),0 0 18px 5px rgba(23,163,152,0.85);transform:scale(1.25);}
-  .pulse-label.lit{color:#fff;font-weight:700;}
+  .pulse-step.active .pulse-label{color:#fff;font-weight:700;}
+  .pulse-icon{margin-top:8px;opacity:.55;transition:opacity .4s ease;}
+  .pulse-icon svg{width:18px;height:18px;stroke:#C9DAE4;}
+  .pulse-step.active .pulse-icon{opacity:1;}
+  .pulse-step.active .pulse-icon svg{stroke:#fff;}
   @media (max-width:560px){
     .pulse-steps{flex-wrap:wrap;row-gap:22px;}
     .pulse-step{flex:0 0 33.33%;}
-    .pulse-line{display:none;}
+    .pulse-track{display:none;}
     .hero-visual{padding:28px 20px;}
   }
 
@@ -161,26 +165,62 @@
 
   /* QUIENES SOMOS */
   .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:52px;align-items:start;}
-  .diff-list{list-style:none;display:grid;gap:14px;margin-top:8px;}
+  .diff-list{list-style:none;display:grid;gap:14px;margin-top:24px;max-width:640px;}
   .diff-list li{
     display:flex;gap:12px;align-items:flex-start;
     background:var(--surface);border:1px solid var(--line);
     padding:14px 16px;border-radius:12px;font-size:.94rem;color:var(--ink);
+    opacity:0;transform:translateX(-40px);
+    transition:opacity .55s ease, transform .55s ease;
   }
+  .diff-list li.in-view{opacity:1;transform:translateX(0);}
+  .diff-list li:nth-child(1){transition-delay:0s;}
+  .diff-list li:nth-child(2){transition-delay:.08s;}
+  .diff-list li:nth-child(3){transition-delay:.16s;}
+  .diff-list li:nth-child(4){transition-delay:.24s;}
+  .diff-list li:nth-child(5){transition-delay:.32s;}
+  .diff-list li:nth-child(6){transition-delay:.4s;}
   .diff-list li::before{
     content:'✓';color:#fff;background:var(--teal);
     width:20px;height:20px;flex:none;border-radius:50%;
     display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;margin-top:2px;
   }
-  .history-card{
-    background:var(--navy);color:#fff;border-radius:20px;padding:34px;
+
+  /* NUESTRA FILOSOFIA - seccion propia */
+  .philosophy-card{
+    background:var(--navy);color:#fff;border-radius:20px;padding:40px;max-width:760px;margin:0 auto;
+    opacity:0;transform:scale(.92);filter:blur(6px);
+    transition:opacity .8s ease, transform .8s ease, filter .8s ease;
   }
-  .history-card .eyebrow{color:var(--gold-soft);}
-  .history-card h3{color:#fff;font-size:1.3rem;margin-bottom:14px;}
-  .history-card p{color:#C9DAE4;font-size:.96rem;margin-bottom:18px;}
-  .history-meta{display:flex;gap:24px;border-top:1px solid rgba(255,255,255,0.18);padding-top:18px;flex-wrap:wrap;}
-  .history-meta div b{display:block;font-family:'Fraunces',serif;font-size:1.15rem;color:var(--gold-soft);}
-  .history-meta div span{font-size:.78rem;color:#9FB8C9;}
+  .philosophy-card.in-view{opacity:1;transform:scale(1);filter:blur(0);animation:softGlow 3.2s ease-in-out 1s infinite;}
+  @keyframes softGlow{
+    0%,100%{box-shadow:0 10px 30px -12px rgba(23,163,152,.25);}
+    50%{box-shadow:0 10px 42px -8px rgba(23,163,152,.5);}
+  }
+  .philosophy-card .eyebrow{color:var(--gold-soft);}
+  .philosophy-card h3{color:#fff;font-size:1.7rem;margin-bottom:16px;}
+  .philosophy-card p{color:#C9DAE4;font-size:1.02rem;max-width:560px;}
+
+  /* TARJETAS META - individuales con icono y color propio */
+  .meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:760px;margin:28px auto 0;}
+  .meta-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:16px;
+    padding:20px 18px;display:flex;gap:14px;align-items:flex-start;
+    opacity:0;transform:translateY(28px) scale(.95);
+    transition:opacity .55s ease, transform .55s ease;
+  }
+  .meta-card.in-view{opacity:1;transform:translateY(0) scale(1);}
+  .meta-card:nth-child(1){transition-delay:0s;}
+  .meta-card:nth-child(2){transition-delay:.15s;}
+  .meta-card:nth-child(3){transition-delay:.3s;}
+  .meta-icon{width:40px;height:40px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;}
+  .meta-icon svg{width:20px;height:20px;}
+  .meta-card.c-teal .meta-icon{background:rgba(23,163,152,.12);color:var(--teal-deep);}
+  .meta-card.c-gold .meta-icon{background:rgba(201,162,39,.15);color:var(--gold);}
+  .meta-card.c-slate .meta-icon{background:rgba(91,122,153,.15);color:#5B7A99;}
+  .meta-card b{display:block;font-family:'Fraunces',serif;font-size:1rem;color:var(--navy);margin-bottom:2px;}
+  .meta-card span{font-size:.82rem;color:var(--ink-soft);}
+  @media (max-width:800px){.meta-grid{grid-template-columns:1fr;}}
 
   /* UNIDADES */
   .unidades{background:var(--surface);}
@@ -321,14 +361,38 @@
       <h3>Así es tu recorrido en el centro</h3>
       <p class="sub">El mismo flujo, para cualquier unidad que necesites</p>
       <div class="pulse-flow">
-        <div class="pulse-line"></div>
-        <div class="pulse-steps">
-          <div class="pulse-step"><span class="pulse-dot"></span><span class="pulse-label">Registro e historia clínica</span></div>
-          <div class="pulse-step"><span class="pulse-dot"></span><span class="pulse-label">Triaje y bioimpedancia</span></div>
-          <div class="pulse-step"><span class="pulse-dot"></span><span class="pulse-label">Consulta especializada</span></div>
-          <div class="pulse-step"><span class="pulse-dot"></span><span class="pulse-label">Diagnóstico y plan</span></div>
-          <div class="pulse-step"><span class="pulse-dot"></span><span class="pulse-label">Tratamiento</span></div>
-          <div class="pulse-step"><span class="pulse-dot"></span><span class="pulse-label">Seguimiento por WhatsApp</span></div>
+        <div class="pulse-track"><div class="pulse-fill" id="pulseFill"></div></div>
+        <div class="pulse-steps" id="pulseSteps">
+          <div class="pulse-step">
+            <span class="pulse-dot"></span>
+            <span class="pulse-label">Registro e historia clínica</span>
+            <span class="pulse-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"></rect><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"></path><path d="M9 11h6M9 15h4"></path></svg></span>
+          </div>
+          <div class="pulse-step">
+            <span class="pulse-dot"></span>
+            <span class="pulse-label">Triaje y bioimpedancia</span>
+            <span class="pulse-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2 7 4-14 2 7h6"></path></svg></span>
+          </div>
+          <div class="pulse-step">
+            <span class="pulse-dot"></span>
+            <span class="pulse-label">Consulta especializada</span>
+            <span class="pulse-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"></circle><path d="M5 20c0-4 3-6 7-6s7 2 7 6"></path></svg></span>
+          </div>
+          <div class="pulse-step">
+            <span class="pulse-dot"></span>
+            <span class="pulse-label">Diagnóstico y plan</span>
+            <span class="pulse-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M20 20l-4.35-4.35"></path></svg></span>
+          </div>
+          <div class="pulse-step">
+            <span class="pulse-dot"></span>
+            <span class="pulse-label">Tratamiento</span>
+            <span class="pulse-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8 12h8"></path></svg></span>
+          </div>
+          <div class="pulse-step">
+            <span class="pulse-dot"></span>
+            <span class="pulse-label">Seguimiento por WhatsApp</span>
+            <span class="pulse-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.38 8.5 8.5 0 0 1-4-1L3 20l1.12-3.5A8.5 8.5 0 1 1 21 11.5z"></path></svg></span>
+          </div>
         </div>
       </div>
     </div>
@@ -337,26 +401,40 @@
 
 <!-- QUIENES SOMOS -->
 <section id="modelo">
-  <div class="wrap about-grid">
-    <div>
-      <span class="eyebrow">Quiénes somos</span>
-      <h2>Atención centrada en el paciente, desde 2014.</h2>
-      <ul class="diff-list">
-        <li>Instalaciones modernas que cumplen criterios de calidad.</li>
-        <li>Personal profesional con formación internacional.</li>
-        <li>Modelo de atención integral: consulta, diagnóstico y tratamiento en un mismo lugar.</li>
-        <li>Diagnóstico por laboratorio e imágenes cuando se requiere.</li>
-        <li>Procedimientos mínimamente invasivos.</li>
-        <li>Seguimiento personalizado y permanente por WhatsApp.</li>
-      </ul>
-    </div>
-    <div class="history-card">
+  <div class="wrap">
+    <span class="eyebrow">Quiénes somos</span>
+    <h2>Atención centrada en el paciente, desde 2014.</h2>
+    <ul class="diff-list">
+      <li>Instalaciones modernas que cumplen criterios de calidad.</li>
+      <li>Personal profesional con formación internacional.</li>
+      <li>Modelo de atención integral: consulta, diagnóstico y tratamiento en un mismo lugar.</li>
+      <li>Diagnóstico por laboratorio e imágenes cuando se requiere.</li>
+      <li>Procedimientos mínimamente invasivos.</li>
+      <li>Seguimiento personalizado y permanente por WhatsApp.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- NUESTRA FILOSOFIA -->
+<section id="filosofia">
+  <div class="wrap">
+    <div class="philosophy-card">
       <span class="eyebrow">Nuestra filosofía</span>
       <h3>Salvando vidas.</h3>
       <p>Cada paciente recibe una evaluación individualizada, un diagnóstico clínico y un plan terapéutico personalizado — acompañándolo desde la primera consulta hasta la recuperación y el seguimiento posterior.</p>
-      <div class="history-meta">
+    </div>
+
+    <div class="meta-grid">
+      <div class="meta-card c-teal">
+        <span class="meta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z"></path><path d="M9 8h6M9 12h6"></path></svg></span>
         <div><b>Boleta</b><span>Comprobante de pago</span></div>
+      </div>
+      <div class="meta-card c-gold">
+        <span class="meta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"></rect><path d="M3 10h18"></path><circle cx="16.5" cy="14" r="1.1"></circle></svg></span>
         <div><b>Efectivo · Yape · Plin</b><span>Formas de pago</span></div>
+      </div>
+      <div class="meta-card c-slate">
+        <span class="meta-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 10h18"></path></svg></span>
         <div><b>Con cita previa</b><span>También según disponibilidad</span></div>
       </div>
     </div>
@@ -602,27 +680,38 @@
       tab.classList.add('active');
       const target = document.getElementById(tab.dataset.target);
       target.classList.add('active');
-      // Lleva al usuario directo al inicio de esta unidad, sin buscar con scroll
       target.scrollIntoView({behavior:'smooth', block:'start'});
     });
   });
 
-  // Animación de "luces" avanzando por el flujo de atención
-  const pulseDots = document.querySelectorAll('.pulse-dot');
-  const pulseLabels = document.querySelectorAll('.pulse-label');
+  // Revelado al hacer scroll: lista izquierda-derecha, tarjeta filosofía, tarjetas meta
+  const revealEls = document.querySelectorAll('.diff-list li, .philosophy-card, .meta-card');
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        entry.target.classList.add('in-view');
+        io.unobserve(entry.target);
+      }
+    });
+  }, {threshold:0.2});
+  revealEls.forEach(el=>io.observe(el));
+
+  // Flujo de atención: latido infinito + camino progresivo + avance por fases
+  const pulseSteps = document.querySelectorAll('.pulse-step');
+  const pulseFill = document.getElementById('pulseFill');
   let pulseIdx = 0;
   function lightPulseStep(){
-    pulseDots.forEach(d=>d.classList.remove('lit'));
-    pulseLabels.forEach(l=>l.classList.remove('lit'));
-    if(pulseDots[pulseIdx]){
-      pulseDots[pulseIdx].classList.add('lit');
-      pulseLabels[pulseIdx].classList.add('lit');
+    pulseSteps.forEach(s=>s.classList.remove('active'));
+    if(pulseSteps[pulseIdx]) pulseSteps[pulseIdx].classList.add('active');
+    if(pulseFill){
+      const pct = pulseSteps.length > 1 ? (pulseIdx/(pulseSteps.length-1))*100 : 100;
+      pulseFill.style.width = pct + '%';
     }
-    pulseIdx = (pulseIdx + 1) % pulseDots.length;
+    pulseIdx = (pulseIdx + 1) % pulseSteps.length;
   }
-  if(pulseDots.length){
+  if(pulseSteps.length){
     lightPulseStep();
-    setInterval(lightPulseStep, 1400);
+    setInterval(lightPulseStep, 1500);
   }
 </script>
 
