@@ -150,18 +150,47 @@ svg{display:block}
 .promo-body{padding:16px 18px;overflow:auto}
 .promo-body>p{color:var(--muted);font-size:.82rem;margin:0 0 12px}
 .promo-body .btn{width:100%}
-.promo-social{display:none;margin-top:13px;border-top:1px solid var(--line);padding-top:11px}
-.promo-social.show{display:block}
-.promo-social-title{font-size:.72rem;font-weight:800;color:var(--navy);margin-bottom:8px}
-.promo-social-list{display:grid;gap:8px}
-.promo-proof{
-  background:#f8fbfb;border:1px solid #dbe9ea;border-radius:14px;padding:10px 11px;
-  animation:helperIn .28s ease-out both
+
+.promo-proof-stage{
+  width:min(100%,430px);
+  min-height:78px;
+  position:relative;
+  overflow:visible;
+  pointer-events:none
 }
-.promo-proof-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.promo-proof b{font-size:.74rem}
-.demo-badge{font-size:.57rem;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:#8a969c;background:#eef2f3;border-radius:999px;padding:4px 6px}
-.promo-proof p{margin:5px 0 0;color:#52636e;font-size:.73rem;line-height:1.32}
+.promo-float{
+  position:absolute;
+  left:12px;right:12px;top:0;
+  display:grid;
+  grid-template-columns:46px 1fr;
+  gap:10px;
+  align-items:center;
+  background:rgba(255,255,255,.98);
+  border:1px solid #d9e7e9;
+  border-radius:18px;
+  padding:10px 12px;
+  box-shadow:0 16px 42px -18px rgba(2,25,43,.42);
+  opacity:0;
+  transform:translateX(115%);
+  animation:promoFloatLR 4.4s cubic-bezier(.22,.8,.2,1) forwards
+}
+@keyframes promoFloatLR{
+  0%{opacity:0;transform:translateX(115%) scale(.96)}
+  14%{opacity:1;transform:translateX(0) scale(1)}
+  72%{opacity:1;transform:translateX(0) scale(1)}
+  100%{opacity:0;transform:translateX(-115%) scale(.97)}
+}
+.promo-avatar{
+  width:46px;height:46px;border-radius:50%;
+  display:grid;place-items:center;
+  background:linear-gradient(145deg,var(--teal),var(--navy));
+  color:#fff;font-weight:900;font-size:.78rem;
+  border:3px solid #fff;
+  box-shadow:0 0 0 1px #cddfe2
+}
+.promo-float b{display:block;font-size:.75rem;color:var(--navy)}
+.promo-float p{margin:3px 0 0;color:#52636e;font-size:.73rem;line-height:1.3}
+
 
 .booking{position:fixed;z-index:140;inset:0;background:var(--bg);transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1);overflow:auto}
 .booking.open{transform:translateY(0)}
@@ -278,7 +307,7 @@ body.booking-open{overflow:hidden}
 
 <header class="top">
   <div class="wrap nav">
-    <img class="brand-logo" src="assets/logo-isotipo.png?v=9" alt="Olano Medic">
+    <img class="brand-logo" src="assets/logo-isotipo.png?v=10" alt="Olano Medic">
     <button class="menu" aria-label="Menú"><svg class="icon"><use href="#i-menu"/></svg></button>
   </div>
 </header>
@@ -301,7 +330,7 @@ body.booking-open{overflow:hidden}
         </div>
       </div>
       <div class="hero-media">
-        <img src="assets/hero-doctor.jpg?v=9" alt="Doctor Olano en clínica">
+        <img src="assets/hero-doctor.jpg?v=10" alt="Doctor Olano en clínica">
         <div class="hero-caption"><b>Dr. Olano</b><span>Atención médica personalizada</span></div>
       </div>
     </div>
@@ -323,15 +352,15 @@ body.booking-open{overflow:hidden}
   <div class="section-head"><h2>Atención especializada</h2><p>Tres de las áreas más consultadas.</p></div>
   <div class="units">
     <article class="unit estetica">
-      <div class="unit-media"><img src="assets/unidad-estetica.jpg?v=9" alt="Medicina estética"></div>
+      <div class="unit-media"><img src="assets/unidad-estetica.jpg?v=10" alt="Medicina estética"></div>
       <div class="unit-copy"><b>Medicina Estética</b><p>Evaluación y tratamientos faciales personalizados.</p><button class="unit-link schedule-action" data-service="botox">Ver y agendar</button></div>
     </article>
     <article class="unit dolor">
-      <div class="unit-media"><img src="assets/unidad-dolor.jpg?v=9" alt="Intervencionismo ecoguiado"></div>
+      <div class="unit-media"><img src="assets/unidad-dolor.jpg?v=10" alt="Intervencionismo ecoguiado"></div>
       <div class="unit-copy"><b>Dolor e Intervencionismo</b><p>Procedimientos ecoguiados y evaluación especializada.</p><button class="unit-link schedule-action" data-service="dolor">Ver y agendar</button></div>
     </article>
     <article class="unit metabolismo">
-      <div class="unit-media"><img src="assets/unidad-metabolismo.jpg?v=9" alt="Consulta de metabolismo"></div>
+      <div class="unit-media"><img src="assets/unidad-metabolismo.jpg?v=10" alt="Consulta de metabolismo"></div>
       <div class="unit-copy"><b>Metabolismo y Obesidad</b><p>Evaluación médica y acompañamiento individual.</p><button class="unit-link schedule-action" data-service="metabolismo">Ver y agendar</button></div>
     </article>
   </div>
@@ -372,7 +401,7 @@ body.booking-open{overflow:hidden}
 <div class="overlay" id="promoOverlay">
 <div class="modal promo-modal">
   <div class="promo-img">
-    <img src="assets/promo-mes.jpg?v=9" alt="Promoción Olano Medic">
+    <img src="assets/promo-mes.jpg?v=10" alt="Promoción Olano Medic">
     <div class="promo-badge">
       <small>Oferta especial</small>
       <b>APROVECHA ESTA OFERTA ESPECIAL SOBRE CUALQUIERA DE NUESTROS SERVICIOS</b>
@@ -382,12 +411,9 @@ body.booking-open{overflow:hidden}
     <p>Continúa al agendamiento antes de que finalice el contador.</p>
     <button class="btn btn-primary pulse schedule-action" id="promoAccept">Quiero aprovecharlo</button>
     <button class="decline" id="promoDecline">No, gracias</button>
-
-    <div class="promo-social" id="promoSocial">
-      <div class="promo-social-title">Mensajes de muestra para el prototipo</div>
-      <div class="promo-social-list" id="promoSocialList"></div>
-    </div>
   </div>
+</div>
+<div class="promo-proof-stage" id="promoProofStage"></div>
 </div>
 </div>
 
@@ -467,19 +493,17 @@ const SERVICES=[
 {id:"rinomodelacion",unit:"Estética",name:"Rinomodelación",price:"Según evaluación"}
 ];
 
-// IMPORTANTE: son textos DEMO para probar el diseño.
-// Antes de publicar la landing definitiva, reemplázalos por reseñas reales/autorizadas.
-const PROMO_DEMO_MESSAGES=[
-"Yo sí lo aprovecharía antes de que termine el contador.",
-"Me gustó poder revisar primero el servicio y luego elegir mi horario.",
-"Si ya estaba pensando en reservar, preferiría hacerlo antes de que finalice la oferta.",
-"Yo no dejaría pasar la oportunidad si el servicio que buscaba está incluido.",
-"Me parece práctico aprovechar la oferta y dejar la solicitud preparada de una vez.",
-"Si todavía quedan minutos, yo terminaría mi reserva ahora.",
-"Lo que me convenció fue poder elegir servicio y horario desde el celular.",
-"Yo preferiría asegurar mi solicitud antes de que la oferta termine.",
-"Si ya llegué hasta aquí, aprovecharía el beneficio antes de cerrar la página.",
-"Yo terminaría el proceso ahora para no perder la oferta disponible."
+const PROMO_NUDGES=[
+"Si ya encontraste el servicio que buscabas, este es un buen momento para elegir tu horario.",
+"La oferta sigue activa mientras el contador esté corriendo.",
+"Puedes revisar tu servicio y horario antes de enviar la solicitud por WhatsApp.",
+"Si estás comparando opciones, guarda tu cita antes de que termine la oferta.",
+"Tu solicitud no se confirma hasta que el centro valide el horario.",
+"El proceso toma pocos pasos: servicio, fecha, hora y datos.",
+"Si ya decidiste avanzar, puedes dejar la solicitud preparada ahora.",
+"Revisa el servicio seleccionado y aprovecha la oferta mientras esté disponible.",
+"Puedes volver atrás antes de enviar la solicitud si deseas cambiar algún dato.",
+"Cuando termine el contador, esta oferta especial dejará de mostrarse."
 ];
 
 const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
@@ -651,29 +675,33 @@ function showGuide(){
 function stopPromoProofs(){
   if(state.promoProofTimeout)clearTimeout(state.promoProofTimeout);
   if(state.promoProofInterval)clearInterval(state.promoProofInterval);
-  state.promoProofTimeout=null;state.promoProofInterval=null;state.promoProofIndex=0;
-  $("#promoSocialList").innerHTML="";
-  $("#promoSocial").classList.remove("show")
+  state.promoProofTimeout=null;
+  state.promoProofInterval=null;
+  state.promoProofIndex=0;
+  const stage=$("#promoProofStage");
+  if(stage)stage.innerHTML="";
 }
-function appendPromoDemo(){
-  if(state.promoProofIndex>=PROMO_DEMO_MESSAGES.length){
+function appendPromoNudge(){
+  if(state.promoProofIndex>=PROMO_NUDGES.length){
     if(state.promoProofInterval)clearInterval(state.promoProofInterval);
-    return
+    return;
   }
-  $("#promoSocial").classList.add("show");
+  const stage=$("#promoProofStage");
+  if(!stage)return;
+  stage.innerHTML="";
   const i=state.promoProofIndex++;
   const card=document.createElement("article");
-  card.className="promo-proof";
-  card.innerHTML=`<div class="promo-proof-head"><b>Cliente ${String(i+1).padStart(2,"0")}</b><span class="demo-badge">Mensaje demo</span></div><p>“${PROMO_DEMO_MESSAGES[i]}”</p>`;
-  $("#promoSocialList").appendChild(card);
-  card.scrollIntoView({behavior:"smooth",block:"nearest"})
+  card.className="promo-float";
+  card.innerHTML=`<div class="promo-avatar">OM</div><div><b>Olano Medic</b><p>${PROMO_NUDGES[i]}</p></div>`;
+  stage.appendChild(card);
 }
 function startPromoProofs(){
   stopPromoProofs();
   state.promoProofTimeout=setTimeout(()=>{
-    appendPromoDemo();
-    state.promoProofInterval=setInterval(appendPromoDemo,5000)
-  },10000)
+    appendPromoNudge();
+    state.promoProofInterval=setInterval(appendPromoNudge,5000);
+  },10000);
+},10000)
 }
 function startPromo(){
   let end=Number(sessionStorage.getItem("olanoPromoEnd"));
