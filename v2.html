@@ -1,9 +1,11 @@
 <!doctype html>
+<!-- OLANO MEDIC BUILD V2.4 SOCIAL 2026-08-17 -->
 <html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Olano Medic | Reserva online</title>
+<meta name="olano-build" content="V2.4-SOCIAL">
 <meta name="description" content="Olano Medic. Atención médica especializada y solicitud de citas online.">
 <meta name="theme-color" content="#0b2e4f">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -190,6 +192,70 @@ svg{display:block}
 .promo-float p{margin:3px 0 0;color:#52636e;font-size:.73rem;line-height:1.3}
 
 
+
+/* ===== TARJETAS SOCIALES DE PRESENTACIÓN ===== */
+.main-social-stage{
+  position:fixed;
+  z-index:88;
+  top:calc(var(--promoH) + 82px);
+  right:10px;
+  width:min(82vw,350px);
+  display:grid;
+  gap:7px;
+  pointer-events:none
+}
+.main-social-card{
+  --avatar:#168f88;
+  width:100%;
+  display:grid;
+  grid-template-columns:44px minmax(0,1fr);
+  gap:10px;
+  align-items:center;
+  background:rgba(255,255,255,.975);
+  border:1px solid #d9e6e8;
+  border-radius:18px;
+  padding:10px 11px;
+  box-shadow:0 16px 42px -20px rgba(2,25,43,.42);
+  opacity:0;
+  transform:translateX(118%);
+  animation:mainSocialFly 7s cubic-bezier(.2,.78,.2,1) forwards
+}
+@keyframes mainSocialFly{
+  0%{opacity:0;transform:translateX(118%) scale(.97)}
+  11%{opacity:1;transform:translateX(0) scale(1)}
+  78%{opacity:1;transform:translateX(0) scale(1)}
+  100%{opacity:0;transform:translateX(-118%) scale(.97)}
+}
+.main-social-avatar{
+  width:44px;height:44px;border-radius:50%;
+  display:grid;place-items:center;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--avatar) 78%,white),var(--avatar));
+  color:#fff;border:3px solid #fff;
+  box-shadow:0 0 0 1px #cbdcdf;
+  overflow:hidden
+}
+.main-social-avatar .icon{width:24px;height:24px;stroke-width:1.8}
+.main-social-body{min-width:0}
+.main-social-head{display:flex;align-items:center;gap:6px;min-width:0}
+.main-social-name{font-size:.76rem;font-weight:900;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.main-social-tag{
+  margin-left:auto;flex:none;
+  font-size:.52rem;font-weight:900;letter-spacing:.045em;
+  padding:3px 5px;border-radius:999px;background:#eef3f4;color:#86939a
+}
+.main-social-stars{display:flex;gap:1px;color:#d5a11f;margin:2px 0 2px}
+.main-social-stars span{font-size:.69rem;line-height:1}
+.main-social-text{margin:0;color:#53656f;font-size:.72rem;line-height:1.28}
+.main-social-card.offer .main-social-stars{display:none}
+.main-social-card.offer{border-color:#cfe4dd;background:linear-gradient(135deg,rgba(255,255,255,.99),rgba(240,250,247,.99))}
+.main-social-card.offer .main-social-text{color:#3d5c55}
+@media(max-width:430px){
+  .main-social-stage{width:min(84vw,330px);right:8px;top:calc(var(--promoH) + 78px)}
+  .main-social-card{grid-template-columns:40px minmax(0,1fr);padding:9px 10px;border-radius:16px}
+  .main-social-avatar{width:40px;height:40px}
+  .main-social-text{font-size:.69rem}
+}
+
 .booking{position:fixed;z-index:140;inset:0;background:var(--bg);transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1);overflow:auto}
 .booking.open{transform:translateY(0)}
 body.booking-open{overflow:hidden}
@@ -305,7 +371,7 @@ body.booking-open{overflow:hidden}
 
 <header class="top">
   <div class="wrap nav">
-    <img class="brand-logo" src="assets/logo-isotipo.png?v=11" alt="Olano Medic">
+    <img class="brand-logo" src="assets/logo-isotipo.png?v=12" alt="Olano Medic">
     <button class="menu" id="menuBtn" aria-label="Menú"><svg class="icon"><use href="#i-menu"/></svg></button>
   </div>
   <div class="nav-menu" id="navMenu">
@@ -333,7 +399,7 @@ body.booking-open{overflow:hidden}
         </div>
       </div>
       <div class="hero-media">
-        <img src="assets/hero-doctor.jpg?v=11" alt="Doctor Olano en clínica">
+        <img src="assets/hero-doctor.jpg?v=12" alt="Doctor Olano en clínica">
         <div class="hero-caption"><b>Dr. Olano</b><span>Atención médica personalizada</span></div>
       </div>
     </div>
@@ -355,15 +421,15 @@ body.booking-open{overflow:hidden}
   <div class="section-head"><h2>Atención especializada</h2><p>Tres de las áreas más consultadas.</p></div>
   <div class="units">
     <article class="unit estetica">
-      <div class="unit-media"><img src="assets/unidad-estetica.jpg?v=11" alt="Medicina estética"></div>
+      <div class="unit-media"><img src="assets/unidad-estetica.jpg?v=12" alt="Medicina estética"></div>
       <div class="unit-copy"><b>Medicina Estética</b><p>Evaluación y tratamientos faciales personalizados.</p><button class="unit-link schedule-action" data-service="botox">Ver y agendar</button></div>
     </article>
     <article class="unit dolor">
-      <div class="unit-media"><img src="assets/unidad-dolor.jpg?v=11" alt="Intervencionismo ecoguiado"></div>
+      <div class="unit-media"><img src="assets/unidad-dolor.jpg?v=12" alt="Intervencionismo ecoguiado"></div>
       <div class="unit-copy"><b>Dolor e Intervencionismo</b><p>Procedimientos ecoguiados y evaluación especializada.</p><button class="unit-link schedule-action" data-service="dolor">Ver y agendar</button></div>
     </article>
     <article class="unit metabolismo">
-      <div class="unit-media"><img src="assets/unidad-metabolismo.jpg?v=11" alt="Consulta de metabolismo"></div>
+      <div class="unit-media"><img src="assets/unidad-metabolismo.jpg?v=12" alt="Consulta de metabolismo"></div>
       <div class="unit-copy"><b>Metabolismo y Obesidad</b><p>Evaluación médica y acompañamiento individual.</p><button class="unit-link schedule-action" data-service="metabolismo">Ver y agendar</button></div>
     </article>
   </div>
@@ -377,6 +443,8 @@ body.booking-open{overflow:hidden}
 </div>
 </section>
 </main>
+
+<div class="main-social-stage" id="mainSocialStage" aria-live="polite"></div>
 
 <div class="helper-card" id="helperCard">
   <div class="helper-row">
@@ -404,7 +472,7 @@ body.booking-open{overflow:hidden}
 <div class="overlay" id="promoOverlay">
 <div class="modal promo-modal">
   <div class="promo-img">
-    <img src="assets/promo-mes.jpg?v=11" alt="Promoción Olano Medic">
+    <img src="assets/promo-mes.jpg?v=12" alt="Promoción Olano Medic">
     <div class="promo-badge">
       <small>Oferta especial</small>
       <b>APROVECHA ESTA OFERTA ESPECIAL SOBRE CUALQUIERA DE NUESTROS SERVICIOS</b>
@@ -482,7 +550,7 @@ body.booking-open{overflow:hidden}
 </div>
 
 <script>
-const CONFIG={phone:"51981214007",open:9,close:21,slot:30,maxDays:60,promoDelay:18000,promoSeconds:300,helperDelay:60000};
+const CONFIG={phone:"51981214007",open:9,close:21,slot:30,maxDays:60,promoDelay:18000,promoSeconds:300,helperDelay:60000,reviewStart:30000,idleOfferStart:60000,socialInterval:5000,socialDuration:7000};
 const SERVICES=[
 {id:"armonizacion",unit:"Estética",name:"Armonización facial",price:"Según evaluación"},
 {id:"botox",unit:"Estética",name:"Bótox rostro completo",price:"S/ 700"},
@@ -495,6 +563,55 @@ const SERVICES=[
 {id:"prp",unit:"Estética",name:"PRP en rostro + Hydrafacial",price:"S/ 200"},
 {id:"rinomodelacion",unit:"Estética",name:"Rinomodelación",price:"Según evaluación"}
 ];
+
+
+const SOCIAL_REVIEWS=[
+{name:"Ana M.",text:"Me atendieron con mucha claridad y el trato fue excelente durante todo el proceso."},
+{name:"Carlos R.",text:"Me gustó mucho la atención. Todo fue explicado con calma y de forma profesional."},
+{name:"María P.",text:"Salí muy conforme con la orientación y con la forma en que resolvieron mis dudas."},
+{name:"José L.",text:"La atención fue muy buena y sentí bastante confianza desde el inicio."},
+{name:"Rosa C.",text:"Me pareció excelente el trato y la dedicación durante mi atención."},
+{name:"Luis A.",text:"Todo estuvo bien organizado y la explicación del tratamiento fue muy clara."},
+{name:"Patricia G.",text:"Me sentí cómoda durante la consulta y la atención fue muy profesional."},
+{name:"Diego S.",text:"Tuve una muy buena experiencia y me explicaron cada paso antes de continuar."},
+{name:"Carmen V.",text:"La atención fue excelente y agradecí que se tomaran el tiempo de orientarme."},
+{name:"Jorge T.",text:"Me gustó el trato, la puntualidad y la claridad con la que atendieron mi consulta."},
+{name:"Lucía F.",text:"Fue una experiencia muy agradable y recibí una atención bastante cuidadosa."},
+{name:"Miguel D.",text:"Quedé satisfecho con la atención y con la explicación que recibí."},
+{name:"Elena B.",text:"Me pareció un servicio muy profesional y sentí que escucharon lo que necesitaba."},
+{name:"Renato H.",text:"La consulta fue clara, ordenada y el trato fue excelente."},
+{name:"Sandra N.",text:"Me gustó la atención personalizada y la tranquilidad con la que me explicaron todo."},
+{name:"Víctor J.",text:"Recibí muy buena orientación y el proceso fue sencillo desde el principio."},
+{name:"Claudia E.",text:"La atención fue excelente y me sentí acompañada durante todo el proceso."},
+{name:"Marco Q.",text:"Me atendieron muy bien y resolvieron mis dudas antes de tomar una decisión."},
+{name:"Andrea K.",text:"La experiencia fue muy buena, con un trato amable y profesional."},
+{name:"Fernando Z.",text:"Quedé conforme con el servicio y con la manera en que explicaron cada detalle."}
+];
+
+const SOCIAL_OFFER_PAST=[
+{name:"Valeria M.",text:"Qué bueno que elegí la oferta; pude avanzar con mi cita antes de que terminara."},
+{name:"Ricardo C.",text:"Me alegró haber aprovechado la oferta cuando todavía estaba activa."},
+{name:"Daniela P.",text:"Qué bueno que decidí usar la oferta; terminé mi solicitud en pocos pasos."},
+{name:"Sergio R.",text:"Aproveché la oferta a tiempo y me gustó poder elegir mi horario desde el celular."},
+{name:"Natalia G.",text:"Me pareció una buena decisión haber elegido la oferta antes de que finalizara."},
+{name:"Alonso V.",text:"Qué bueno que no lo dejé para después y aproveché la oferta cuando apareció."},
+{name:"Mónica L.",text:"Elegí la oferta y pude dejar mi solicitud preparada de una manera muy sencilla."},
+{name:"Paolo S.",text:"Me alegra haber aprovechado la oferta antes de que se acabara el tiempo."},
+{name:"Gabriela T.",text:"Qué bueno que presioné la oferta; pude revisar el servicio y continuar con mi cita."},
+{name:"Héctor A.",text:"Aproveché la oferta mientras estaba activa y el proceso me resultó bastante rápido."},
+{name:"Fiorella C.",text:"Me gustó haber tomado la oferta en ese momento y avanzar con mi reserva."},
+{name:"Eduardo F.",text:"Qué bueno que elegí la oferta cuando la vi; no tuve que dejar el proceso para después."},
+{name:"Paola D.",text:"Aproveché la oferta y pude completar los datos de mi cita con tranquilidad."},
+{name:"Christian B.",text:"Me pareció acertado elegir la oferta antes de que terminara el contador."},
+{name:"Karina J.",text:"Qué bueno que aproveché la oferta; pude avanzar directamente al agendamiento."},
+{name:"Óscar N.",text:"Elegí la oferta a tiempo y me resultó fácil continuar con el horario que quería."},
+{name:"Melissa H.",text:"Me alegró haber aprovechado la oferta cuando todavía quedaban unos minutos."},
+{name:"Javier E.",text:"Qué bueno que decidí avanzar con la oferta y dejar la solicitud lista."},
+{name:"Camila Q.",text:"Aproveché la oferta antes de que finalizara y pude revisar todo antes de enviarlo."},
+{name:"Bruno Z.",text:"Me gustó haber elegido la oferta a tiempo y completar el proceso desde el celular."}
+];
+
+const SOCIAL_AVATARS=["#168f88","#0f6f91","#8a6a21","#6f5aa7","#287f65","#985b5b","#315e96","#9a6b25","#4f7c8a","#7d5d86"];
 
 const PROMO_NUDGES=[
 "Si ya encontraste el servicio que buscabas, este es un buen momento para elegir tu horario.",
@@ -515,7 +632,8 @@ const state={
   month:new Date(new Date().getFullYear(),new Date().getMonth(),1),
   sort:"az",id:null,url:null,
   heroOut:false,scheduleInteracted:false,
-  promoProofTimeout:null,promoProofInterval:null,promoProofIndex:0,helperTimer:null,helperEligibleAt:Date.now()+CONFIG.helperDelay
+  promoProofTimeout:null,promoProofInterval:null,promoProofIndex:0,helperTimer:null,helperEligibleAt:Date.now()+CONFIG.helperDelay,
+  anyInteraction:false,reviewIndex:0,offerIndex:0,mainSocialTimer:null,offerModeActive:false,mainSocialStarted:false
 };
 const norm=s=>(s||"").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 const icon=id=>`<svg class="icon"><use href="#${id}"/></svg>`;
@@ -540,7 +658,10 @@ function updateDock(){
 }
 function markScheduleInteraction(){
   state.scheduleInteracted=true;
+  state.anyInteraction=true;
+  state.offerModeActive=false;
   $("#helperCard").classList.remove("show");
+  clearMainSocialStage();
   if(state.helperTimer){clearInterval(state.helperTimer);state.helperTimer=null}
 }
 function openBooking(serviceId="",options={}){
@@ -676,6 +797,86 @@ function showGuide(){
   $("#helperCard").classList.remove("show");
   $("#guideOverlay").classList.add("show")
 }
+
+function clearMainSocialStage(){
+  const stage=$("#mainSocialStage");
+  if(stage)stage.innerHTML="";
+}
+function socialBusy(){
+  return document.body.classList.contains("booking-open")
+    || $("#promoOverlay").classList.contains("show")
+    || $("#guideOverlay").classList.contains("show")
+    || document.visibilityState!=="visible";
+}
+function socialStars(){
+  return '<div class="main-social-stars" aria-hidden="true"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>';
+}
+function spawnMainSocialCard(type){
+  if(socialBusy())return false;
+  const isOffer=type==="offer";
+  const list=isOffer?SOCIAL_OFFER_PAST:SOCIAL_REVIEWS;
+  const key=isOffer?"offerIndex":"reviewIndex";
+  if(state[key]>=list.length)return false;
+
+  const item=list[state[key]];
+  const index=state[key];
+  state[key]++;
+
+  const stage=$("#mainSocialStage");
+  const card=document.createElement("article");
+  card.className="main-social-card "+(isOffer?"offer":"review");
+  card.style.setProperty("--avatar",SOCIAL_AVATARS[index%SOCIAL_AVATARS.length]);
+  card.innerHTML=`
+    <div class="main-social-avatar">${icon("i-user")}</div>
+    <div class="main-social-body">
+      <div class="main-social-head">
+        <span class="main-social-name">${item.name}</span>
+        <span class="main-social-tag">PRESENTACIÓN</span>
+      </div>
+      ${isOffer?"":socialStars()}
+      <p class="main-social-text">“${item.text}”</p>
+    </div>`;
+  stage.appendChild(card);
+
+  // Con duración 7 s e intervalo 5 s habrá, como máximo, dos tarjetas durante la transición.
+  setTimeout(()=>card.remove(),CONFIG.socialDuration+250);
+  return true;
+}
+function mainSocialTick(){
+  if(state.offerModeActive){
+    if(state.offerIndex<SOCIAL_OFFER_PAST.length){
+      spawnMainSocialCard("offer");
+      return;
+    }
+    state.offerModeActive=false;
+  }
+  if(state.reviewIndex<SOCIAL_REVIEWS.length){
+    spawnMainSocialCard("review");
+    return;
+  }
+  if(state.mainSocialTimer){
+    clearInterval(state.mainSocialTimer);
+    state.mainSocialTimer=null;
+  }
+}
+function startMainSocialReviews(){
+  if(state.mainSocialStarted)return;
+  state.mainSocialStarted=true;
+  mainSocialTick();
+  state.mainSocialTimer=setInterval(mainSocialTick,CONFIG.socialInterval);
+}
+function activateIdleOfferCards(){
+  if(state.anyInteraction||state.scheduleInteracted)return;
+  state.offerModeActive=true;
+  clearMainSocialStage();
+  // Si el flujo social aún no inició por cualquier razón, lo iniciamos aquí.
+  if(!state.mainSocialStarted){
+    state.mainSocialStarted=true;
+    state.mainSocialTimer=setInterval(mainSocialTick,CONFIG.socialInterval);
+  }
+  mainSocialTick();
+}
+
 function stopPromoProofs(){
   if(state.promoProofTimeout)clearTimeout(state.promoProofTimeout);
   if(state.promoProofInterval)clearInterval(state.promoProofInterval);
@@ -746,6 +947,19 @@ function scheduleHelper(){
   state.helperTimer=setInterval(check,1500);
   check()
 }
+
+
+// Cualquier pulsación real sobre controles cuenta como interacción.
+// El scroll por sí solo NO cuenta, para conservar la lógica de usuario indeciso.
+document.addEventListener("pointerdown",e=>{
+  const interactive=e.target.closest("button,a,input,summary,.route,.unit-link");
+  if(!interactive)return;
+  state.anyInteraction=true;
+  if(state.offerModeActive){
+    state.offerModeActive=false;
+    clearMainSocialStage();
+  }
+},{capture:true});
 
 // MENÚ SUPERIOR
 $("#menuBtn").onclick=e=>{e.stopPropagation();$("#navMenu").classList.toggle("show")};
@@ -825,6 +1039,11 @@ new IntersectionObserver(entries=>{
 
 updateDock();
 scheduleHelper();
+
+// Tarjetas generales: empiezan a los 30 s desde la carga.
+// Usuario indeciso: a los 60 s sin pulsaciones, se prioriza la secuencia de oferta en pasado.
+setTimeout(startMainSocialReviews,CONFIG.reviewStart);
+setTimeout(activateIdleOfferCards,CONFIG.idleOfferStart);
 
 let pe=Number(sessionStorage.getItem("olanoPromoEnd"));
 if(pe>Date.now())startPromo();
