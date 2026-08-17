@@ -70,6 +70,10 @@ svg{display:block}
 .brand-logo{width:58px;height:58px;object-fit:contain}
 .menu{width:46px;height:46px;border:0;background:transparent;color:var(--navy);display:grid;place-items:center;border-radius:50%}
 
+.nav-menu{display:none;position:absolute;z-index:75;right:14px;top:64px;width:min(260px,calc(100vw - 28px));background:#fff;border:1px solid var(--line);border-radius:18px;padding:8px;box-shadow:0 20px 50px -20px rgba(0,20,40,.38)}
+.nav-menu.show{display:grid;gap:6px}
+.nav-menu button{border:0;background:#f7fafb;border-radius:13px;padding:11px 12px;display:flex;align-items:center;gap:9px;color:var(--navy);font-weight:800;text-align:left}
+.nav-menu button:hover{background:#eef7f6}
 .hero{padding:15px 0 12px}
 .hero-card{background:#fff;border:1px solid var(--line);border-radius:28px;overflow:hidden;box-shadow:var(--shadow)}
 .hero-copy{padding:21px 20px 17px;background:radial-gradient(circle at 0 0,#1aa79d1b,transparent 36%),radial-gradient(circle at 100% 100%,#c9a22718,transparent 32%)}
@@ -140,7 +144,7 @@ svg{display:block}
 .helper-card small{display:block;color:var(--muted);font-size:.72rem;margin-top:2px}
 .helper-card button{border:0;background:var(--teal);color:#fff;border-radius:999px;padding:10px 12px;font-weight:800;font-size:.74rem}
 
-.promo-modal{padding:0;overflow:hidden;max-height:min(88vh,760px);display:flex;flex-direction:column}
+.promo-modal{padding:0;overflow:hidden;max-height:min(calc(100dvh - 128px),690px);display:flex;flex-direction:column}
 .promo-img{height:220px;position:relative;overflow:hidden;flex:none}
 .promo-img img{width:100%;height:100%;object-fit:cover;object-position:center 24%;animation:promoMove 9.5s ease-in-out infinite alternate;will-change:transform}
 .promo-img:after{content:"";position:absolute;inset:auto 0 0;height:46%;background:linear-gradient(transparent,#051d30d2)}
@@ -151,6 +155,7 @@ svg{display:block}
 .promo-body>p{color:var(--muted);font-size:.82rem;margin:0 0 12px}
 .promo-body .btn{width:100%}
 
+#promoOverlay.show{flex-direction:column;gap:10px}
 .promo-proof-stage{
   width:min(100%,430px);
   min-height:78px;
@@ -180,14 +185,7 @@ svg{display:block}
   72%{opacity:1;transform:translateX(0) scale(1)}
   100%{opacity:0;transform:translateX(-115%) scale(.97)}
 }
-.promo-avatar{
-  width:46px;height:46px;border-radius:50%;
-  display:grid;place-items:center;
-  background:linear-gradient(145deg,var(--teal),var(--navy));
-  color:#fff;font-weight:900;font-size:.78rem;
-  border:3px solid #fff;
-  box-shadow:0 0 0 1px #cddfe2
-}
+.promo-avatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#dfeaed,#c9d8dc);color:#6b7f87;border:3px solid #fff;box-shadow:0 0 0 1px #cddfe2}.promo-avatar .icon{width:25px;height:25px;stroke-width:1.8}
 .promo-float b{display:block;font-size:.75rem;color:var(--navy)}
 .promo-float p{margin:3px 0 0;color:#52636e;font-size:.73rem;line-height:1.3}
 
@@ -307,8 +305,13 @@ body.booking-open{overflow:hidden}
 
 <header class="top">
   <div class="wrap nav">
-    <img class="brand-logo" src="assets/logo-isotipo.png?v=10" alt="Olano Medic">
-    <button class="menu" aria-label="Menú"><svg class="icon"><use href="#i-menu"/></svg></button>
+    <img class="brand-logo" src="assets/logo-isotipo.png?v=11" alt="Olano Medic">
+    <button class="menu" id="menuBtn" aria-label="Menú"><svg class="icon"><use href="#i-menu"/></svg></button>
+  </div>
+  <div class="nav-menu" id="navMenu">
+    <button id="menuBook"><svg class="icon"><use href="#i-calendar"/></svg>Agendar cita</button>
+    <button id="menuServices"><svg class="icon"><use href="#i-service"/></svg>Ver servicios</button>
+    <button id="menuFaq"><svg class="icon"><use href="#i-help"/></svg>Preguntas frecuentes</button>
   </div>
 </header>
 
@@ -330,7 +333,7 @@ body.booking-open{overflow:hidden}
         </div>
       </div>
       <div class="hero-media">
-        <img src="assets/hero-doctor.jpg?v=10" alt="Doctor Olano en clínica">
+        <img src="assets/hero-doctor.jpg?v=11" alt="Doctor Olano en clínica">
         <div class="hero-caption"><b>Dr. Olano</b><span>Atención médica personalizada</span></div>
       </div>
     </div>
@@ -352,22 +355,22 @@ body.booking-open{overflow:hidden}
   <div class="section-head"><h2>Atención especializada</h2><p>Tres de las áreas más consultadas.</p></div>
   <div class="units">
     <article class="unit estetica">
-      <div class="unit-media"><img src="assets/unidad-estetica.jpg?v=10" alt="Medicina estética"></div>
+      <div class="unit-media"><img src="assets/unidad-estetica.jpg?v=11" alt="Medicina estética"></div>
       <div class="unit-copy"><b>Medicina Estética</b><p>Evaluación y tratamientos faciales personalizados.</p><button class="unit-link schedule-action" data-service="botox">Ver y agendar</button></div>
     </article>
     <article class="unit dolor">
-      <div class="unit-media"><img src="assets/unidad-dolor.jpg?v=10" alt="Intervencionismo ecoguiado"></div>
+      <div class="unit-media"><img src="assets/unidad-dolor.jpg?v=11" alt="Intervencionismo ecoguiado"></div>
       <div class="unit-copy"><b>Dolor e Intervencionismo</b><p>Procedimientos ecoguiados y evaluación especializada.</p><button class="unit-link schedule-action" data-service="dolor">Ver y agendar</button></div>
     </article>
     <article class="unit metabolismo">
-      <div class="unit-media"><img src="assets/unidad-metabolismo.jpg?v=10" alt="Consulta de metabolismo"></div>
+      <div class="unit-media"><img src="assets/unidad-metabolismo.jpg?v=11" alt="Consulta de metabolismo"></div>
       <div class="unit-copy"><b>Metabolismo y Obesidad</b><p>Evaluación médica y acompañamiento individual.</p><button class="unit-link schedule-action" data-service="metabolismo">Ver y agendar</button></div>
     </article>
   </div>
 </div>
 </section>
 
-<section class="block faq">
+<section class="block faq" id="faq">
 <div class="wrap">
   <details><summary>¿La cita queda confirmada al enviarla?</summary><p>No. Primero se envía la solicitud por WhatsApp y el centro confirma el cupo.</p></details>
   <details><summary>¿Qué pasa si cierro el agendamiento?</summary><p>El avance queda guardado para que puedas retomarlo desde la burbuja “Cita pendiente”.</p></details>
@@ -401,7 +404,7 @@ body.booking-open{overflow:hidden}
 <div class="overlay" id="promoOverlay">
 <div class="modal promo-modal">
   <div class="promo-img">
-    <img src="assets/promo-mes.jpg?v=10" alt="Promoción Olano Medic">
+    <img src="assets/promo-mes.jpg?v=11" alt="Promoción Olano Medic">
     <div class="promo-badge">
       <small>Oferta especial</small>
       <b>APROVECHA ESTA OFERTA ESPECIAL SOBRE CUALQUIERA DE NUESTROS SERVICIOS</b>
@@ -512,7 +515,7 @@ const state={
   month:new Date(new Date().getFullYear(),new Date().getMonth(),1),
   sort:"az",id:null,url:null,
   heroOut:false,scheduleInteracted:false,
-  promoProofTimeout:null,promoProofInterval:null,promoProofIndex:0
+  promoProofTimeout:null,promoProofInterval:null,promoProofIndex:0,helperTimer:null,helperEligibleAt:Date.now()+CONFIG.helperDelay
 };
 const norm=s=>(s||"").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 const icon=id=>`<svg class="icon"><use href="#${id}"/></svg>`;
@@ -537,7 +540,8 @@ function updateDock(){
 }
 function markScheduleInteraction(){
   state.scheduleInteracted=true;
-  $("#helperCard").classList.remove("show")
+  $("#helperCard").classList.remove("show");
+  if(state.helperTimer){clearInterval(state.helperTimer);state.helperTimer=null}
 }
 function openBooking(serviceId="",options={}){
   markScheduleInteraction();
@@ -692,7 +696,7 @@ function appendPromoNudge(){
   const i=state.promoProofIndex++;
   const card=document.createElement("article");
   card.className="promo-float";
-  card.innerHTML=`<div class="promo-avatar">OM</div><div><b>Olano Medic</b><p>${PROMO_NUDGES[i]}</p></div>`;
+  card.innerHTML=`<div class="promo-avatar">${icon("i-user")}</div><div><b>Sugerencia rápida</b><p>${PROMO_NUDGES[i]}</p></div>`;
   stage.appendChild(card);
 }
 function startPromoProofs(){
@@ -701,7 +705,6 @@ function startPromoProofs(){
     appendPromoNudge();
     state.promoProofInterval=setInterval(appendPromoNudge,5000);
   },10000);
-},10000)
 }
 function startPromo(){
   let end=Number(sessionStorage.getItem("olanoPromoEnd"));
@@ -725,18 +728,31 @@ function startPromo(){
 }
 function triggerPromo(){
   if(sessionStorage.getItem("olanoPromoSeen"))return;
+  if(document.body.classList.contains("booking-open")||$("#guideOverlay").classList.contains("show")){setTimeout(triggerPromo,5000);return}
+  if(state.scheduleInteracted)return;
   sessionStorage.setItem("olanoPromoSeen","1");
   startPromo();
   $("#promoOverlay").classList.add("show");
   startPromoProofs()
 }
 function scheduleHelper(){
-  setTimeout(()=>{
-    if(!state.scheduleInteracted&&!document.body.classList.contains("booking-open")&&!$("#promoOverlay").classList.contains("show")){
-      $("#helperCard").classList.add("show")
-    }
-  },CONFIG.helperDelay)
+  if(state.helperTimer)clearInterval(state.helperTimer);
+  const check=()=>{
+    if(state.scheduleInteracted){clearInterval(state.helperTimer);state.helperTimer=null;return}
+    if(Date.now()<state.helperEligibleAt)return;
+    const busy=document.body.classList.contains("booking-open")||$("#promoOverlay").classList.contains("show")||$("#guideOverlay").classList.contains("show");
+    if(!busy&&!hasDraft())$("#helperCard").classList.add("show")
+  };
+  state.helperTimer=setInterval(check,1500);
+  check()
 }
+
+// MENÚ SUPERIOR
+$("#menuBtn").onclick=e=>{e.stopPropagation();$("#navMenu").classList.toggle("show")};
+$("#menuBook").onclick=()=>{$("#navMenu").classList.remove("show");openBooking()};
+$("#menuServices").onclick=()=>{$("#navMenu").classList.remove("show");$("#unidades").scrollIntoView({behavior:"smooth"})};
+$("#menuFaq").onclick=()=>{$("#navMenu").classList.remove("show");$("#faq").scrollIntoView({behavior:"smooth"})};
+document.addEventListener("click",e=>{if(!$("#navMenu").contains(e.target)&&e.target!==$("#menuBtn"))$("#navMenu").classList.remove("show")});
 
 // BOTONES / EVENTOS
 $("#heroBook").onclick=()=>openBooking();
