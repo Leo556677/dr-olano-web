@@ -1,0 +1,133 @@
+    $("#promoText").textContent=left?`Oferta Especial · ${String(Math.floor(sec/60)).padStart(2,"0")}:${String(sec%60).padStart(2,"0")}`:"Oferta finalizada";
+    if(left<=0)clearInterval(timer)
+  };
+  tick();
+  let timer=setInterval(tick,400)
+}
+function triggerPromo(){
+  if(sessionStorage.getItem("olanoPromoSeen"))return;
+  if(document.body.classList.contains("booking-open")||$("#guideOverlay").classList.contains("show")){setTimeout(triggerPromo,5000);return}
+  if(state.scheduleInteracted||state.anyInteraction)return;
+  sessionStorage.setItem("olanoPromoSeen","1");
+  startPromo();
+  $("#promoOverlay").classList.add("show");
+  $("#promoOverlay").setAttribute("aria-hidden","false");
+  rememberFocus();
+  setTimeout(()=>$("#promoOverlay .modal").focus(),30);
+  trackEvent("promo_view");
+  startPromoProofs()
+}
+function scheduleHelper(){
+  // La activación real se ejecuta con activateIdleOfferCards()
+  // exactamente a los 60 s. Se conserva esta función para compatibilidad.
+}
+
+
+// Cualquier pulsación real sobre controles cuenta como interacción.
+// El scroll por sí solo NO cuenta, para conservar la lógica de usuario indeciso.
+document.addEventListener("pointerdown",e=>{
+  const interactive=e.target.closest("button,a,input,summary,.route,.unit-link");
+  if(!interactive)return;
+
+  state.anyInteraction=true;
+  state.idleOfferActive=false;
+  state.idleOfferQueue=[];
+  hideHelper();
+
+  if(interactive.id!=="promoAccept"&&interactive.id!=="promoDecline"){
+    clearMainSocialStage();
+  }
+},{capture:true});
+
+
+let lastFocused=null;
+function rememberFocus(){lastFocused=document.activeElement instanceof HTMLElement?document.activeElement:null}
+function restoreFocus(){if(lastFocused&&document.contains(lastFocused))setTimeout(()=>lastFocused.focus(),20)}
+function closeGuideDialog(){
+  $("#guideOverlay").classList.remove("show");$("#guideOverlay").setAttribute("aria-hidden","true");restoreFocus();
+}
+function closePromoDialog(){
+  stopPromoProofs();$("#promoOverlay").classList.remove("show");$("#promoOverlay").setAttribute("aria-hidden","true");restoreFocus();
+}
+document.addEventListener("keydown",e=>{
+  if(e.key!=="Escape")return;
+  if($("#booking").classList.contains("open")){closeBooking();return}
+  if($("#promoOverlay").classList.contains("show")){closePromoDialog();return}
+  if($("#guideOverlay").classList.contains("show")){closeGuideDialog();return}
+  if($("#navMenu").classList.contains("show")){$("#navMenu").classList.remove("show");$("#menuBtn").setAttribute("aria-expanded","false");$("#menuBtn").focus()}
+});
+
+// MENÚ SUPERIOR
+$("#menuBtn").onclick=e=>{e.stopPropagation();const open=$("#navMenu").classList.toggle("show");$("#menuBtn").setAttribute("aria-expanded",String(open))};
+$("#menuBook").onclick=()=>{$("#navMenu").classList.remove("show");openBooking()};
+$("#menuServices").onclick=()=>{$("#navMenu").classList.remove("show");$("#unidades").scrollIntoView({behavior:"smooth"})};
+$("#menuFaq").onclick=()=>{$("#navMenu").classList.remove("show");$("#faq").scrollIntoView({behavior:"smooth"})};
+document.addEventListener("click",e=>{if(!$("#navMenu").contains(e.target)&&e.target!==$("#menuBtn")){ $("#navMenu").classList.remove("show");$("#menuBtn").setAttribute("aria-expanded","false") }});
+
+// BOTONES / EVENTOS
+$("#heroBook").onclick=()=>openBooking();
+$("#heroWhatsApp").onclick=()=>trackEvent("whatsapp_click",{source:"hero"});
+$("#footerWhatsApp").onclick=()=>trackEvent("whatsapp_click",{source:"footer"});
+$("#footerBook").onclick=e=>{e.preventDefault();openBooking()};
+$("#floatingBook").onclick=()=>openBooking();
+$("#pendingBtn").onclick=resume;
+$("#routeDirect").onclick=()=>openBooking();
+$("#routeExplore").onclick=()=>$("#unidades").scrollIntoView({behavior:"smooth"});
+$("#helperOpen").onclick=showGuide;
+$("#helperBackdrop").onclick=()=>{
+  state.anyInteraction=true;
+  state.idleOfferActive=false;
+  state.idleOfferQueue=[];
+  hideHelper();
+};
+
+$$('[data-service]').forEach(b=>b.onclick=()=>openBooking(b.dataset.service));
+$$('[data-guide]').forEach(b=>b.onclick=()=>{
+  $("#guideOverlay").classList.remove("show");
+  openBooking(b.dataset.guide)
+});
+$("#closeGuide").onclick=closeGuideDialog;
+$("#guideOverlay").onclick=e=>{if(e.target===e.currentTarget)closeGuideDialog()};
+
+$("#closeBooking").onclick=closeBooking;
+$("#closeFrom1").onclick=closeBooking;
+$("#backTo1").onclick=()=>go(1);
+$("#backTo2").onclick=()=>go(2);
+$("#backTo3").onclick=()=>go(3);
+$("#toStep2").onclick=()=>state.service&&go(2);
+$("#toStep3").onclick=()=>state.date&&state.time&&go(3);
+$("#toStep4").onclick=()=>!$("#toStep4").disabled&&go(4);
+$("#sendBooking").onclick=sendWA;
+$("#finishBooking").onclick=closeBooking;
+
+$("#serviceSearch").addEventListener("input",renderServices);
+$("#serviceSearch").addEventListener("focus",()=>{
+  markScheduleInteraction();
+  setTimeout(()=>$(".search-row").scrollIntoView({behavior:"smooth",block:"start"}),180)
+});
+$("#sortBtn").onclick=()=>{
+  markScheduleInteraction();
+  state.sort=state.sort==="az"?"za":"az";
+  $("#sortBtn").textContent=state.sort==="az"?"A→Z":"Z→A";
+  renderServices()
+};
+$("#prevMonth").onclick=()=>{markScheduleInteraction();state.month=new Date(state.month.getFullYear(),state.month.getMonth()-1,1);renderCalendar()};
+$("#nextMonth").onclick=()=>{markScheduleInteraction();state.month=new Date(state.month.getFullYear(),state.month.getMonth()+1,1);renderCalendar()};
+$("#clientName").addEventListener("input",validate);
+$("#clientPhone").addEventListener("input",validate);
+
+$("#promoAccept").onclick=()=>{
+  markScheduleInteraction();
+  stopPromoProofs();
+  $("#promoOverlay").classList.remove("show");
+  $("#promoOverlay").setAttribute("aria-hidden","true");
+  restoreFocus();
+  trackEvent("promo_click");
+  openBooking()
+};
+$("#promoDecline").onclick=closePromoDialog;
+$("#promoOverlay").onclick=e=>{
+  if(e.target===e.currentTarget)closePromoDialog()
+};
+
+// El CTA flotante solo aparece después de salir del HERO.
