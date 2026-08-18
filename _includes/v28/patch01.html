@@ -2,6 +2,67 @@
 const dolorService=SERVICES.find(x=>x.id==="dolor");
 if(dolorService)dolorService.price="Según evaluación";
 
+// Presentation-only social proof.
+// It is intentionally disabled on the public root and enabled only with ?preview=1.
+// Preview mode is also marked noindex/nofollow and excluded from external tracking.
+const OLANO_PREVIEW=new URLSearchParams(location.search).get("preview")==="1";
+if(OLANO_PREVIEW){
+  const robots=document.querySelector('meta[name="robots"]');
+  if(robots)robots.setAttribute("content","noindex,nofollow,noarchive");
+  TRACKING.ga4MeasurementId="";
+  TRACKING.metaPixelId="";
+
+  SOCIAL_REVIEWS.push(
+    {name:"María Fernanda R.",text:"Me gustó mucho la atención y la explicación antes de mi tratamiento facial."},
+    {name:"Andrea C.",text:"La evaluación fue clara, ordenada y me ayudó a decidir con tranquilidad."},
+    {name:"Lucía P.",text:"Me atendieron con paciencia y resolvieron todas mis dudas sobre el procedimiento."},
+    {name:"Carolina M.",text:"El proceso para solicitar mi cita fue rápido y la atención se sintió muy personalizada."},
+    {name:"Valeria S.",text:"Me explicaron cada paso antes de empezar y eso me dio mucha confianza."},
+    {name:"Rosa Elena T.",text:"Tuve una buena experiencia en mi consulta y sentí un trato muy cuidadoso."},
+    {name:"Daniela V.",text:"La orientación sobre medicina estética fue sencilla de entender y sin apuros."},
+    {name:"Patricia G.",text:"Me gustó que primero evaluaran mi caso y luego me explicaran las alternativas."},
+    {name:"Fiorella A.",text:"La atención fue amable y pude preguntar todo lo que necesitaba antes del tratamiento."},
+    {name:"Claudia N.",text:"Mi consulta fue puntual y sentí que revisaron mis necesidades con bastante detalle."},
+    {name:"Mónica L.",text:"La explicación del tratamiento facial fue completa y me sentí acompañada durante el proceso."},
+    {name:"Gabriela H.",text:"Me pareció muy práctico poder elegir servicio, fecha y hora desde el celular."},
+    {name:"Alejandra B.",text:"Recibí una orientación clara sobre las opciones disponibles antes de tomar una decisión."},
+    {name:"Sandra J.",text:"La atención fue cordial y el procedimiento se explicó de forma sencilla."},
+    {name:"Katherine D.",text:"Me gustó el enfoque de evaluación previa y que no apresuraran la decisión."},
+    {name:"Paola E.",text:"Tuve una experiencia agradable y una explicación bastante detallada del servicio."},
+    {name:"Milagros Q.",text:"La consulta me ayudó a entender mejor qué opción podía ser adecuada para mí."},
+    {name:"Natalia F.",text:"Todo el proceso se sintió organizado, desde la solicitud de cita hasta la orientación."},
+    {name:"Jimena O.",text:"Me atendieron con mucha amabilidad y respondieron mis preguntas con claridad."},
+    {name:"Cecilia R.",text:"La evaluación fue profesional y agradecí que explicaran primero antes de realizar cualquier procedimiento."}
+  );
+
+  SOCIAL_OFFER_PAST.push(
+    {name:"María Fernanda R.",text:"Qué bueno que aproveché la oferta; pude avanzar con mi solicitud sin complicarme."},
+    {name:"Andrea C.",text:"Me alegró haber aprovechado la oferta cuando apareció."},
+    {name:"Lucía P.",text:"Qué bueno que presioné el botón antes de que terminara el tiempo."},
+    {name:"Carolina M.",text:"Aproveché la oferta y me resultó muy fácil continuar al agendamiento."},
+    {name:"Valeria S.",text:"Me gustó haber aprovechado la oportunidad justo cuando estaba decidiendo."},
+    {name:"Rosa Elena T.",text:"Qué bueno que no dejé pasar la oferta y continué con mi solicitud."},
+    {name:"Daniela V.",text:"Vi la oferta, la aproveché y pude elegir mi cita rápidamente."},
+    {name:"Patricia G.",text:"Me alegró haber usado la oferta antes de que finalizara el contador."},
+    {name:"Fiorella A.",text:"Qué bueno que aproveché la oferta mientras revisaba los servicios."},
+    {name:"Claudia N.",text:"Aproveché la oferta y seguí el proceso de agendamiento en ese momento."},
+    {name:"Mónica L.",text:"Me pareció una buena oportunidad y decidí aprovecharla antes de que terminara."},
+    {name:"Gabriela H.",text:"Qué bueno que la aproveché; el paso al agendamiento fue directo."},
+    {name:"Alejandra B.",text:"Me alegró haber continuado con la oferta cuando todavía estaba disponible."},
+    {name:"Sandra J.",text:"Aproveché la oferta y terminé de elegir el servicio que quería consultar."},
+    {name:"Katherine D.",text:"Qué bueno que no la dejé pasar y avancé con la solicitud de cita."},
+    {name:"Paola E.",text:"Me gustó haber aprovechado la oferta mientras comparaba las opciones."},
+    {name:"Milagros Q.",text:"Vi el contador y decidí aprovechar la oferta antes de que terminara."},
+    {name:"Natalia F.",text:"Qué bueno que elegí la oferta; pude continuar sin salir de la página."},
+    {name:"Jimena O.",text:"Me alegró haberla aprovechado justo antes de seguir con el agendamiento."},
+    {name:"Cecilia R.",text:"Aproveché la oferta y luego continué tranquilamente con mi solicitud."}
+  );
+}
+
+// Use the generated lightweight intro poster before playback starts.
+const introVideoPoster=document.querySelector("#introVideo");
+if(introVideoPoster)introVideoPoster.poster="assets/intro-poster.jpg?v=16";
+
 // Preserve lazy-loading when optimized assets become available.
 upgradeOptimizedMedia=function(){
   const swap=img=>{
@@ -31,6 +92,18 @@ initTracking=function(){
   initTrackingBase();
 };
 initTracking();
+
+// When the 60 s inactivity helper replaces an open promo, normalize accessibility state
+// and move focus to the helper instead of leaving focus inside a hidden modal.
+const activateIdleOfferCardsBase=activateIdleOfferCards;
+activateIdleOfferCards=function(){
+  const promoWasOpen=document.querySelector("#promoOverlay")?.classList.contains("show");
+  activateIdleOfferCardsBase();
+  if(promoWasOpen&&!document.querySelector("#promoOverlay")?.classList.contains("show")){
+    document.querySelector("#promoOverlay")?.setAttribute("aria-hidden","true");
+    setTimeout(()=>document.querySelector("#helperOpen")?.focus(),30);
+  }
+};
 
 // Visible access to the factual privacy notice.
 const footerNote=document.querySelector('.footer-note');
