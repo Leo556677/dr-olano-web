@@ -1,0 +1,235 @@
+<!doctype html>
+<!-- OLANO MEDIC BUILD V2.8 PRODUCTION 2026-08-18 -->
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Dr. Olano | Medicina Estética y Atención Médica en Carabayllo</title>
+<meta name="olano-build" content="V2.8-PRODUCTION">
+<meta name="description" content="Agenda tu consulta con Dr. Olano en Carabayllo. Medicina estética, manejo del dolor y metabolismo. Elige servicio, fecha y horario; confirmamos por WhatsApp.">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta name="theme-color" content="#0b2e4f">
+<link rel="canonical" href="https://leo556677.github.io/dr-olano-web/">
+<link rel="icon" type="image/png" href="assets/logo-isotipo.png?v=16">
+<link rel="apple-touch-icon" href="assets/logo-isotipo.png?v=16">
+<meta property="og:locale" content="es_PE">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Olano Medic">
+<meta property="og:title" content="Dr. Olano | Medicina Estética y Atención Médica en Carabayllo">
+<meta property="og:description" content="Elige servicio, fecha y horario para solicitar tu cita. Confirmación final por WhatsApp.">
+<meta property="og:url" content="https://leo556677.github.io/dr-olano-web/">
+<meta property="og:image" content="https://leo556677.github.io/dr-olano-web/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Dr. Olano | Olano Medic">
+<meta name="twitter:description" content="Medicina estética, manejo del dolor y metabolismo en Carabayllo. Solicita tu cita online.">
+<meta name="twitter:image" content="https://leo556677.github.io/dr-olano-web/og-image.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"MedicalClinic",
+  "@id":"https://leo556677.github.io/dr-olano-web/#clinic",
+  "name":"Olano Medic",
+  "url":"https://leo556677.github.io/dr-olano-web/",
+  "logo":"https://leo556677.github.io/dr-olano-web/assets/logo-isotipo-128.png",
+  "image":"https://leo556677.github.io/dr-olano-web/og-image.png",
+  "telephone":"+51981214007",
+  "address":{
+    "@type":"PostalAddress",
+    "addressLocality":"Carabayllo",
+    "addressRegion":"Lima",
+    "addressCountry":"PE"
+  },
+  "areaServed":{"@type":"City","name":"Carabayllo"},
+  "openingHoursSpecification":[{
+    "@type":"OpeningHoursSpecification",
+    "dayOfWeek":["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+    "opens":"09:00",
+    "closes":"21:00"
+  }]
+}
+</script>
+<style>
+:root{
+  --navy:#0b2e4f;--navy2:#061d33;--teal:#1aa79d;--teal2:#0f827a;
+  --bg:#f4f7f8;--white:#fff;--muted:#65737d;--line:#dce6e9;
+  --green:#1e9f64;--orange:#ec9b2d;--red:#d64e48;--gold:#d7ab33;
+  --shadow:0 18px 48px -28px rgba(7,30,54,.34);--promoH:0px
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--navy);font-family:"Public Sans",sans-serif;line-height:1.4;padding-bottom:92px}
+body.promo-on{--promoH:24px}
+button,input{font:inherit}
+button{cursor:pointer}
+a{text-decoration:none;color:inherit}
+img{display:block;max-width:100%}
+svg{display:block}
+.wrap{width:min(calc(100% - 28px),1120px);margin:auto}
+.icon{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+
+body.intro-active{overflow:hidden}
+.intro-loader{
+  position:fixed;
+  z-index:9999;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#061d33;
+  opacity:1;
+  visibility:visible;
+  transition:opacity .55s ease,visibility .55s ease;
+  animation:introFailsafe 10s forwards
+}
+@keyframes introFailsafe{0%,88%{opacity:1;visibility:visible}100%{opacity:0;visibility:hidden;pointer-events:none}}
+.intro-loader.hide{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none
+}
+.intro-video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  background:#061d33
+}
+.intro-fallback{
+  display:none;
+  position:absolute;
+  inset:0;
+  place-items:center;
+  color:#fff;
+  background:
+    radial-gradient(circle at 50% 40%,rgba(26,167,157,.22),transparent 38%),
+    #061d33
+}
+.intro-fallback.show{display:grid}
+.intro-fallback img{
+  width:88px;
+  height:88px;
+  object-fit:contain;
+  filter:drop-shadow(0 10px 24px rgba(0,0,0,.28));
+  animation:pulse 1.1s ease-in-out infinite
+}
+@media(min-width:760px){
+  .intro-video{object-fit:contain}
+}
+
+
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+@keyframes pendingPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 0 rgba(11,46,79,.26)}50%{transform:scale(1.045);box-shadow:0 0 0 10px rgba(11,46,79,0)}}
+@keyframes selectedPulse{
+  0%{transform:scale(1);box-shadow:0 0 0 0 rgba(26,167,157,.0)}
+  22%{transform:scale(1.025);box-shadow:0 0 0 7px rgba(26,167,157,.18)}
+  52%{transform:scale(.992);box-shadow:0 0 0 1px rgba(26,167,157,.85)}
+  78%{transform:scale(1.02);box-shadow:0 0 0 10px rgba(26,167,157,.08)}
+  100%{transform:scale(1);box-shadow:0 0 0 0 rgba(26,167,157,0)}
+}
+@keyframes promoShine{0%{transform:translateX(-120%)}100%{transform:translateX(220%)}}
+@keyframes promoStripes{to{background-position:24px 0}}
+@keyframes heroZoom{0%{transform:scale(1.00) translate3d(0,0,0)}100%{transform:scale(1.08) translate3d(0,1.5%,0)}}
+@keyframes esteticaMove{0%{transform:scale(1.02) translate3d(-1%,0,0)}100%{transform:scale(1.12) translate3d(2.5%,1%,0)}}
+@keyframes dolorMove{0%{transform:scale(1.03) translate3d(0,-1.5%,0)}100%{transform:scale(1.11) translate3d(-1.5%,2%,0)}}
+@keyframes metabolismoMove{0%{transform:scale(1.02) translate3d(1.5%,1%,0)}100%{transform:scale(1.10) translate3d(-2%,0,0)}}
+@keyframes promoMove{0%{transform:scale(1.02)}50%{transform:scale(1.10) translate3d(-1%,1%,0)}100%{transform:scale(1.05) translate3d(1%,0,0)}}
+@keyframes helperIn{0%{opacity:0;transform:translateY(18px) scale(.96)}100%{opacity:1;transform:none}}
+.pulse{animation:pulse 1.1s infinite}
+
+@keyframes ctaShine{
+  0%{transform:translateX(-140%) skewX(-18deg)}
+  100%{transform:translateX(420%) skewX(-18deg)}
+}
+.dock #floatingBook{
+  position:relative;
+  overflow:hidden;
+  isolation:isolate
+}
+.dock #floatingBook:after{
+  content:"";
+  position:absolute;
+  z-index:2;
+  top:-25%;
+  bottom:-25%;
+  left:-28%;
+  width:22%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),rgba(255,255,255,.88),rgba(255,255,255,.18),transparent);
+  filter:blur(.2px);
+  pointer-events:none;
+  animation:ctaShine 1.65s linear infinite
+}
+.dock #floatingBook>*{
+  position:relative;
+  z-index:3
+}
+
+
+.promo-count{display:none;position:fixed;z-index:200;left:0;right:0;top:0;height:24px;background:#e9eef0;overflow:hidden}
+.promo-count.show{display:block}
+.promo-fill{
+  position:absolute;inset:0 auto 0 0;width:100%;background:var(--green);
+  transition:width .38s linear,background .25s;overflow:hidden
+}
+.promo-fill:before{
+  content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(125deg,rgba(255,255,255,.20) 0 8px,rgba(255,255,255,.02) 8px 16px);
+  background-size:24px 24px;animation:promoStripes .8s linear infinite
+}
+.promo-fill:after{
+  content:"";position:absolute;top:0;bottom:0;width:70px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.65),transparent);
+  animation:promoShine 1.25s linear infinite
+}
+.promo-text{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:.7rem;font-weight:900;letter-spacing:.025em;-webkit-text-stroke:.55px rgba(0,0,0,.92);paint-order:stroke fill;text-shadow:0 1px 2px #000,0 0 3px #000,0 0 6px rgba(0,0,0,.72)}
+
+.top{position:sticky;top:var(--promoH);z-index:70;background:rgba(244,247,248,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.nav{height:70px;display:flex;align-items:center;justify-content:space-between}
+.brand-lockup{display:flex;align-items:center;gap:9px}.brand-logo{width:58px;height:58px;object-fit:contain}.brand-name{font:700 1.08rem "Fraunces",serif;color:var(--navy);letter-spacing:.01em;white-space:nowrap}
+.menu{width:46px;height:46px;border:0;background:transparent;color:var(--navy);display:grid;place-items:center;border-radius:50%}
+
+.nav-menu{display:none;position:absolute;z-index:75;right:14px;top:64px;width:min(260px,calc(100vw - 28px));background:#fff;border:1px solid var(--line);border-radius:18px;padding:8px;box-shadow:0 20px 50px -20px rgba(0,20,40,.38)}
+.nav-menu.show{display:grid;gap:6px}
+.nav-menu button{border:0;background:#f7fafb;border-radius:13px;padding:11px 12px;display:flex;align-items:center;gap:9px;color:var(--navy);font-weight:800;text-align:left}
+.nav-menu button:hover{background:#eef7f6}
+.hero{padding:15px 0 12px}
+.hero-card{background:#fff;border:1px solid var(--line);border-radius:28px;overflow:hidden;box-shadow:var(--shadow)}
+.hero-copy{padding:21px 20px 17px;background:radial-gradient(circle at 0 0,#1aa79d1b,transparent 36%),radial-gradient(circle at 100% 100%,#c9a22718,transparent 32%)}
+.eyebrow{display:inline-flex;gap:7px;align-items:center;background:#1aa79d12;color:var(--teal2);padding:8px 11px;border-radius:999px;font-size:.69rem;font-weight:800;text-transform:uppercase;letter-spacing:.07em}
+.hero h1{font:700 clamp(2rem,9.7vw,3.6rem)/1.03 "Fraunces",serif;margin:14px 0 9px}
+.hero p{margin:0 0 16px;color:var(--muted);font-size:.95rem}
+.hero-actions{display:grid;gap:8px}
+.btn{min-height:54px;border:0;border-radius:999px;padding:13px 18px;display:flex;align-items:center;justify-content:center;gap:9px;font-weight:800}
+.btn-primary{background:var(--teal);color:#fff;box-shadow:0 12px 26px -16px #1aa79ddd}
+.trust{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:13px}
+.trust div{border:1px solid var(--line);background:#fff;border-radius:15px;padding:9px 5px;text-align:center}
+.trust b{display:block;font-size:.84rem}
+.trust span{display:block;font-size:.65rem;color:var(--muted);margin-top:2px}
+
+.hero-media{height:315px;position:relative;overflow:hidden;background:#e7f1f2}
+.hero-media img{width:100%;height:100%;object-fit:cover;object-position:center 28%;animation:heroZoom 9.23s ease-in-out infinite alternate;will-change:transform}
+.hero-media:after{content:"";position:absolute;left:0;right:0;bottom:0;height:32%;background:linear-gradient(transparent,rgba(4,24,40,.62));pointer-events:none}
+.hero-caption{position:absolute;z-index:1;left:16px;right:16px;bottom:15px;color:#fff}
+.hero-caption b{display:block;font-size:1rem}
+.hero-caption span{display:block;font-size:.75rem;color:#e2edf2;margin-top:3px}
+
+.block{padding:16px 0}
+.section-head{margin-bottom:12px}
+.section-head h2{font:700 1.72rem/1.08 "Fraunces",serif;margin:0 0 5px}
+.section-head p{margin:0;color:var(--muted);font-size:.88rem}
+.routes{display:grid;gap:10px}
+.route{display:grid;grid-template-columns:42px 1fr auto;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:18px;padding:13px;box-shadow:var(--shadow)}
+.route-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:#1aa79d12;color:var(--teal2)}
+.route b{display:block;font-size:.9rem}
+.route small{display:block;color:var(--muted);font-size:.74rem;margin-top:2px}
+.route-arrow{color:var(--teal2)}
+
+.units{display:grid;gap:12px}
+.unit{overflow:hidden;background:#fff;border:1px solid var(--line);border-radius:21px;box-shadow:var(--shadow)}
+.unit-media{height:225px;overflow:hidden;background:#e7f1f2}
+.unit-media img{width:100%;height:100%;object-fit:cover;will-change:transform}
+.unit.estetica .unit-media img{object-position:center 25%;animation:esteticaMove 6.92s ease-in-out infinite alternate}
+.unit.dolor .unit-media img{object-position:center 27%;animation:dolorMove 8.08s ease-in-out infinite alternate}
