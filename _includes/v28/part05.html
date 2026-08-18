@@ -1,0 +1,259 @@
+  // No enviamos servicio, diagnóstico, nombre, teléfono ni datos médicos a trackers.
+  for(const [k,v] of Object.entries(params||{})){
+    if(["service","serviceId","serviceName","name","phone","condition","diagnosis"].includes(k))continue;
+    if(["string","number","boolean"].includes(typeof v))clean[k]=v;
+  }
+  window.dataLayer.push({event,...clean});
+  try{
+    const log=JSON.parse(sessionStorage.getItem("olanoEventLog")||"[]");
+    log.push({event,ts:Date.now(),...clean});
+    sessionStorage.setItem("olanoEventLog",JSON.stringify(log.slice(-100)));
+  }catch{}
+  if(typeof window.gtag==="function")window.gtag("event",event,clean);
+  if(typeof window.fbq==="function")window.fbq("trackCustom",event,clean);
+}
+function upgradeOptimizedMedia(){
+  document.querySelectorAll("img[data-optimized]").forEach(img=>{
+    const candidate=img.dataset.optimized;
+    if(!candidate)return;
+    const probe=new Image();
+    probe.onload=()=>{img.src=candidate};
+    probe.src=candidate;
+  });
+}
+
+function initTracking(){
+  if(TRACKING.ga4MeasurementId){
+    const g=document.createElement("script");g.async=true;g.src=`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(TRACKING.ga4MeasurementId)}`;document.head.appendChild(g);
+    window.gtag=function(){window.dataLayer.push(arguments)};gtag("js",new Date());gtag("config",TRACKING.ga4MeasurementId,{anonymize_ip:true});
+  }
+  if(TRACKING.metaPixelId){
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,"script","https://connect.facebook.net/en_US/fbevents.js");
+    fbq("init",TRACKING.metaPixelId);fbq("track","PageView");
+  }
+}
+
+const state={
+  step:1,service:null,date:null,time:null,name:"",phone:"",
+  month:new Date(new Date().getFullYear(),new Date().getMonth(),1),
+  sort:"az",id:null,url:null,
+  heroOut:false,scheduleInteracted:false,anyInteraction:false,
+
+  // Reseñas generales: loop infinito aleatorio.
+  socialLoopStarted:false,socialTimer:null,lastReviewIndex:-1,
+
+  // Usuario indeciso: 20 tarjetas de oferta en pasado.
+  idleOfferActive:false,idleOfferQueue:[],
+
+  // Tarjetas dentro de la oferta.
+  promoProofTimeout:null,promoProofTimer:null,promoOfferQueue:[],
+
+  helperShown:false
+};
+const norm=s=>(s||"").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+const icon=id=>`<svg class="icon"><use href="#${id}"/></svg>`;
+function iso(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
+function fromIso(s){let[y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)}
+function fmt(d){return new Intl.DateTimeFormat("es-PE",{weekday:"long",day:"numeric",month:"long",year:"numeric"}).format(d)}
+function makeId(){return "DO-"+Date.now().toString(36).slice(-6).toUpperCase()}
+function setPrimary(btn,on){btn.disabled=!on;btn.classList.toggle("pulse",on)}
+function draft(){
+  try{
+    const d=JSON.parse(localStorage.getItem("olanoDraft")||"null");
+    if(!d)return null;
+    const created=Number(d.createdAt||0);
+    if(!created||Date.now()-created>CONFIG.draftMaxAgeMs){localStorage.removeItem("olanoDraft");return null}
+    if(d.date){const chosen=fromIso(d.date);chosen.setHours(23,59,59,999);if(chosen<Date.now()){localStorage.removeItem("olanoDraft");return null}}
+    return d;
+  }catch{localStorage.removeItem("olanoDraft");return null}
+}
+function hasDraft(){
+  const d=draft();
+  return !!(d&&(d.serviceId||d.date||d.name||d.id))
+}
+function saveDraft(status="draft"){
+  const previous=draft();
+  const d={status,createdAt:previous?.createdAt||Date.now(),serviceId:state.service?.id||"",date:state.date||"",time:state.time||"",name:$("#clientName")?.value||state.name||"",phone:$("#clientPhone")?.value||state.phone||"",id:state.id||"",url:state.url||""};
+  if(d.serviceId||d.date||d.name||d.id){localStorage.setItem("olanoDraft",JSON.stringify(d));if(!previous)trackEvent("draft_created")}
+  updateDock()
+}
+function updateDock(){
+  const pending=hasDraft();
+  $("#dock").classList.toggle("has-draft",pending);
+  $("#dock").classList.toggle("show-cta",state.heroOut);
+
+  // Reserva dinámica de espacio para que las reseñas nunca tapen
+  // AGENDAR CITA ni CITA PENDIENTE.
+  const stage=$("#mainSocialStage");
+  if(stage)stage.classList.toggle("reserve-dock",state.heroOut||pending);
+}
+function markScheduleInteraction(){
+  state.scheduleInteracted=true;
+  state.anyInteraction=true;
+  state.idleOfferActive=false;
+  hideHelper();
+  clearMainSocialStage();
+}
+function openBooking(serviceId="",options={}){
+  markScheduleInteraction();
+  const hasPref=!!serviceId;
+  if(hasPref)state.service=SERVICES.find(x=>x.id===serviceId)||state.service;
+  $("#booking").classList.add("open");
+  $("#booking").setAttribute("aria-hidden","false");
+  document.body.classList.add("booking-open");
+  rememberFocus();
+  setTimeout(()=>$("#booking").focus(),30);
+  trackEvent("booking_open");
+  go(1);
+
+  // Si se entra desde otra parte de la landing con un servicio concreto:
+  // se borra cualquier búsqueda vieja, se muestra la lista completa y se enfoca el servicio.
+  if(hasPref){
+    $("#serviceSearch").value="";
+    renderServices();
+    setTimeout(()=>focusSelectedService(serviceId),120)
+  }else{
+    renderServices()
+  }
+}
+function focusSelectedService(serviceId){
+  const target=document.querySelector(`[data-svc="${serviceId}"]`);
+  if(!target)return;
+  target.scrollIntoView({behavior:"smooth",block:"center"});
+  target.classList.remove("focus-pulse");
+  void target.offsetWidth;
+  target.classList.add("focus-pulse");
+  setTimeout(()=>target.classList.remove("focus-pulse"),2800)
+}
+function closeBooking(){
+  saveDraft(state.id?"sent":"draft");
+  $("#booking").classList.remove("open");
+  $("#booking").setAttribute("aria-hidden","true");
+  document.body.classList.remove("booking-open");
+  restoreFocus();
+  updateDock()
+}
+function go(n){
+  state.step=n;
+  $$(".step").forEach(s=>s.classList.toggle("active",+s.dataset.step===n));
+  $("#progressBar").style.width=(n*25)+"%";
+  if(n===2)renderCalendar();
+  if(n===4)renderSummary();
+  $("#booking").scrollTo({top:0,behavior:"instant"})
+}
+function renderServices(){
+  let list=[...SERVICES],q=norm($("#serviceSearch").value.trim());
+  if(q)list=list.filter(x=>norm(`${x.name} ${x.unit} ${x.price}`).includes(q));
+  list.sort((a,b)=>state.sort==="az"?a.name.localeCompare(b.name,"es"):b.name.localeCompare(a.name,"es"));
+  $("#serviceList").innerHTML=list.map(x=>`<button class="svc ${state.service?.id===x.id?"active":""}" data-svc="${x.id}"><div><b>${x.name}</b><small>${x.unit} · ${x.price}</small></div>${icon("i-arrow")}</button>`).join("");
+  $$("[data-svc]").forEach(b=>b.onclick=()=>{
+    markScheduleInteraction();
+    state.service=SERVICES.find(x=>x.id===b.dataset.svc);
+    trackEvent("service_selected");
+    renderServices();
+    setPrimary($("#toStep2"),true);
+    saveDraft()
+  });
+  setPrimary($("#toStep2"),!!state.service)
+}
+function renderCalendar(){
+  let m=state.month,days=$("#calendarDays"),today=new Date();today.setHours(0,0,0,0);
+  let max=new Date(today);max.setDate(max.getDate()+CONFIG.maxDays);
+  $("#monthTitle").textContent=new Intl.DateTimeFormat("es-PE",{month:"long",year:"numeric"}).format(m);
+  days.innerHTML="";
+  let first=new Date(m.getFullYear(),m.getMonth(),1),last=new Date(m.getFullYear(),m.getMonth()+1,0);
+  for(let i=0;i<first.getDay();i++)days.insertAdjacentHTML("beforeend","<span></span>");
+  for(let d=1;d<=last.getDate();d++){
+    let dt=new Date(m.getFullYear(),m.getMonth(),d),key=iso(dt),off=dt<today||dt>max||dt.getDay()===0;
+    days.insertAdjacentHTML("beforeend",`<button class="day ${state.date===key?"selected":""}" data-day="${key}" ${off?"disabled":""}>${d}</button>`)
+  }
+  $$("[data-day]").forEach(b=>b.onclick=()=>{
+    markScheduleInteraction();
+    state.date=b.dataset.day;state.time="";
+    trackEvent("date_selected");
+    renderCalendar();renderTimes();saveDraft();
+    setTimeout(()=>$("#timesWrap").scrollIntoView({behavior:"smooth",block:"start"}),120)
+  });
+  renderTimes();setPrimary($("#toStep3"),!!(state.date&&state.time))
+}
+function renderTimes(){
+  let box=$("#times");box.innerHTML="";if(!state.date)return;
+  for(let m=CONFIG.open*60;m<CONFIG.close*60;m+=CONFIG.slot){
+    let t=`${String(Math.floor(m/60)).padStart(2,"0")}:${String(m%60).padStart(2,"0")}`;
+    box.insertAdjacentHTML("beforeend",`<button class="time ${state.time===t?"selected":""}" data-time="${t}">${t}</button>`)
+  }
+  $$("[data-time]").forEach(b=>b.onclick=()=>{
+    markScheduleInteraction();
+    state.time=b.dataset.time;trackEvent("time_selected");renderTimes();setPrimary($("#toStep3"),true);saveDraft();
+    setTimeout(()=>$("#toStep3").scrollIntoView({behavior:"smooth",block:"center"}),120)
+  })
+}
+function validate(){
+  state.name=$("#clientName").value.trim();
+  state.phone=$("#clientPhone").value.replace(/\s+/g,"");
+  if(state.name||state.phone)markScheduleInteraction();
+  setPrimary($("#toStep4"),state.name.length>=3&&state.phone.length>=7);
+  saveDraft()
+}
+function renderSummary(){
+  trackEvent("booking_review");
+  $("#summary").innerHTML=`<div class="summary-row"><span class="summary-key">${icon("i-service")}Servicio</span><b>${state.service.name}</b></div><div class="summary-row"><span class="summary-key">${icon("i-user")}Nombre</span><b>${state.name}</b></div><div class="summary-row"><span class="summary-key">${icon("i-calendar")}Fecha</span><b>${fmt(fromIso(state.date))}</b></div><div class="summary-row"><span class="summary-key">${icon("i-clock")}Hora</span><b>${state.time}</b></div><div class="summary-row"><span class="summary-key">${icon("i-check")}Estado</span><b>Pendiente de confirmación</b></div>`
+}
+function sendWA(){
+  markScheduleInteraction();
+  trackEvent("whatsapp_click",{source:"booking"});
+  state.id=makeId();
+  const msg=[`Hola, deseo solicitar una cita desde la web.`,``,`*Código:* ${state.id}`,`*Nombre:* ${state.name}`,`*Servicio:* ${state.service.name}`,`*Fecha:* ${fmt(fromIso(state.date))}`,`*Hora:* ${state.time}`,`*Estado:* Pendiente de confirmación`].join("\n");
+  state.url=`https://wa.me/${CONFIG.phone}?text=${encodeURIComponent(msg)}`;
+  $("#bookingCode").textContent=state.id;
+  $("#openWhatsApp").href=state.url;
+  saveDraft("sent");
+  go(5);
+  setTimeout(()=>location.href=state.url,140)
+}
+function resume(){
+  markScheduleInteraction();
+  trackEvent("draft_resumed");
+  let d=draft();if(!d)return;
+  state.service=d.serviceId?SERVICES.find(x=>x.id===d.serviceId):null;
+  state.date=d.date||"";state.time=d.time||"";state.id=d.id||null;state.url=d.url||null;
+  openBooking();
+  setTimeout(()=>{
+    $("#clientName").value=d.name||"";$("#clientPhone").value=d.phone||"";
+    state.name=d.name||"";state.phone=d.phone||"";
+    if(d.status==="sent"&&d.id){
+      $("#bookingCode").textContent=d.id;if(d.url)$("#openWhatsApp").href=d.url;go(5)
+    }else if(d.time){
+      go(4);renderSummary()
+    }else if(d.date){
+      go(2)
+    }else if(d.serviceId){
+      go(1);renderServices();setTimeout(()=>focusSelectedService(d.serviceId),100)
+    }
+    validate()
+  },80)
+}
+function showHelper(){
+  if(state.anyInteraction||state.scheduleInteracted||hasDraft())return;
+  state.helperShown=true;
+  $("#helperBackdrop").classList.add("show");
+  $("#helperCard").classList.add("show");
+}
+function hideHelper(){
+  state.helperShown=false;
+  $("#helperBackdrop").classList.remove("show");
+  $("#helperCard").classList.remove("show");
+}
+function showGuide(){
+  markScheduleInteraction();
+  hideHelper();
+  $("#guideOverlay").classList.add("show");
+  $("#guideOverlay").setAttribute("aria-hidden","false");
+  rememberFocus();
+  setTimeout(()=>$("#guideOverlay .modal").focus(),30);
+}
+
+function clearMainSocialStage(){
+  const stage=$("#mainSocialStage");
+  if(stage)stage.innerHTML="";
+}
