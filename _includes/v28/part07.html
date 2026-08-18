@@ -1,0 +1,66 @@
+// La burbuja "Cita pendiente" aparece desde el inicio si existe un borrador, aunque no haya scroll.
+new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    state.heroOut=!e.isIntersecting;
+    updateDock()
+  })
+},{threshold:.35}).observe($("#heroActions"));
+
+
+function renderVerifiedBusinessFields(){
+  // Secciones opcionales: no se muestran hasta contar con datos verificados.
+  if(BUSINESS.cmp){const chip=document.createElement("span");chip.className="trust-chip";chip.textContent=`CMP ${BUSINESS.cmp}`;document.querySelector(".trust-chips")?.appendChild(chip)}
+  if(BUSINESS.addressLine){document.querySelector(".footer-meta")?.insertAdjacentHTML("afterbegin",`<span>${BUSINESS.addressLine}</span>`)}
+}
+
+function startLandingExperience(){
+  // Todos los tiempos de la landing comienzan DESPUÉS de terminar el video.
+  upgradeOptimizedMedia();
+  updateDock();
+  renderVerifiedBusinessFields();
+
+  // 30 s desde que la landing ya quedó visible:
+  // reseñas generales en loop infinito y aleatorio.
+  setTimeout(startMainSocialReviews,CONFIG.reviewStart);
+
+  // 60 s desde que la landing quedó visible:
+  // si no hubo interacción, activar orientación + secuencia especial.
+  setTimeout(activateIdleOfferCards,CONFIG.idleOfferStart);
+
+  // El contador de una oferta ya iniciada en esta sesión se reanuda.
+  const pe=Number(sessionStorage.getItem("olanoPromoEnd"));
+  if(pe>Date.now())startPromo();
+
+  // Oferta a los 30 s desde que termina el intro.
+  setTimeout(triggerPromo,CONFIG.promoDelay);
+}
+
+(function bootIntro(){
+  const loader=$("#introLoader"),video=$("#introVideo"),fallback=$("#introFallback"),skip=$("#introSkip");
+  let finished=false,experienceStarted=false,skipTimer=null;
+  const startExperienceOnce=()=>{if(experienceStarted)return;experienceStarted=true;initTracking();trackEvent("landing_view");startLandingExperience()};
+  const finishIntro=(reason="ended")=>{
+    if(finished)return;finished=true;clearTimeout(skipTimer);sessionStorage.setItem("olanoIntroSeen","1");
+    loader.classList.add("hide");document.body.classList.remove("intro-active");trackEvent("intro_complete",{reason});
+    setTimeout(()=>{loader.style.display="none";startExperienceOnce()},560)
+  };
+  const bypassIntro=()=>{loader.style.display="none";document.body.classList.remove("intro-active");startExperienceOnce()};
+  const showFallback=()=>{video.style.display="none";fallback.classList.add("show");setTimeout(()=>finishIntro("fallback"),900)};
+  const shouldBypass=sessionStorage.getItem("olanoIntroSeen")==="1"||hasDraft()||window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(shouldBypass){bypassIntro();return}
+  document.body.classList.add("intro-active");
+  const fallbackSrc=video.dataset.src,optimizedSrc=video.dataset.optimizedSrc;
+  const loadIntro=(src)=>{video.src=src||fallbackSrc;video.load()};
+  if(optimizedSrc){fetch(optimizedSrc,{method:"HEAD",cache:"no-store"}).then(r=>loadIntro(r.ok?optimizedSrc:fallbackSrc)).catch(()=>loadIntro(fallbackSrc))}else{loadIntro(fallbackSrc)}
+  video.addEventListener("ended",()=>finishIntro("ended"),{once:true});video.addEventListener("error",()=>{
+    if(video.src.includes("intro-olano-720.mp4")){loadIntro(fallbackSrc);return}
+    showFallback();
+  });
+  skipTimer=setTimeout(()=>skip.classList.add("show"),1200);skip.onclick=()=>finishIntro("skip");
+  const tryPlay=()=>{video.muted=true;const p=video.play();if(p&&typeof p.catch==="function")p.catch(showFallback)};
+  if(video.readyState>=2)tryPlay();else video.addEventListener("loadeddata",tryPlay,{once:true});
+  setTimeout(()=>{if(!finished)showFallback()},8000);
+})();
+</script>
+</body>
+</html>
