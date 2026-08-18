@@ -5,7 +5,9 @@ if(dolorService)dolorService.price="Según evaluación";
 // Presentation-only social proof.
 // It is intentionally disabled on the public root and enabled only with ?preview=1.
 // Preview mode is also marked noindex/nofollow and excluded from external tracking.
-const OLANO_PREVIEW=new URLSearchParams(location.search).get("preview")==="1";
+const OLANO_QUERY=new URLSearchParams(location.search);
+const OLANO_PREVIEW=OLANO_QUERY.get("preview")==="1";
+const OLANO_FAST_PREVIEW=OLANO_PREVIEW&&OLANO_QUERY.get("fast")==="1";
 if(OLANO_PREVIEW){
   const robots=document.querySelector('meta[name="robots"]');
   if(robots)robots.setAttribute("content","noindex,nofollow,noarchive");
@@ -57,6 +59,16 @@ if(OLANO_PREVIEW){
     {name:"Jimena O.",text:"Me alegró haberla aprovechado justo antes de seguir con el agendamiento."},
     {name:"Cecilia R.",text:"Aproveché la oferta y luego continué tranquilamente con mi solicitud."}
   );
+}
+
+// Fast validation mode: only changes initial waiting times in preview.
+// The 7 s visible + 5 s gap social cadence remains untouched.
+if(OLANO_FAST_PREVIEW){
+  CONFIG.reviewStart=5000;
+  CONFIG.promoDelay=5000;
+  CONFIG.idleOfferStart=20000;
+  CONFIG.helperDelay=20000;
+  CONFIG.promoProofStart=1500;
 }
 
 // Use the generated lightweight intro poster before playback starts.
