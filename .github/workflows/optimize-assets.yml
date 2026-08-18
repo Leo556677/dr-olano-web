@@ -1,16 +1,13 @@
-name: Deploy and optimize landing
+name: Optimize Olano Medic media
 
 on:
-  push:
-    paths:
-      - '.deploy/site-v28.tar.gz.b64'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  deploy:
+  optimize:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -18,18 +15,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Restore production HTML payload
-        run: |
-          set -euxo pipefail
-          base64 -d .deploy/site-v28.tar.gz.b64 > /tmp/site.tar.gz
-          tar -xzf /tmp/site.tar.gz -C .
-
-      - name: Install media tools
+      - name: Install ffmpeg
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
 
-      - name: Generate optimized image assets
+      - name: Generate optimized assets from verified source files
         run: |
           set -euxo pipefail
           ffmpeg -y -i assets/hero-doctor.jpg -vf "scale=640:-2" -c:v libwebp -quality 82 assets/hero-doctor-640.webp
@@ -38,33 +29,18 @@ jobs:
           ffmpeg -y -i assets/unidad-metabolismo.jpg -vf "scale=640:-2" -c:v libwebp -quality 82 assets/unidad-metabolismo-640.webp
           ffmpeg -y -i assets/promo-mes.jpg -vf "scale=640:-2" -c:v libwebp -quality 82 assets/promo-mes-640.webp
           ffmpeg -y -i assets/logo-isotipo.png -vf "scale=128:128:force_original_aspect_ratio=decrease,pad=128:128:(ow-iw)/2:(oh-ih)/2:color=0x00000000" assets/logo-isotipo-128.png
-
-      - name: Generate optimized intro video and poster
-        run: |
-          set -euxo pipefail
           ffmpeg -y -i assets/intro-olano.mp4 -vf "scale=720:-2" -c:v libx264 -preset slow -crf 27 -movflags +faststart -c:a aac -b:a 64k assets/intro-olano-720.mp4
           ffmpeg -y -ss 0 -i assets/intro-olano.mp4 -frames:v 1 -vf "scale=360:-2" -q:v 6 assets/intro-poster.jpg
 
-      - name: Validate production JavaScript
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-          html=Path('index.html').read_text(encoding='utf-8')
-          js='\n'.join(re.findall(r'<script(?: [^>]*)?>(.*?)</script>',html,re.S))
-          Path('/tmp/site.js').write_text(js,encoding='utf-8')
-          PY
-          node --check /tmp/site.js
-
-      - name: Commit production build
+      - name: Commit optimized media only when changed
         run: |
           set -euxo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html v2.html robots.txt sitemap.xml assets/hero-doctor-640.webp assets/unidad-estetica-640.webp assets/unidad-dolor-640.webp assets/unidad-metabolismo-640.webp assets/promo-mes-640.webp assets/logo-isotipo-128.png assets/intro-olano-720.mp4 assets/intro-poster.jpg
+          git add assets/hero-doctor-640.webp assets/unidad-estetica-640.webp assets/unidad-dolor-640.webp assets/unidad-metabolismo-640.webp assets/promo-mes-640.webp assets/logo-isotipo-128.png assets/intro-olano-720.mp4 assets/intro-poster.jpg
           if git diff --cached --quiet; then
-            echo "No production changes to commit"
+            echo "Optimized assets are already current."
           else
-            git commit -m "Deploy V2.8 production landing"
+            git commit -m "Optimize Olano Medic media assets"
             git push origin HEAD:main
           fi
