@@ -1,0 +1,166 @@
+function socialBusy(){
+  return document.body.classList.contains("booking-open")
+    || $("#promoOverlay").classList.contains("show")
+    || $("#guideOverlay").classList.contains("show")
+    || $("#helperCard").classList.contains("show")
+    || document.visibilityState!=="visible";
+}
+function socialStars(){
+  return '<div class="main-social-stars" aria-hidden="true"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>';
+}
+function shuffledIndexes(length){
+  const a=Array.from({length},(_,i)=>i);
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function pickRandomReviewIndex(){
+  if(!SOCIAL_REVIEWS.length)return -1;
+  if(SOCIAL_REVIEWS.length===1)return 0;
+  let index;
+  do{index=Math.floor(Math.random()*SOCIAL_REVIEWS.length)}
+  while(index===state.lastReviewIndex);
+  state.lastReviewIndex=index;
+  return index;
+}
+function renderSocialCard(item,type,index){
+  const stage=$("#mainSocialStage");
+  if(!stage)return;
+
+  stage.innerHTML="";
+  const isOffer=type==="offer";
+  const card=document.createElement("article");
+  card.className="main-social-card "+(isOffer?"offer":"review");
+  card.style.setProperty("--avatar",SOCIAL_AVATARS[index%SOCIAL_AVATARS.length]);
+  card.innerHTML=`
+    <div class="main-social-avatar">${icon("i-user")}</div>
+    <div class="main-social-body">
+      <div class="main-social-head">
+        <span class="main-social-name">${item.name}</span>
+        
+      </div>
+      ${isOffer?"":socialStars()}
+      <p class="main-social-text">“${item.text}”</p>
+    </div>`;
+  stage.appendChild(card);
+
+  setTimeout(()=>card.remove(),CONFIG.socialVisible+100);
+}
+function scheduleSocialCycle(delay){
+  if(state.socialTimer)clearTimeout(state.socialTimer);
+  state.socialTimer=setTimeout(runSocialCycle,delay);
+}
+function runSocialCycle(){
+  if(socialBusy()){
+    scheduleSocialCycle(1000);
+    return;
+  }
+
+  if(state.idleOfferActive&&state.idleOfferQueue.length){
+    const index=state.idleOfferQueue.shift();
+    renderSocialCard(SOCIAL_OFFER_PAST[index],"offer",index);
+
+    if(!state.idleOfferQueue.length){
+      state.idleOfferActive=false;
+    }
+
+    scheduleSocialCycle(CONFIG.socialVisible+CONFIG.socialGap);
+    return;
+  }
+
+  const index=pickRandomReviewIndex();
+  if(index<0){scheduleSocialCycle(12000);return}
+  renderSocialCard(SOCIAL_REVIEWS[index],"review",index);
+  scheduleSocialCycle(CONFIG.socialVisible+CONFIG.socialGap);
+}
+function startMainSocialReviews(){
+  if(state.socialLoopStarted||!SOCIAL_REVIEWS.length)return;
+  state.socialLoopStarted=true;
+  runSocialCycle();
+}
+function activateIdleOfferCards(){
+  if(state.anyInteraction||state.scheduleInteracted||hasDraft())return;
+
+  state.idleOfferActive=SOCIAL_OFFER_PAST.length>0;
+  state.idleOfferQueue=shuffledIndexes(SOCIAL_OFFER_PAST.length);
+  clearMainSocialStage();
+
+  if($("#promoOverlay").classList.contains("show")){
+    stopPromoProofs();
+    $("#promoOverlay").classList.remove("show");
+  }
+
+  showHelper();
+
+  if(!state.socialLoopStarted){
+    state.socialLoopStarted=true;
+  }
+  runSocialCycle();
+}
+
+function stopPromoProofs(){
+  if(state.promoProofTimeout)clearTimeout(state.promoProofTimeout);
+  if(state.promoProofTimer)clearTimeout(state.promoProofTimer);
+  state.promoProofTimeout=null;
+  state.promoProofTimer=null;
+  state.promoOfferQueue=[];
+  const stage=$("#promoProofStage");
+  if(stage)stage.innerHTML="";
+}
+function renderPromoOfferCard(index){
+  const stage=$("#promoProofStage");
+  if(!stage)return;
+
+  stage.innerHTML="";
+  const item=SOCIAL_OFFER_PAST[index];
+  if(!item)return;
+  const card=document.createElement("article");
+  card.className="promo-float";
+  card.style.setProperty("--avatar",SOCIAL_AVATARS[index%SOCIAL_AVATARS.length]);
+  card.innerHTML=`
+    <div class="promo-avatar">${icon("i-user")}</div>
+    <div class="promo-float-body">
+      <div class="promo-float-head">
+        <b>${item.name}</b>
+        
+      </div>
+      <p>“${item.text}”</p>
+    </div>`;
+  stage.appendChild(card);
+  setTimeout(()=>card.remove(),CONFIG.socialVisible+100);
+}
+function runPromoProofCycle(){
+  if(!$("#promoOverlay").classList.contains("show"))return;
+  if(!state.promoOfferQueue.length)return;
+
+  const index=state.promoOfferQueue.shift();
+  renderPromoOfferCard(index);
+
+  state.promoProofTimer=setTimeout(
+    runPromoProofCycle,
+    CONFIG.socialVisible+CONFIG.socialGap
+  );
+}
+function startPromoProofs(){
+  stopPromoProofs();
+  state.promoOfferQueue=shuffledIndexes(SOCIAL_OFFER_PAST.length);
+  if(!state.promoOfferQueue.length)return;
+  state.promoProofTimeout=setTimeout(runPromoProofCycle,CONFIG.promoProofStart);
+}
+
+function startPromo(){
+  let end=Number(sessionStorage.getItem("olanoPromoEnd"));
+  if(!end||end<Date.now()){
+    end=Date.now()+CONFIG.promoSeconds*1000;
+    sessionStorage.setItem("olanoPromoEnd",String(end))
+  }
+  document.body.classList.add("promo-on");
+  $("#promoCount").classList.add("show");
+  let total=CONFIG.promoSeconds*1000;
+  const tick=()=>{
+    let left=Math.max(0,end-Date.now()),pct=left/total*100;
+    $("#promoFill").style.width=pct+"%";
+    $("#promoFill").style.background=pct>60?"var(--green)":pct>30?"var(--orange)":"var(--red)";
+    let sec=Math.ceil(left/1000);
