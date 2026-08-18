@@ -1,26 +1,28 @@
-name: Optimize landing assets
+name: Deploy and optimize landing
 
 on:
   push:
     paths:
-      - '.github/workflows/optimize-assets.yml'
-      - 'index.html'
-      - 'assets/*.jpg'
-      - 'assets/*.png'
-      - 'assets/intro-olano.mp4'
+      - '.deploy/site-v28.tar.gz.b64'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  optimize:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Restore production HTML payload
+        run: |
+          set -euxo pipefail
+          base64 -d .deploy/site-v28.tar.gz.b64 > /tmp/site.tar.gz
+          tar -xzf /tmp/site.tar.gz -C .
 
       - name: Install media tools
         run: |
@@ -43,15 +45,26 @@ jobs:
           ffmpeg -y -i assets/intro-olano.mp4 -vf "scale=720:-2" -c:v libx264 -preset slow -crf 27 -movflags +faststart -c:a aac -b:a 64k assets/intro-olano-720.mp4
           ffmpeg -y -ss 0 -i assets/intro-olano.mp4 -frames:v 1 -vf "scale=360:-2" -q:v 6 assets/intro-poster.jpg
 
-      - name: Commit optimized assets
+      - name: Validate production JavaScript
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html=Path('index.html').read_text(encoding='utf-8')
+          js='\n'.join(re.findall(r'<script(?: [^>]*)?>(.*?)</script>',html,re.S))
+          Path('/tmp/site.js').write_text(js,encoding='utf-8')
+          PY
+          node --check /tmp/site.js
+
+      - name: Commit production build
         run: |
           set -euxo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/hero-doctor-640.webp assets/unidad-estetica-640.webp assets/unidad-dolor-640.webp assets/unidad-metabolismo-640.webp assets/promo-mes-640.webp assets/logo-isotipo-128.png assets/intro-olano-720.mp4 assets/intro-poster.jpg
+          git add index.html v2.html robots.txt sitemap.xml assets/hero-doctor-640.webp assets/unidad-estetica-640.webp assets/unidad-dolor-640.webp assets/unidad-metabolismo-640.webp assets/promo-mes-640.webp assets/logo-isotipo-128.png assets/intro-olano-720.mp4 assets/intro-poster.jpg
           if git diff --cached --quiet; then
-            echo "No asset changes to commit"
+            echo "No production changes to commit"
           else
-            git commit -m "Optimize landing media assets"
+            git commit -m "Deploy V2.8 production landing"
             git push origin HEAD:main
           fi
