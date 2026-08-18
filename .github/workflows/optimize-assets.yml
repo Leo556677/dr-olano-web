@@ -4,6 +4,10 @@ on:
   push:
     paths:
       - '.github/workflows/optimize-assets.yml'
+      - 'index.html'
+      - 'assets/*.jpg'
+      - 'assets/*.png'
+      - 'assets/intro-olano.mp4'
   workflow_dispatch:
 
 permissions:
