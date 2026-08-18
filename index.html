@@ -1,7 +1,7 @@
 ---
 permalink: /
 ---
-{% include v28/part01.html %}
+{% capture v28_part01 %}{% include v28/part01.html %}{% endcapture %}{{ v28_part01 | replace: 'assets/logo-isotipo-128.png', 'assets/logo-isotipo.png' }}
 {% include v28/part02.html %}
 {% include v28/part03.html %}
 {% include v28/part04.html %}
