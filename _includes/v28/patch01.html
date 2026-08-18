@@ -31,3 +31,14 @@ initTracking=function(){
   initTrackingBase();
 };
 initTracking();
+
+// Visible access to the factual privacy notice.
+const footerNote=document.querySelector('.footer-note');
+if(footerNote&&!document.querySelector('.footer-privacy')){
+  const privacy=document.createElement('a');
+  privacy.className='footer-privacy';
+  privacy.href='privacidad.html';
+  privacy.textContent='Privacidad';
+  privacy.style.cssText='display:inline-block;color:#dbe8ee;font-size:.68rem;font-weight:800;text-decoration:underline;text-underline-offset:3px;margin-top:2px';
+  footerNote.insertAdjacentElement('afterend',privacy);
+}
