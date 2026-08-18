@@ -1,0 +1,33 @@
+// V2.8 hardening: never display an unverified price.
+const dolorService=SERVICES.find(x=>x.id==="dolor");
+if(dolorService)dolorService.price="Según evaluación";
+
+// Preserve lazy-loading when optimized assets become available.
+upgradeOptimizedMedia=function(){
+  const swap=img=>{
+    const candidate=img.dataset.optimized;
+    if(!candidate)return;
+    const probe=new Image();
+    probe.onload=()=>{img.src=candidate};
+    probe.src=candidate;
+  };
+  const lazy=[...document.querySelectorAll('img[data-optimized][loading="lazy"]')];
+  document.querySelectorAll('img[data-optimized]:not([loading="lazy"])').forEach(swap);
+  if(!lazy.length)return;
+  if(!('IntersectionObserver' in window)){lazy.forEach(swap);return}
+  const io=new IntersectionObserver(entries=>entries.forEach(entry=>{
+    if(!entry.isIntersecting)return;
+    io.unobserve(entry.target);swap(entry.target);
+  }),{rootMargin:"350px 0px"});
+  lazy.forEach(img=>io.observe(img));
+};
+
+// Make external analytics initialization idempotent. IDs remain empty until real IDs are supplied.
+const initTrackingBase=initTracking;
+let trackingInitialized=false;
+initTracking=function(){
+  if(trackingInitialized)return;
+  trackingInitialized=true;
+  initTrackingBase();
+};
+initTracking();
