@@ -17,12 +17,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat .image-upload/hero-doctor-640.webp.b64.part* | base64 -d > assets/hero-doctor-640.webp
-          cat .image-upload/unidad-estetica-640.webp.b64.part* | base64 -d > assets/unidad-estetica-640.webp
-          cat .image-upload/unidad-dolor-640.webp.b64.part* | base64 -d > assets/unidad-dolor-640.webp
+          base64 -d .image-upload/hero-doctor-640.webp.b64 > assets/hero-doctor-640.webp
+          base64 -d .image-upload/unidad-estetica-640.webp.b64 > assets/unidad-estetica-640.webp
+          base64 -d .image-upload/unidad-dolor-640.webp.b64 > assets/unidad-dolor-640.webp
           cat .image-upload/promo-mes-640.webp.b64.part* | base64 -d > assets/promo-mes-640.webp
           cat .image-upload/unidad-metabolismo-640.webp.b64.part* | base64 -d > assets/unidad-metabolismo-640.webp
-          file assets/*-640.webp
+          file assets/hero-doctor-640.webp assets/unidad-estetica-640.webp assets/unidad-dolor-640.webp assets/promo-mes-640.webp assets/unidad-metabolismo-640.webp
       - name: Commit landing image replacement
         shell: bash
         run: |
