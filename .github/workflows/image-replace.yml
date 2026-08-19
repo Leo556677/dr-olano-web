@@ -30,6 +30,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           rm -rf .image-upload .image-upload-ready .image-upload-note
-          git add assets/hero-doctor-640.webp assets/unidad-estetica-640.webp assets/unidad-dolor-640.webp assets/promo-mes-640.webp assets/unidad-metabolismo-640.webp .image-upload .image-upload-ready .image-upload-note
+          git add -A
           git commit -m "Replace landing images with Dr. Olano branding"
           git push
