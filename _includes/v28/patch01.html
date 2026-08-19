@@ -127,3 +127,61 @@ if(footerNote&&!document.querySelector('.footer-privacy')){
   privacy.style.cssText='display:inline-block;color:#dbe8ee;font-size:.68rem;font-weight:800;text-decoration:underline;text-underline-offset:3px;margin-top:2px';
   footerNote.insertAdjacentElement('afterend',privacy);
 }
+
+// Visual polish requested after mobile validation: keep the doctor visible in promo,
+// center the decline action, and blur the landing behind the booking flow on all breakpoints.
+if(!document.querySelector('#v28-visual-polish')){
+  const visualPolish=document.createElement('style');
+  visualPolish.id='v28-visual-polish';
+  visualPolish.textContent=`
+    .promo-badge{
+      left:15px;
+      right:auto;
+      bottom:11px;
+      width:43%;
+      max-width:185px;
+    }
+    .promo-badge small{
+      font-size:.56rem;
+      line-height:1;
+      margin-bottom:4px;
+      letter-spacing:.065em;
+    }
+    .promo-badge b{
+      max-width:100%;
+      font:700 clamp(.69rem,2.6vw,.78rem)/1.08 "Fraunces",serif;
+      letter-spacing:0;
+      text-shadow:0 2px 8px rgba(0,0,0,.62);
+    }
+    #promoDecline{
+      display:block;
+      width:max-content;
+      margin:8px auto 0;
+      padding:8px 16px;
+      text-align:center;
+    }
+    .booking{
+      background:rgba(244,247,248,.84)!important;
+      -webkit-backdrop-filter:blur(18px) saturate(1.05);
+      backdrop-filter:blur(18px) saturate(1.05);
+    }
+    .booking-head{
+      background:rgba(244,247,248,.86)!important;
+      -webkit-backdrop-filter:blur(16px) saturate(1.05);
+      backdrop-filter:blur(16px) saturate(1.05);
+    }
+    .search-row{
+      background:rgba(244,247,248,.72)!important;
+      -webkit-backdrop-filter:blur(12px);
+      backdrop-filter:blur(12px);
+    }
+    .actions{
+      background:linear-gradient(transparent,rgba(244,247,248,.82) 25%,rgba(244,247,248,.94))!important;
+    }
+    @media(min-width:760px){
+      .booking{background:rgba(244,247,248,.80)!important}
+      .promo-badge{width:40%;max-width:175px}
+    }
+  `;
+  document.head.appendChild(visualPolish);
+}
