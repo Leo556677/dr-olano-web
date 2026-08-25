@@ -1,13 +1,13 @@
 // V2.8 policy hardening for WhatsApp review.
 // Keep the public funnel focused on medical evaluation and appointment scheduling.
-const facialEvaluationService=SERVICES.find(x=>x.id==="botox");
+const facialEvaluationService=SERVICES.find(x=>x.id==="estetica-facial");
 if(facialEvaluationService){
   facialEvaluationService.name="Evaluación de medicina estética facial";
   facialEvaluationService.price="Según evaluación médica";
 }
 
 // Keep the orientation helper focused on medical evaluation and appointment scheduling.
-const facialEvaluationGuide=document.querySelector('.guide-option[data-guide="botox"]');
+const facialEvaluationGuide=document.querySelector('.guide-option[data-guide="estetica-facial"]');
 if(facialEvaluationGuide){
   facialEvaluationGuide.innerHTML='Estética facial<small>Evaluación médica de opciones faciales según cada caso.</small>';
 }
