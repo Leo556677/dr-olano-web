@@ -1,16 +1,15 @@
 // V2.8 policy hardening for WhatsApp review.
-// Keep the public funnel focused on medical evaluation/appointment scheduling,
-// not direct sale or promotion of a prescription medicine inside WhatsApp.
-const botoxPolicyService=SERVICES.find(x=>x.id==="botox");
-if(botoxPolicyService){
-  botoxPolicyService.name="Evaluación de medicina estética facial";
-  botoxPolicyService.price="Según evaluación médica";
+// Keep the public funnel focused on medical evaluation and appointment scheduling.
+const facialEvaluationService=SERVICES.find(x=>x.id==="facial-esthetic-evaluation");
+if(facialEvaluationService){
+  facialEvaluationService.name="Evaluación de medicina estética facial";
+  facialEvaluationService.price="Según evaluación médica";
 }
 
-// Remove prescription-drug wording from the orientation helper that routes to WhatsApp booking.
-const botoxGuide=document.querySelector('.guide-option[data-guide="botox"]');
-if(botoxGuide){
-  botoxGuide.innerHTML='Estética facial<small>Evaluación médica de opciones faciales según cada caso.</small>';
+// Keep the orientation helper focused on medical evaluation and appointment scheduling.
+const facialEvaluationGuide=document.querySelector('.guide-option[data-guide="facial-esthetic-evaluation"]');
+if(facialEvaluationGuide){
+  facialEvaluationGuide.innerHTML='Estética facial<small>Evaluación médica de opciones faciales según cada caso.</small>';
 }
 
 // Make the nature of the website and current support contact explicit for policy review.
