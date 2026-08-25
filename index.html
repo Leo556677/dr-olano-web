@@ -24,7 +24,11 @@ permalink: /
   | replace: '51981214007', '51907108271'
   | replace: 'metaPixelId:""', 'metaPixelId:"2579515552504402"'
 }}
-{% include v28/part05.html %}
+{% capture v28_part05 %}{% include v28/part05.html %}{% endcapture %}{{ v28_part05
+  | replace: 'if(typeof window.fbq==="function")window.fbq("trackCustom",event,clean);', 'if(typeof window.fbq==="function"&&event!=="landing_view")window.fbq("trackCustom",event,clean);'
+  | replace: 'function initTracking(){', 'function initTracking(){if(window.__olanoTrackingInitialized)return;window.__olanoTrackingInitialized=true;'
+}}
+initTracking();
 {% include v28/patch01.html %}
 {% include v28/patch02-policy.html %}
 {% include v28/part06a.html %}
