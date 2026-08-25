@@ -25,7 +25,7 @@ permalink: /
   | replace: 'metaPixelId:""', 'metaPixelId:"2579515552504402"'
 }}
 {% capture v28_part05 %}{% include v28/part05.html %}{% endcapture %}{{ v28_part05
-  | replace: 'if(typeof window.fbq==="function")window.fbq("trackCustom",event,clean);', 'if(typeof window.fbq==="function"&&event!=="landing_view")window.fbq("trackCustom",event,clean);'
+  | replace: 'if(typeof window.fbq==="function")window.fbq("trackCustom",event,clean);', '/* Meta custom events disabled for health/wellness compliance. Standard PageView remains enabled in initTracking(). */'
   | replace: 'function initTracking(){', 'function initTracking(){if(window.__olanoTrackingInitialized)return;window.__olanoTrackingInitialized=true;'
 }}
 initTracking();
