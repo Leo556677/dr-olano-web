@@ -12,6 +12,17 @@ if(facialEvaluationGuide){
   facialEvaluationGuide.innerHTML='Estética facial<small>Evaluación médica de opciones faciales según cada caso.</small>';
 }
 
+// Prevent stale drafts with retired service identifiers from leaving the booking UI in an invalid state.
+const policyDraftBase=draft;
+draft=function(){
+  const saved=policyDraftBase();
+  if(saved?.serviceId&&!SERVICES.some(item=>item.id===saved.serviceId)){
+    localStorage.removeItem('olanoDraft');
+    return null;
+  }
+  return saved;
+};
+
 // Make the nature of the website and current support contact explicit for policy review.
 const policyFooter=document.querySelector('.site-footer .wrap');
 if(policyFooter&&!document.querySelector('.footer-policy-note')){
