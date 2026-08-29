@@ -13,11 +13,19 @@ function renderVerifiedBusinessFields(){
   if(BUSINESS.addressLine){document.querySelector(".footer-meta")?.insertAdjacentHTML("afterbegin",`<span>${BUSINESS.addressLine}</span>`)}
 }
 
+const DIRECT_BOOKING=new URLSearchParams(window.location.search).get("reserva")==="1";
+
 function startLandingExperience(){
   // Todos los tiempos de la landing comienzan DESPUÉS de terminar el video.
   upgradeOptimizedMedia();
   updateDock();
   renderVerifiedBusinessFields();
+
+  // Entrada especial para anuncios: omite exploración y abre directamente la lista de servicios.
+  if(DIRECT_BOOKING){
+    setTimeout(()=>openBooking(),0);
+    return;
+  }
 
   // 30 s desde que la landing ya quedó visible:
   // reseñas generales en loop infinito y aleatorio.
@@ -46,7 +54,7 @@ function startLandingExperience(){
   };
   const bypassIntro=()=>{loader.style.display="none";document.body.classList.remove("intro-active");startExperienceOnce()};
   const showFallback=()=>{video.style.display="none";fallback.classList.add("show");setTimeout(()=>finishIntro("fallback"),900)};
-  const shouldBypass=sessionStorage.getItem("olanoIntroSeen")==="1"||hasDraft()||window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const shouldBypass=DIRECT_BOOKING||sessionStorage.getItem("olanoIntroSeen")==="1"||hasDraft()||window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if(shouldBypass){bypassIntro();return}
   document.body.classList.add("intro-active");
   const fallbackSrc=video.dataset.src,optimizedSrc=video.dataset.optimizedSrc;
