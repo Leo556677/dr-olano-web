@@ -1,367 +1,473 @@
-// ===== V23.3 · SELECTOR COMPACTO DEFINITIVO =====
-// Corrige jerarquía, filtros, altura útil y acordeones sin tocar calendario/WhatsApp.
+// ===== V23.4 · SELECTOR DE SERVICIOS ESTABLE =====
+// Objetivo: filtros horizontales + acordeón sin huecos + scroll vertical real + búsqueda instantánea plana.
 (function(){
-  if(typeof V23_STATE==='undefined'||typeof V23_CATEGORIES==='undefined')return;
+  if(typeof V23_STATE==='undefined'||typeof V23_CATEGORIES==='undefined'||typeof SERVICES==='undefined')return;
 
   const STEP1=document.querySelector('.step[data-step="1"]');
   const BOOKING=document.querySelector('#booking');
-  if(!STEP1||!BOOKING)return;
+  const INPUT=document.querySelector('#serviceSearch');
+  const LIST=document.querySelector('#serviceList');
+  if(!STEP1||!BOOKING||!INPUT||!LIST)return;
+
+  const V234={
+    searchMode:false,
+    blurTimer:null,
+    filterScrollLeft:0,
+    ensureFilter:null
+  };
 
   V23_STATE.filtersOpen=true;
-
-  // Mostrar el filtro siempre no significa abrir todas las categorías.
-  // Solo búsqueda o una categoría filtrada expanden automáticamente resultados.
-  v23ShouldExpandAll=function(){
-    return !!V23_STATE.appliedQuery || V23_STATE.filterCategory!=='all';
-  };
+  V23_STATE.openCategory=null;
+  V23_STATE.filterCategory='all';
+  V23_STATE.appliedQuery='';
 
   const FILTER_LABELS={
     all:'Todas',consulta:'Consulta',metabolismo:'Metabolismo',estetica:'Estética',
     regenerativa:'Regenerativa',dolor:'Dolor',novare:'NOVARE'
   };
 
-  function v233Dirty(){
-    return !!V23_STATE.appliedQuery || V23_STATE.filterCategory!=='all' || state.sort==='za';
+  function v234CategoryLabel(id){
+    return V23_CATEGORIES.find(c=>c.id===id)?.label||id;
   }
 
-  function v233TrashSvg(){
-    return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function v234Sorted(list){
+    return [...list].sort((a,b)=>state.sort==='za'
+      ?b.name.localeCompare(a.name,'es')
+      :a.name.localeCompare(b.name,'es'));
   }
 
-  v23RenderFilterPanel=function(){
-    const panel=document.querySelector('#v23FilterPanel');
-    if(!panel)return;
-    V23_STATE.filtersOpen=true;
-    panel.classList.add('show');
-
-    panel.innerHTML=`
-      <div class="v233-filter-grid" aria-label="Filtros de servicios">
-        <button type="button" class="v233-chip ${V23_STATE.filterCategory==='all'?'active':''}" data-v233-filter="all">Todas</button>
-        ${V23_CATEGORIES.map(c=>`<button type="button" class="v233-chip ${V23_STATE.filterCategory===c.id?'active':''}" data-v233-filter="${c.id}">${FILTER_LABELS[c.id]||c.label}</button>`).join('')}
-        <div class="v233-tools">
-          <button type="button" class="v233-sort ${state.sort==='za'?'active':''}" id="v233Sort" aria-label="Cambiar orden alfabético">${state.sort==='za'?'Z–A':'A–Z'}</button>
-          <button type="button" class="v233-clear ${v233Dirty()?'active':''}" id="v233Clear" aria-label="Limpiar búsqueda y filtros" title="Limpiar" ${v233Dirty()?'':'disabled'}>${v233TrashSvg()}</button>
-        </div>
-      </div>`;
-
-    panel.querySelectorAll('[data-v233-filter]').forEach(btn=>btn.onclick=()=>{
-      markScheduleInteraction();
-      V23_STATE.filterCategory=btn.dataset.v233Filter;
-      V23_STATE.filtersOpen=true;
-      if(V23_STATE.filterCategory!=='all')V23_STATE.openCategory=V23_STATE.filterCategory;
-      renderServices();
-      v233Fit();
-    });
-
-    panel.querySelector('#v233Sort').onclick=()=>{
-      markScheduleInteraction();
-      state.sort=state.sort==='za'?'az':'za';
-      V23_STATE.filtersOpen=true;
-      renderServices();
-      v233Fit();
-    };
-
-    const clear=panel.querySelector('#v233Clear');
-    if(clear&&!clear.disabled)clear.onclick=()=>{
-      markScheduleInteraction();
-      V23_STATE.appliedQuery='';
-      V23_STATE.filterCategory='all';
-      V23_STATE.filtersOpen=true;
-      V23_STATE.openCategory='consulta';
-      state.sort='az';
-      const input=document.querySelector('#serviceSearch');
-      if(input)input.value='';
-      renderServices();
-      v233Fit();
-    };
-  };
-
-  function v233CleanTop(){
+  function v234CleanTop(){
     STEP1.querySelectorAll('.v23-step-help').forEach(el=>el.remove());
     const title=STEP1.querySelector('.step-title h2');
     if(title)title.textContent='¿Qué deseas reservar?';
     const legacy=document.querySelector('#sortBtn');
-    if(legacy){legacy.style.display='none';legacy.tabIndex=-1;legacy.setAttribute('aria-hidden','true')}
+    if(legacy){
+      legacy.style.display='none';
+      legacy.tabIndex=-1;
+      legacy.setAttribute('aria-hidden','true');
+    }
   }
 
-  function v233SetMode(active){
-    BOOKING.classList.toggle('v233-service-mode',!!active);
+  function v234SelectedSummary(){
+    const box=document.querySelector('#v23SelectedSummary');
+    if(!box)return;
+    if(!state.service){
+      box.classList.remove('show');
+      box.innerHTML='';
+      return;
+    }
+    box.classList.add('show');
+    box.innerHTML=`<small>Seleccionado</small><b>${state.service.name}</b>`;
+  }
+
+  function v234Dirty(){
+    return V23_STATE.filterCategory!=='all'||state.sort==='za';
+  }
+
+  function v234TrashSvg(){
+    return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
+
+  function v234RememberStrip(){
+    const old=document.querySelector('#v234FilterStrip');
+    if(old)V234.filterScrollLeft=old.scrollLeft;
+  }
+
+  function v234EnsureFilterVisible(row,id){
+    if(!row||!id)return;
+    const chip=row.querySelector(`[data-v234-filter="${id}"]`);
+    if(!chip)return;
+    const left=chip.offsetLeft;
+    const right=left+chip.offsetWidth;
+    const viewLeft=row.scrollLeft;
+    const viewRight=viewLeft+row.clientWidth;
+    if(left<viewLeft+4)row.scrollLeft=Math.max(0,left-8);
+    else if(right>viewRight-4)row.scrollLeft=Math.max(0,right-row.clientWidth+8);
+  }
+
+  function v234RenderFilterRow(){
+    const panel=document.querySelector('#v23FilterPanel');
+    if(!panel)return;
+    v234RememberStrip();
+
+    if(V234.searchMode){
+      panel.style.display='none';
+      panel.innerHTML='';
+      return;
+    }
+
+    panel.style.display='block';
+    panel.classList.add('show');
+    const dirty=v234Dirty();
+    panel.innerHTML=`
+      <div class="v234-filter-strip" id="v234FilterStrip" aria-label="Filtrar servicios por categoría">
+        <button type="button" class="v234-filter-chip ${V23_STATE.filterCategory==='all'?'active':''}" data-v234-filter="all">Todas</button>
+        ${V23_CATEGORIES.map(c=>`<button type="button" class="v234-filter-chip ${V23_STATE.filterCategory===c.id?'active':''}" data-v234-filter="${c.id}">${FILTER_LABELS[c.id]||c.label}</button>`).join('')}
+        <button type="button" class="v234-sort ${state.sort==='za'?'active':''}" id="v234Sort" aria-label="Cambiar orden alfabético">${state.sort==='za'?'Z–A':'A–Z'}</button>
+        <button type="button" class="v234-clear ${dirty?'active':''}" id="v234Clear" aria-label="Limpiar filtros" title="Limpiar filtros" ${dirty?'':'disabled'}>${v234TrashSvg()}</button>
+      </div>`;
+
+    const row=panel.querySelector('#v234FilterStrip');
+    requestAnimationFrame(()=>{
+      row.scrollLeft=V234.filterScrollLeft;
+      if(V234.ensureFilter){
+        v234EnsureFilterVisible(row,V234.ensureFilter);
+        V234.filterScrollLeft=row.scrollLeft;
+        V234.ensureFilter=null;
+      }
+    });
+
+    row.addEventListener('scroll',()=>{V234.filterScrollLeft=row.scrollLeft},{passive:true});
+
+    row.querySelectorAll('[data-v234-filter]').forEach(btn=>btn.onclick=()=>{
+      markScheduleInteraction();
+      V234.filterScrollLeft=row.scrollLeft;
+      V23_STATE.filterCategory=btn.dataset.v234Filter;
+      V23_STATE.openCategory=V23_STATE.filterCategory==='all'?null:V23_STATE.filterCategory;
+      V234.ensureFilter=V23_STATE.filterCategory;
+      renderServices();
+    });
+
+    row.querySelector('#v234Sort').onclick=()=>{
+      markScheduleInteraction();
+      V234.filterScrollLeft=row.scrollLeft;
+      state.sort=state.sort==='za'?'az':'za';
+      renderServices();
+    };
+
+    const clear=row.querySelector('#v234Clear');
+    if(clear&&!clear.disabled)clear.onclick=()=>{
+      markScheduleInteraction();
+      V23_STATE.filterCategory='all';
+      V23_STATE.openCategory=null;
+      state.sort='az';
+      V234.filterScrollLeft=0;
+      V234.ensureFilter='all';
+      renderServices();
+    };
+  }
+
+  function v234ServiceButton(s,searchResult=false){
+    const active=state.service?.id===s.id?'active':'';
+    const category=searchResult?`<span class="v234-result-category">${v234CategoryLabel(s.category)}</span>`:'';
+    return `<button type="button" class="v23-service v234-service ${active}" data-v234-svc="${s.id}">
+      <div>${category}<b>${s.name}</b><small>${s.unit} · ${s.price}</small></div>${icon('i-arrow')}
+    </button>`;
+  }
+
+  function v234RenderSearchResults(){
+    const q=norm(INPUT.value.trim());
+    let results=v234Sorted(SERVICES);
+    if(q)results=results.filter(s=>norm(`${s.name} ${s.unit} ${s.price} ${v234CategoryLabel(s.category)}`).includes(q));
+
+    LIST.classList.add('v234-search-results');
+    if(!results.length){
+      LIST.innerHTML=`<div class="v234-empty" role="status"><b>No encontramos ese servicio</b><span>Prueba con otro término.</span></div>`;
+      return;
+    }
+    LIST.innerHTML=results.map(s=>v234ServiceButton(s,true)).join('');
+  }
+
+  function v234RenderCategories(){
+    LIST.classList.remove('v234-search-results');
+    const categories=V23_STATE.filterCategory==='all'
+      ?V23_CATEGORIES
+      :V23_CATEGORIES.filter(c=>c.id===V23_STATE.filterCategory);
+
+    LIST.innerHTML=categories.map(cat=>{
+      const services=v234Sorted(SERVICES.filter(s=>s.category===cat.id));
+      const open=V23_STATE.openCategory===cat.id;
+      // IMPORTANTE: si está cerrado NO se renderiza cuerpo. Así no existe ningún cajón blanco residual.
+      const body=open?`<div class="v23-category-body">${services.map(s=>v234ServiceButton(s,false)).join('')}</div>`:'';
+      return `<section class="v23-category ${open?'open':''}" data-tone="${cat.tone}" data-v234-category="${cat.id}">
+        <button type="button" class="v23-category-head" data-v234-cat-toggle="${cat.id}" aria-expanded="${open?'true':'false'}">
+          <span><b>${cat.label}</b><small>${services.length} ${services.length===1?'servicio':'servicios'}</small></span>${icon('i-arrow')}
+        </button>${body}
+      </section>`;
+    }).join('');
+  }
+
+  function v234BindServiceEvents(){
+    LIST.querySelectorAll('[data-v234-cat-toggle]').forEach(btn=>btn.onclick=()=>{
+      markScheduleInteraction();
+      const id=btn.dataset.v234CatToggle;
+      V23_STATE.openCategory=V23_STATE.openCategory===id?null:id;
+      renderServices();
+      requestAnimationFrame(()=>{
+        const opened=LIST.querySelector(`[data-v234-category="${V23_STATE.openCategory||''}"]`);
+        if(opened)opened.scrollIntoView({block:'nearest'});
+      });
+    });
+
+    LIST.querySelectorAll('[data-v234-svc]').forEach(btn=>btn.onclick=()=>{
+      if(V234.blurTimer){clearTimeout(V234.blurTimer);V234.blurTimer=null}
+      markScheduleInteraction();
+      const svc=SERVICES.find(s=>s.id===btn.dataset.v234Svc);
+      if(!svc)return;
+      state.service=svc;
+      setPrimary(document.querySelector('#toStep2'),true);
+      saveDraft();
+
+      if(V234.searchMode){
+        V234.searchMode=false;
+        INPUT.value='';
+        V23_STATE.appliedQuery='';
+        V23_STATE.filterCategory='all';
+        V23_STATE.openCategory=null;
+        INPUT.blur();
+      }
+      renderServices();
+    });
+  }
+
+  // Sustituimos renderServices de V23 únicamente para el Paso 1.
+  renderServices=function(){
+    v23EnsureUI();
+    v234CleanTop();
+    v234RenderFilterRow();
+    if(V234.searchMode)v234RenderSearchResults();
+    else v234RenderCategories();
+    v234BindServiceEvents();
+    v234SelectedSummary();
+    setPrimary(document.querySelector('#toStep2'),!!state.service);
+    requestAnimationFrame(v234Fit);
+  };
+
+  function v234EnterSearch(){
+    if(V234.blurTimer){clearTimeout(V234.blurTimer);V234.blurTimer=null}
+    V234.searchMode=true;
+    V23_STATE.appliedQuery='';
+    renderServices();
+    requestAnimationFrame(()=>{LIST.scrollTop=0;v234Fit()});
+  }
+
+  function v234ExitSearch(){
+    V234.searchMode=false;
+    INPUT.value='';
+    V23_STATE.appliedQuery='';
+    V23_STATE.filterCategory='all';
+    V23_STATE.openCategory=null;
+    renderServices();
+    requestAnimationFrame(()=>{LIST.scrollTop=0;v234Fit()});
+  }
+
+  // Captura antes de listeners antiguos: búsqueda EN VIVO, sin Enter y sin auto-scroll heredado.
+  INPUT.addEventListener('focus',e=>{
+    e.stopImmediatePropagation();
+    v234EnterSearch();
+  },true);
+
+  INPUT.addEventListener('input',e=>{
+    e.stopImmediatePropagation();
+    if(!V234.searchMode)V234.searchMode=true;
+    renderServices();
+    LIST.scrollTop=0;
+  },true);
+
+  INPUT.addEventListener('keydown',e=>{
+    if(e.key==='Enter')e.preventDefault();
+    e.stopImmediatePropagation();
+  },true);
+
+  INPUT.addEventListener('blur',()=>{
+    V234.blurTimer=setTimeout(()=>{
+      V234.blurTimer=null;
+      if(V234.searchMode)v234ExitSearch();
+    },180);
+  });
+
+  // "Ver más servicios" debe abrir catálogo normal, NO enfocar automáticamente el buscador.
+  document.querySelector('#v23MoreServices')?.addEventListener('click',e=>{
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    markScheduleInteraction();
+    v23HideFeatured();
+    V234.searchMode=false;
+    INPUT.value='';
+    V23_STATE.filterCategory='all';
+    V23_STATE.openCategory=null;
+    renderServices();
+  },true);
+
+  function v234SetMode(active){
+    BOOKING.classList.toggle('v234-service-mode',!!active);
     if(!active)return;
-    v233CleanTop();
+    v234CleanTop();
     const head=document.querySelector('.booking-head-row b');
     if(head)head.textContent='PASO 1/4 · SERVICIO';
-    requestAnimationFrame(v233Fit);
+    requestAnimationFrame(v234Fit);
   }
 
-  function v233Fit(){
+  function v234Fit(){
     if(!STEP1.classList.contains('active'))return;
     const vh=window.visualViewport?.height||window.innerHeight;
     const head=document.querySelector('.booking-head');
-    const headH=head?.getBoundingClientRect().height||54;
-    const available=Math.max(360,Math.floor(vh-headH-6));
-    BOOKING.style.setProperty('--v233-step-h',`${available}px`);
+    const headH=head?.getBoundingClientRect().height||52;
+    const available=Math.max(270,Math.floor(vh-headH-4));
+    BOOKING.style.setProperty('--v234-step-h',`${available}px`);
   }
 
-  // V23 vuelve a crear el subtítulo en cada render: se elimina después de cada render.
-  const v233RenderBase=renderServices;
-  renderServices=function(){
-    v233RenderBase();
-    v233CleanTop();
-    requestAnimationFrame(v233Fit);
+  // La función real del flujo es go(n). Se envuelve directamente, sin alias showStep.
+  const v234GoBase=go;
+  go=function(n){
+    v234GoBase(n);
+    v234SetMode(Number(n)===1);
   };
 
-  // Mantener encabezado compacto únicamente en el paso de servicios.
-  const v233ShowStepBase=showStep;
-  showStep=function(n){
-    v233ShowStepBase(n);
-    v233SetMode(Number(n)===1);
-  };
-
-  if(!document.querySelector('#v233-styles')){
+  if(!document.querySelector('#v234-styles')){
     const style=document.createElement('style');
-    style.id='v233-styles';
+    style.id='v234-styles';
     style.textContent=`
-      /* ===== CABECERA: compacta, sin duplicar jerarquía ===== */
-      .booking.v233-service-mode{overflow:hidden!important}
-      .booking.v233-service-mode .booking-head{
-        padding:6px 12px 6px!important;
-        min-height:0!important;
-      }
-      .booking.v233-service-mode .booking-head-row b{
-        font:900 .75rem/1.05 system-ui,-apple-system,sans-serif!important;
-        letter-spacing:.055em!important;
-        color:var(--navy)!important;
-      }
-      .booking.v233-service-mode .close-btn{
-        width:38px!important;height:38px!important;
-      }
-      .booking.v233-service-mode .progress{
-        height:3px!important;margin-top:5px!important;
-      }
-      .booking.v233-service-mode .booking-inner{
+      /* ===== CONTENEDOR PASO 1 ===== */
+      .booking.v234-service-mode{overflow:hidden!important}
+      .booking.v234-service-mode .booking-head{padding:6px 12px!important;min-height:0!important}
+      .booking.v234-service-mode .booking-head-row b{font:900 .75rem/1 system-ui,-apple-system,sans-serif!important;letter-spacing:.055em!important}
+      .booking.v234-service-mode .close-btn{width:38px!important;height:38px!important}
+      .booking.v234-service-mode .progress{height:3px!important;margin-top:5px!important}
+      .booking.v234-service-mode .booking-inner{
         width:min(calc(100% - 20px),700px)!important;
-        height:var(--v233-step-h,calc(100dvh - 54px))!important;
-        margin:5px auto 0!important;
+        height:var(--v234-step-h,calc(100dvh - 52px))!important;
+        margin:4px auto 0!important;
         overflow:hidden!important;
       }
-      .booking.v233-service-mode .step[data-step="1"].active{
-        height:100%!important;
-        min-height:0!important;
+      .booking.v234-service-mode .step[data-step="1"].active{
+        height:100%!important;min-height:0!important;overflow:hidden!important;
         display:grid!important;
         grid-template-rows:auto auto auto minmax(0,1fr) auto auto!important;
         align-content:stretch!important;
-        overflow:hidden!important;
       }
-
-      /* ===== 30% SUPERIOR: título + búsqueda + filtros ===== */
       .step[data-step="1"] .v23-step-help{display:none!important}
-      .booking.v233-service-mode .step-title{
-        min-height:31px!important;
-        margin:2px 0 4px!important;
-        gap:6px!important;
-      }
-      .booking.v233-service-mode .step-title .icon{
-        width:19px!important;height:19px!important;
-      }
-      .booking.v233-service-mode .step-title h2{
-        font:700 clamp(1.28rem,6vw,1.6rem)/1.02 "Fraunces",serif!important;
-        margin:0!important;
-      }
-      .booking.v233-service-mode .search-row{
-        position:static!important;
-        display:grid!important;
-        grid-template-columns:1fr!important;
-        margin:0 0 4px!important;
-        padding:0!important;
-        background:transparent!important;
-      }
-      .booking.v233-service-mode .search-box{
-        min-height:40px!important;
-        height:40px!important;
-        border-radius:12px!important;
-        padding:0 10px!important;
-        gap:7px!important;
-      }
-      .booking.v233-service-mode .search-box .icon{
-        width:19px!important;height:19px!important;
-      }
-      .booking.v233-service-mode #serviceSearch{
-        font-size:.8rem!important;
-      }
-      .booking.v233-service-mode #sortBtn{display:none!important}
+      .booking.v234-service-mode .step-title{min-height:31px!important;margin:2px 0 4px!important;gap:6px!important}
+      .booking.v234-service-mode .step-title .icon{width:19px!important;height:19px!important}
+      .booking.v234-service-mode .step-title h2{font:700 clamp(1.3rem,6vw,1.62rem)/1.02 "Fraunces",serif!important;margin:0!important}
 
-      /* 7 categorías SIEMPRE visibles en dos filas. Sin scroll horizontal. */
-      .booking.v233-service-mode .v23-filter-panel,
-      .booking.v233-service-mode .v23-filter-panel.show{
-        display:block!important;
-        margin:0 0 5px!important;
-        padding:0!important;
-        border:0!important;
-        background:transparent!important;
-        box-shadow:none!important;
+      /* ===== BUSCADOR ===== */
+      .booking.v234-service-mode .search-row{
+        position:static!important;display:grid!important;grid-template-columns:1fr!important;
+        margin:0 0 4px!important;padding:0!important;background:transparent!important;
       }
-      .v233-filter-grid{
-        display:grid!important;
-        grid-template-columns:repeat(4,minmax(0,1fr))!important;
-        grid-auto-rows:30px!important;
-        gap:4px!important;
-      }
-      .v233-chip{
-        min-width:0!important;
-        width:100%!important;
-        height:30px!important;
-        border:1px solid var(--line)!important;
-        border-radius:9px!important;
-        background:#fff!important;
-        color:var(--navy)!important;
-        padding:0 4px!important;
-        font-size:.53rem!important;
-        line-height:1!important;
-        font-weight:850!important;
-        white-space:nowrap!important;
-        overflow:hidden!important;
-        text-overflow:ellipsis!important;
-      }
-      .v233-chip.active{
-        background:var(--navy)!important;
-        border-color:var(--navy)!important;
-        color:#fff!important;
-      }
-      .v233-tools{
-        min-width:0!important;
-        display:grid!important;
-        grid-template-columns:1fr 30px!important;
-        gap:4px!important;
-      }
-      .v233-sort,.v233-clear{
-        height:30px!important;
-        min-height:30px!important;
-        border:1px solid var(--line)!important;
-        border-radius:9px!important;
-        background:#fff!important;
-        color:var(--navy)!important;
-        padding:0!important;
-        display:grid!important;
-        place-items:center!important;
-        font-weight:900!important;
-      }
-      .v233-sort{font-size:.52rem!important}
-      .v233-sort.active{border-color:var(--teal2)!important;color:var(--teal2)!important;background:#eef8f7!important}
-      .v233-clear{color:#9aa8ad!important}
-      .v233-clear svg{width:16px!important;height:16px!important}
-      .v233-clear.active{color:var(--teal2)!important;border-color:#cce7e4!important;background:#eef8f7!important}
-      .v233-clear:disabled{opacity:.38!important}
+      .booking.v234-service-mode .search-box{height:40px!important;min-height:40px!important;border-radius:12px!important;padding:0 10px!important;gap:7px!important}
+      .booking.v234-service-mode .search-box .icon{width:19px!important;height:19px!important}
+      .booking.v234-service-mode #serviceSearch{font-size:.82rem!important}
+      .booking.v234-service-mode #sortBtn{display:none!important}
 
-      /* ===== 70% ÚTIL: viewport real del catálogo ===== */
-      .booking.v233-service-mode .service-list{
-        min-height:0!important;
-        height:auto!important;
-        max-height:none!important;
-        overflow-y:auto!important;
-        overscroll-behavior:contain!important;
-        -webkit-overflow-scrolling:touch!important;
-        padding:2px 2px 10px!important;
-        gap:5px!important;
-        background:linear-gradient(180deg,rgba(244,247,248,.18),rgba(244,247,248,.55))!important;
-        scroll-padding-bottom:14px!important;
+      /* ===== FILTROS: UNA SOLA FILA HORIZONTAL, SCROLL INDEPENDIENTE ===== */
+      .booking.v234-service-mode .v23-filter-panel,
+      .booking.v234-service-mode .v23-filter-panel.show{
+        display:block;margin:0 0 5px!important;padding:0!important;border:0!important;
+        background:transparent!important;box-shadow:none!important;min-width:0!important;
       }
-      .booking.v233-service-mode .v23-category{
-        border-radius:13px!important;
-        box-shadow:0 8px 22px -22px rgba(7,30,54,.4)!important;
+      .v234-filter-strip{
+        display:flex!important;align-items:center!important;gap:5px!important;
+        width:100%!important;height:34px!important;overflow-x:auto!important;overflow-y:hidden!important;
+        overscroll-behavior-x:contain!important;-webkit-overflow-scrolling:touch!important;
+        scrollbar-width:none!important;touch-action:pan-x!important;padding:0 1px 2px!important;
+        scroll-behavior:smooth!important;
       }
-      .booking.v233-service-mode .v23-category-head{
-        min-height:43px!important;
-        padding:7px 10px!important;
-        gap:6px!important;
+      .v234-filter-strip::-webkit-scrollbar{display:none!important}
+      .v234-filter-chip,.v234-sort,.v234-clear{
+        flex:0 0 auto!important;height:31px!important;min-height:31px!important;
+        border:1px solid var(--line)!important;border-radius:10px!important;background:#fff!important;
+        color:var(--navy)!important;padding:0 11px!important;font-size:.61rem!important;font-weight:850!important;
+        white-space:nowrap!important;display:grid!important;place-items:center!important;
       }
-      .booking.v233-service-mode .v23-category-head>span:first-child,
-      .booking.v233-service-mode .v23-category-head b{
-        font-size:.74rem!important;
-        line-height:1.05!important;
-      }
-      .booking.v233-service-mode .v23-category-head small{
-        font-size:.52rem!important;
-        margin-top:1px!important;
-      }
-      .booking.v233-service-mode .v23-category-head .icon{
-        width:17px!important;height:17px!important;
-      }
-      .booking.v233-service-mode .v23-category-body{
-        padding:5px!important;
-        gap:4px!important;
-      }
-      .booking.v233-service-mode .v23-service{
-        min-height:44px!important;
-        padding:7px 9px!important;
-        border-radius:10px!important;
-        gap:5px!important;
-      }
-      .booking.v233-service-mode .v23-service b{
-        font-size:.7rem!important;line-height:1.08!important;
-      }
-      .booking.v233-service-mode .v23-service small{
-        font-size:.56rem!important;margin-top:1px!important;line-height:1.08!important;
-      }
-      .booking.v233-service-mode .v23-service .icon{
-        width:17px!important;height:17px!important;
-      }
+      .v234-filter-chip.active{background:var(--navy)!important;border-color:var(--navy)!important;color:#fff!important}
+      .v234-sort.active{border-color:var(--teal2)!important;color:var(--teal2)!important;background:#eef8f7!important}
+      .v234-clear{width:31px!important;padding:0!important;color:#9aa8ad!important}
+      .v234-clear svg{width:15px!important;height:15px!important}
+      .v234-clear.active{color:var(--teal2)!important;border-color:#cce7e4!important;background:#eef8f7!important}
+      .v234-clear:disabled{opacity:.35!important}
 
-      /* Resumen solo aparece si existe selección; no roba espacio si está vacío. */
-      .booking.v233-service-mode .v23-selected-summary{
-        margin:3px 1px 0!important;
-        padding:5px 7px!important;
-        border-radius:9px!important;
+      /* ===== CATÁLOGO: ÚNICO SCROLL VERTICAL REAL ===== */
+      .booking.v234-service-mode .service-list{
+        min-height:0!important;height:auto!important;max-height:none!important;
+        overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior-y:contain!important;
+        -webkit-overflow-scrolling:touch!important;touch-action:pan-y!important;
+        padding:1px 2px 10px!important;gap:6px!important;
+        background:transparent!important;scroll-padding:46px 0 12px!important;
       }
-      .booking.v233-service-mode .v23-selected-summary:not(.show){display:none!important}
-      .booking.v233-service-mode .v23-selected-summary small{font-size:.48rem!important}
-      .booking.v233-service-mode .v23-selected-summary b{font-size:.61rem!important}
+      .booking.v234-service-mode .v23-category{
+        display:block!important;border:0!important;border-radius:13px!important;overflow:visible!important;
+        background:transparent!important;box-shadow:none!important;margin:0!important;
+      }
+      .booking.v234-service-mode .v23-category-head{
+        width:100%!important;min-height:45px!important;padding:7px 10px!important;border-radius:13px!important;
+        display:grid!important;grid-template-columns:1fr auto!important;align-items:center!important;gap:7px!important;
+        position:relative!important;z-index:2!important;
+      }
+      .booking.v234-service-mode .v23-category.open .v23-category-head{
+        position:sticky!important;top:0!important;z-index:5!important;border-radius:13px 13px 8px 8px!important;
+      }
+      .booking.v234-service-mode .v23-category-head b{font-size:.76rem!important;line-height:1.05!important}
+      .booking.v234-service-mode .v23-category-head small{font-size:.53rem!important;margin-top:1px!important}
+      .booking.v234-service-mode .v23-category-head .icon{width:17px!important;height:17px!important}
 
-      /* ===== CTA compacto y siempre visible ===== */
-      .booking.v233-service-mode .actions{
-        position:static!important;
-        grid-template-columns:52px minmax(0,1fr)!important;
-        gap:6px!important;
-        min-height:54px!important;
-        padding:5px 0 4px!important;
-        background:linear-gradient(180deg,rgba(244,247,248,.72),var(--bg) 38%)!important;
+      /* NO existe cajón residual en categorías cerradas. */
+      .booking.v234-service-mode .v23-category:not(.open) .v23-category-body{display:none!important}
+      .booking.v234-service-mode .v23-category-body{
+        display:grid!important;gap:4px!important;padding:5px!important;margin:0!important;
+        background:#f6faf9!important;border-radius:0 0 13px 13px!important;
       }
-      .booking.v233-service-mode .actions .back-btn,
-      .booking.v233-service-mode .actions .btn{
-        min-height:48px!important;
-        height:48px!important;
-        border-radius:16px!important;
+      .booking.v234-service-mode .v23-service{
+        min-height:45px!important;padding:7px 9px!important;border-radius:10px!important;gap:6px!important;
       }
-      .booking.v233-service-mode .actions .btn{
-        font-size:.78rem!important;
-      }
+      .booking.v234-service-mode .v23-service b{font-size:.71rem!important;line-height:1.08!important}
+      .booking.v234-service-mode .v23-service small{font-size:.56rem!important;margin-top:2px!important;line-height:1.08!important}
+      .booking.v234-service-mode .v23-service .icon{width:17px!important;height:17px!important}
 
-      @media(max-width:380px){
-        .v233-chip{font-size:.49rem!important;padding:0 2px!important}
-        .v233-filter-grid{gap:3px!important}
-        .booking.v233-service-mode .step-title h2{font-size:1.2rem!important}
+      /* ===== MODO BÚSQUEDA: SIN CATEGORÍAS NI FILTROS ===== */
+      .booking.v234-service-mode .service-list.v234-search-results{
+        display:flex!important;flex-direction:column!important;gap:5px!important;
+        padding-top:2px!important;background:transparent!important;
       }
+      .booking.v234-service-mode .v234-search-results .v23-service{
+        flex:0 0 auto!important;background:#f3f9f8!important;border:1px solid #dce9e9!important;
+      }
+      .v234-result-category{
+        display:block!important;color:var(--teal2)!important;font-size:.49rem!important;font-weight:850!important;
+        text-transform:uppercase!important;letter-spacing:.035em!important;margin-bottom:2px!important;
+      }
+      .v234-empty{
+        min-height:140px!important;display:flex!important;flex-direction:column!important;align-items:center!important;
+        justify-content:center!important;text-align:center!important;padding:20px!important;color:var(--navy)!important;
+      }
+      .v234-empty b{font-size:.9rem!important}
+      .v234-empty span{font-size:.68rem!important;color:var(--muted)!important;margin-top:5px!important}
+
+      /* ===== SELECCIÓN + CTA ===== */
+      .booking.v234-service-mode .v23-selected-summary{margin:3px 1px 0!important;padding:5px 7px!important;border-radius:9px!important}
+      .booking.v234-service-mode .v23-selected-summary:not(.show){display:none!important}
+      .booking.v234-service-mode .v23-selected-summary small{font-size:.48rem!important}
+      .booking.v234-service-mode .v23-selected-summary b{font-size:.61rem!important}
+      .booking.v234-service-mode .actions{
+        position:static!important;grid-template-columns:52px minmax(0,1fr)!important;gap:6px!important;
+        min-height:54px!important;padding:5px 0 4px!important;background:linear-gradient(180deg,rgba(244,247,248,.7),var(--bg) 40%)!important;
+      }
+      .booking.v234-service-mode .actions .back-btn,.booking.v234-service-mode .actions .btn{
+        min-height:48px!important;height:48px!important;border-radius:16px!important;
+      }
+      .booking.v234-service-mode .actions .btn{font-size:.79rem!important}
+
       @media(max-height:680px){
-        .booking.v233-service-mode .booking-head{padding:4px 10px!important}
-        .booking.v233-service-mode .close-btn{width:34px!important;height:34px!important}
-        .booking.v233-service-mode .booking-inner{margin-top:3px!important}
-        .booking.v233-service-mode .step-title{min-height:27px!important;margin:0 0 3px!important}
-        .booking.v233-service-mode .step-title h2{font-size:1.18rem!important}
-        .booking.v233-service-mode .search-box{height:36px!important;min-height:36px!important}
-        .v233-filter-grid{grid-auto-rows:27px!important;gap:3px!important}
-        .v233-chip,.v233-sort,.v233-clear{height:27px!important;min-height:27px!important}
-        .v233-tools{grid-template-columns:1fr 27px!important}
-        .booking.v233-service-mode .v23-category-head{min-height:39px!important;padding:6px 9px!important}
-        .booking.v233-service-mode .actions{min-height:49px!important;padding-top:3px!important}
-        .booking.v233-service-mode .actions .back-btn,.booking.v233-service-mode .actions .btn{height:44px!important;min-height:44px!important}
+        .booking.v234-service-mode .booking-head{padding:4px 10px!important}
+        .booking.v234-service-mode .close-btn{width:34px!important;height:34px!important}
+        .booking.v234-service-mode .booking-inner{margin-top:2px!important}
+        .booking.v234-service-mode .step-title{min-height:27px!important;margin:0 0 3px!important}
+        .booking.v234-service-mode .step-title h2{font-size:1.18rem!important}
+        .booking.v234-service-mode .search-box{height:36px!important;min-height:36px!important}
+        .v234-filter-strip{height:31px!important}.v234-filter-chip,.v234-sort,.v234-clear{height:28px!important;min-height:28px!important}
+        .booking.v234-service-mode .v23-category-head{min-height:40px!important;padding:6px 9px!important}
+        .booking.v234-service-mode .actions{min-height:49px!important;padding-top:3px!important}
+        .booking.v234-service-mode .actions .back-btn,.booking.v234-service-mode .actions .btn{height:44px!important;min-height:44px!important}
       }
     `;
     document.head.appendChild(style);
   }
 
-  v233CleanTop();
+  v234CleanTop();
   renderServices();
-  v233SetMode(STEP1.classList.contains('active'));
+  v234SetMode(STEP1.classList.contains('active'));
 
-  window.addEventListener('resize',v233Fit,{passive:true});
-  window.visualViewport?.addEventListener('resize',v233Fit,{passive:true});
+  window.addEventListener('resize',v234Fit,{passive:true});
+  window.visualViewport?.addEventListener('resize',v234Fit,{passive:true});
 })();
