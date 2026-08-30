@@ -1,6 +1,0 @@
-window.V2_HTML.push(`<section class="block faq"><div class="wrap"><details><summary>¿La cita queda confirmada al enviarla?</summary><p>No. Se envía la solicitud a WhatsApp y el centro confirma el cupo.</p></details><details><summary>¿Qué ocurre si cierro el agendamiento?</summary><p>Tu avance queda guardado y puedes continuarlo desde el aviso persistente.</p></details></div></section>
-</main>
-<div class="review-toast" id="reviewToast"><div class="review-toast-row"><div class="review-avatar" id="reviewAvatar">M</div><div><div class="stars" id="toastStars"></div><b id="reviewName"></b><p id="reviewText"></p><span class="review-demo">Demo de diseño · reemplazar por reseña real</span></div></div></div>
-<div class="floating" id="floating"><button class="btn btn-primary" id="floatingBook"><svg class="icon"><use href="#i-calendar"/></svg>AGENDAR CITA</button></div>
-<div class="draft-pill" id="draftPill"><button id="resumeDraft" aria-label="Continuar cita pendiente"><svg class="icon"><use href="#i-calendar"/></svg><span id="draftTitle">Cita pendiente</span></button></div>
-`);

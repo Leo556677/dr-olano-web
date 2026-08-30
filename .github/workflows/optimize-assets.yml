@@ -28,14 +28,13 @@ jobs:
           # replacement would be overwritten.
           ffmpeg -y -i assets/logo-isotipo.png -vf "scale=128:128:force_original_aspect_ratio=decrease,pad=128:128:(ow-iw)/2:(oh-ih)/2:color=0x00000000" assets/logo-isotipo-128.png
           ffmpeg -y -i assets/intro-olano.mp4 -vf "scale=720:-2" -c:v libx264 -preset slow -crf 27 -movflags +faststart -c:a aac -b:a 64k assets/intro-olano-720.mp4
-          ffmpeg -y -ss 0 -i assets/intro-olano.mp4 -frames:v 1 -vf "scale=360:-2" -q:v 6 assets/intro-poster.jpg
 
       - name: Commit optimized media only when changed
         run: |
           set -euxo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/logo-isotipo-128.png assets/intro-olano-720.mp4 assets/intro-poster.jpg
+          git add assets/logo-isotipo-128.png assets/intro-olano-720.mp4
           if git diff --cached --quiet; then
             echo "Optimized assets are already current."
           else
