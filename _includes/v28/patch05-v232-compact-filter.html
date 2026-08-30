@@ -1,0 +1,194 @@
+// ===== V23.2 · FILTROS COMPACTOS + 70% LISTA =====
+// Objetivo: reducir al mínimo el bloque superior y dejar la mayor parte de la pantalla a servicios.
+(function(){
+  if(typeof V23_STATE==='undefined'||typeof V23_CATEGORIES==='undefined')return;
+
+  V23_STATE.filtersOpen=true;
+
+  // El subtítulo ya no aporta información accionable y ocupa espacio crítico en móvil.
+  const help=document.querySelector('.v23-step-help');
+  if(help)help.remove();
+
+  // El botón lateral "Filtros" deja de ser necesario porque el filtro queda siempre visible.
+  const legacyFilterBtn=document.querySelector('#sortBtn');
+  if(legacyFilterBtn){
+    legacyFilterBtn.setAttribute('aria-hidden','true');
+    legacyFilterBtn.tabIndex=-1;
+  }
+
+  // Reemplaza el panel de filtros por una barra compacta:
+  // categorías desplazables + un único botón A–Z/Z–A + limpiar con icono.
+  v23RenderFilterPanel=function(){
+    const panel=document.querySelector('#v23FilterPanel');
+    if(!panel)return;
+    V23_STATE.filtersOpen=true;
+    panel.classList.add('show');
+
+    const trashSvg=`<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    panel.innerHTML=`
+      <div class="v232-filterbar">
+        <div class="v232-category-strip" aria-label="Categorías de servicios">
+          <button type="button" class="v23-filter-chip ${V23_STATE.filterCategory==='all'?'active':''}" data-v23-filter="all">Todas</button>
+          ${V23_CATEGORIES.map(c=>`<button type="button" class="v23-filter-chip ${V23_STATE.filterCategory===c.id?'active':''}" data-v23-filter="${c.id}">${c.label}</button>`).join('')}
+        </div>
+        <button type="button" class="v232-sort" id="v232SortToggle" aria-label="Cambiar orden alfabético">${state.sort==='az'?'A–Z':'Z–A'}</button>
+        <button type="button" class="v232-clear" id="v232ClearFilters" aria-label="Limpiar búsqueda y filtros" title="Limpiar filtros">${trashSvg}</button>
+      </div>`;
+
+    panel.querySelectorAll('[data-v23-filter]').forEach(btn=>btn.onclick=()=>{
+      markScheduleInteraction();
+      V23_STATE.filterCategory=btn.dataset.v23Filter;
+      V23_STATE.filtersOpen=true;
+      renderServices();
+    });
+
+    panel.querySelector('#v232SortToggle').onclick=()=>{
+      markScheduleInteraction();
+      state.sort=state.sort==='az'?'za':'az';
+      V23_STATE.filtersOpen=true;
+      renderServices();
+    };
+
+    panel.querySelector('#v232ClearFilters').onclick=()=>{
+      markScheduleInteraction();
+      V23_STATE.appliedQuery='';
+      V23_STATE.filterCategory='all';
+      V23_STATE.filtersOpen=true;
+      state.sort='az';
+      const input=document.querySelector('#serviceSearch');
+      if(input)input.value='';
+      renderServices();
+    };
+  };
+
+  if(!document.querySelector('#v232-compact-filter-styles')){
+    const style=document.createElement('style');
+    style.id='v232-compact-filter-styles';
+    style.textContent=`
+      /* ---- ZONA SUPERIOR: máxima compactación ---- */
+      .step[data-step="1"] .v23-step-help{display:none!important}
+      .step[data-step="1"] .step-title{margin-bottom:5px!important}
+      .step[data-step="1"] .step-title h2{
+        font-size:clamp(1.65rem,7.4vw,2.05rem)!important;
+        line-height:1.02!important;
+        margin:0!important;
+      }
+      .step[data-step="1"] .search-row{
+        display:grid!important;
+        grid-template-columns:1fr!important;
+        gap:0!important;
+        margin:7px 0 5px!important;
+      }
+      .step[data-step="1"] #serviceSearch{
+        min-height:46px!important;
+        height:46px!important;
+        font-size:.84rem!important;
+        border-radius:14px!important;
+        padding-top:0!important;
+        padding-bottom:0!important;
+      }
+      .step[data-step="1"] #sortBtn{display:none!important}
+
+      /* ---- FILTRO SIEMPRE ABIERTO, UNA SOLA FRANJA ---- */
+      .step[data-step="1"] .v23-filter-panel,
+      .step[data-step="1"] .v23-filter-panel.show{
+        display:block!important;
+        margin:0 0 7px!important;
+        padding:0!important;
+        background:transparent!important;
+        border:0!important;
+        border-radius:0!important;
+        box-shadow:none!important;
+      }
+      .v232-filterbar{
+        display:grid!important;
+        grid-template-columns:minmax(0,1fr) 48px 42px!important;
+        align-items:center!important;
+        gap:5px!important;
+        min-height:38px!important;
+      }
+      .v232-category-strip{
+        min-width:0!important;
+        display:flex!important;
+        gap:5px!important;
+        overflow-x:auto!important;
+        overscroll-behavior-x:contain!important;
+        scrollbar-width:none!important;
+        -webkit-overflow-scrolling:touch!important;
+        padding:1px 0!important;
+      }
+      .v232-category-strip::-webkit-scrollbar{display:none!important}
+      .v232-category-strip .v23-filter-chip{
+        flex:0 0 auto!important;
+        min-height:34px!important;
+        padding:6px 9px!important;
+        border-radius:999px!important;
+        font-size:.61rem!important;
+        line-height:1!important;
+        max-width:180px!important;
+        overflow:hidden!important;
+        text-overflow:ellipsis!important;
+        white-space:nowrap!important;
+      }
+      .v232-sort,
+      .v232-clear{
+        height:36px!important;
+        min-height:36px!important;
+        border:1px solid var(--line)!important;
+        border-radius:11px!important;
+        background:#fff!important;
+        color:var(--navy)!important;
+        font-weight:900!important;
+        display:grid!important;
+        place-items:center!important;
+        padding:0!important;
+      }
+      .v232-sort{font-size:.63rem!important;letter-spacing:.01em!important}
+      .v232-clear{color:var(--teal2)!important}
+      .v232-clear svg{width:18px!important;height:18px!important}
+
+      /* ---- 70% VISUAL PARA ELEGIR SERVICIOS ---- */
+      .step[data-step="1"] .service-list{
+        height:calc(100dvh - 380px)!important;
+        min-height:48dvh!important;
+        max-height:68dvh!important;
+        overflow-y:auto!important;
+        overscroll-behavior:contain!important;
+        gap:7px!important;
+        padding-bottom:96px!important;
+        scroll-padding-bottom:100px!important;
+      }
+      .step[data-step="1"] .v23-category{
+        border-radius:15px!important;
+      }
+      .step[data-step="1"] .v23-category-head{
+        padding:10px 12px!important;
+        min-height:50px!important;
+      }
+      .step[data-step="1"] .v23-category-head small{font-size:.59rem!important;margin-top:1px!important}
+      .step[data-step="1"] .v23-category-body{padding:6px!important;gap:5px!important}
+      .step[data-step="1"] .v23-service{
+        padding:9px 10px!important;
+        border-radius:12px!important;
+      }
+      .step[data-step="1"] .v23-service b{font-size:.76rem!important;line-height:1.12!important}
+      .step[data-step="1"] .v23-service small{font-size:.62rem!important;margin-top:2px!important}
+
+      /* Mantener el CTA inferior visible sin regalarle altura al panel superior. */
+      .step[data-step="1"] .v23-selected-summary{margin-top:5px!important;padding:6px 8px!important}
+
+      @media(max-height:720px){
+        .step[data-step="1"] .step-title h2{font-size:1.45rem!important}
+        .step[data-step="1"] #serviceSearch{height:42px!important;min-height:42px!important}
+        .v232-filterbar{grid-template-columns:minmax(0,1fr) 45px 38px!important}
+        .v232-category-strip .v23-filter-chip{min-height:31px!important;padding:5px 8px!important;font-size:.56rem!important}
+        .v232-sort,.v232-clear{height:32px!important;min-height:32px!important}
+        .step[data-step="1"] .service-list{height:calc(100dvh - 340px)!important;min-height:46dvh!important;max-height:70dvh!important}
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Aplicar inmediatamente el filtro abierto y mantenerlo abierto en siguientes renders.
+  if(typeof renderServices==='function')renderServices();
+})();
