@@ -1,0 +1,398 @@
+// ===== V23 · SELECTOR DE SERVICIOS ORIENTADO A CONVERSIÓN =====
+// Mantiene intactos calendario, datos, WhatsApp y confirmación.
+
+const V23_CATEGORIES=[
+  {id:"consulta",label:"Consulta Médica Especializada",tone:"navy"},
+  {id:"metabolismo",label:"Metabolismo y Obesidad",tone:"teal"},
+  {id:"estetica",label:"Medicina Estética",tone:"aqua"},
+  {id:"regenerativa",label:"Medicina Regenerativa",tone:"green"},
+  {id:"dolor",label:"Dolor e Intervencionismo Ecoguiado",tone:"blue"},
+  {id:"novare",label:"NOVARE / Cirugía Plástica de Rostro",tone:"deep"}
+];
+
+// Nombres públicos redactados para describir el servicio/objetivo médico sin promocionar
+// directamente medicamentos sujetos a prescripción en la entrada publicitaria.
+const V23_SERVICES=[
+  {id:"consulta",category:"consulta",unit:"Consulta",name:"Consulta Médica Especializada",price:"S/ 70"},
+
+  {id:"metabolismo",category:"metabolismo",unit:"Metabolismo",name:"Consulta de Metabolismo y Obesidad",price:"S/ 70"},
+  {id:"control-peso-medico",category:"metabolismo",unit:"Metabolismo",name:"Tratamiento médico para control de peso",price:"Según evaluación"},
+  {id:"plan-nutricional",category:"metabolismo",unit:"Metabolismo",name:"Plan nutricional personalizado",price:"Según evaluación"},
+
+  {id:"estetica-facial",category:"estetica",unit:"Estética",name:"Evaluación de líneas de expresión",price:"Según evaluación"},
+  {id:"prp-hydrafacial",category:"estetica",unit:"Estética",name:"PRP rostro + Hydrafacial",price:"S/ 200"},
+  {id:"limpieza-facial",category:"estetica",unit:"Estética",name:"Limpieza facial",price:"Según evaluación"},
+  {id:"laser",category:"estetica",unit:"Estética",name:"Láser facial",price:"Según evaluación"},
+  {id:"armonizacion",category:"estetica",unit:"Estética",name:"Armonización facial",price:"Según evaluación"},
+  {id:"rinomodelacion",category:"estetica",unit:"Estética",name:"Rinomodelación",price:"Según evaluación"},
+  {id:"labios",category:"estetica",unit:"Estética",name:"Relleno de labios",price:"Según evaluación"},
+  {id:"tensado-facial",category:"estetica",unit:"Estética",name:"Tensado facial",price:"Según evaluación"},
+  {id:"endolifting",category:"estetica",unit:"Estética",name:"Endolifting / Endoláser",price:"Según evaluación"},
+  {id:"lipolisis",category:"estetica",unit:"Estética",name:"Lipólisis / Hidrolipoclasia",price:"Según evaluación"},
+
+  {id:"prp-regenerativa",category:"regenerativa",unit:"Regenerativa",name:"PRP — Plasma Rico en Plaquetas",price:"Según evaluación"},
+  {id:"prf",category:"regenerativa",unit:"Regenerativa",name:"PRF — Plasma Rico en Fibrina",price:"Según evaluación"},
+  {id:"ozonoterapia",category:"regenerativa",unit:"Regenerativa",name:"Ozonoterapia",price:"Según evaluación"},
+  {id:"celulas-madre",category:"regenerativa",unit:"Regenerativa",name:"Células madre",price:"Según evaluación"},
+  {id:"factores-crecimiento",category:"regenerativa",unit:"Regenerativa",name:"Factores de crecimiento",price:"Según evaluación"},
+  {id:"exosomas",category:"regenerativa",unit:"Regenerativa",name:"Exosomas",price:"Según evaluación"},
+  {id:"acido-hialuronico-reg",category:"regenerativa",unit:"Regenerativa",name:"Ácido hialurónico",price:"Según evaluación"},
+  {id:"hidrodisecciones-reg",category:"regenerativa",unit:"Regenerativa",name:"Hidrodisecciones",price:"Según evaluación"},
+
+  {id:"bloqueos",category:"dolor",unit:"Dolor",name:"Bloqueos nerviosos ecoguiados",price:"Según evaluación"},
+  {id:"dolor",category:"dolor",unit:"Dolor",name:"Infiltraciones ecoguiadas",price:"Según evaluación"},
+  {id:"electrolisis",category:"dolor",unit:"Dolor",name:"Electrólisis percutánea",price:"Según evaluación"},
+  {id:"neuromodulacion",category:"dolor",unit:"Dolor",name:"Neuromodulación",price:"Según evaluación"},
+  {id:"hidrodiseccion-dolor",category:"dolor",unit:"Dolor",name:"Hidrodisección ecoguiada",price:"Según evaluación"},
+  {id:"ozonoterapia-ecoguiada",category:"dolor",unit:"Dolor",name:"Ozonoterapia ecoguiada",price:"Según evaluación"},
+
+  {id:"minilifting",category:"novare",unit:"NOVARE",name:"Minilifting facial",price:"Según evaluación"},
+  {id:"rinofast",category:"novare",unit:"NOVARE",name:"Rinofast",price:"Según evaluación"},
+  {id:"lipopapada",category:"novare",unit:"NOVARE",name:"Lipopapada de alta definición",price:"Según evaluación"},
+  {id:"bichectomia",category:"novare",unit:"NOVARE",name:"Bichectomía",price:"Según evaluación"},
+  {id:"lip-lift",category:"novare",unit:"NOVARE",name:"Lip Lift ambulatorio",price:"Según evaluación"},
+  {id:"blefaroplastia",category:"novare",unit:"NOVARE",name:"Blefaroplastia superior e inferior",price:"Según evaluación"},
+  {id:"frontoplastia",category:"novare",unit:"NOVARE",name:"Frontoplastia",price:"Según evaluación"},
+  {id:"foxy-eyes",category:"novare",unit:"NOVARE",name:"Foxy Eyes",price:"Según evaluación"},
+  {id:"lipofilling",category:"novare",unit:"NOVARE",name:"Lipofilling facial",price:"Según evaluación"},
+  {id:"mini-lipoescultura",category:"novare",unit:"NOVARE",name:"Mini lipoescultura ambulatoria",price:"Según evaluación"},
+  {id:"lifting-cejas",category:"novare",unit:"NOVARE",name:"Lifting de cejas / Castañares",price:"Según evaluación"},
+  {id:"otoplastia",category:"novare",unit:"NOVARE",name:"Otoplastia / Lobuloplastia",price:"Según evaluación"}
+];
+
+SERVICES.splice(0,SERVICES.length,...V23_SERVICES);
+
+const V23_FEATURED=[
+  {serviceId:"estetica-facial",label:"Líneas de expresión",meta:"Evaluación médica facial personalizada",tag:"Más consultado"},
+  {serviceId:"consulta",label:"Consulta Médica Especializada",meta:"Consulta · S/ 70",tag:"Consulta"},
+  {serviceId:"prp-hydrafacial",label:"PRP rostro + Hydrafacial",meta:"Medicina Estética · S/ 200",tag:"Cuidado facial"},
+  {serviceId:"bloqueos",label:"Bloqueos nerviosos ecoguiados",meta:"Dolor · Según evaluación",tag:"Dolor"},
+  {serviceId:"metabolismo",label:"Metabolismo y Obesidad",meta:"Consulta · S/ 70",tag:"Metabolismo"},
+  {serviceId:"consulta",label:"No sé qué elegir",meta:"Empieza por una evaluación médica",tag:"Orientación"}
+];
+
+const V23_STATE={
+  openCategory:"consulta",
+  appliedQuery:"",
+  filterCategory:"all",
+  filtersOpen:false,
+  featuredOpen:false
+};
+
+function v23CategoryForService(service){return service?.category||"consulta"}
+function v23CategoryLabel(id){return V23_CATEGORIES.find(c=>c.id===id)?.label||id}
+function v23ShouldExpandAll(){return !!V23_STATE.appliedQuery||V23_STATE.filtersOpen||V23_STATE.filterCategory!=="all"}
+
+function v23EnsureUI(){
+  const step=document.querySelector('.step[data-step="1"]');
+  if(!step)return;
+
+  const title=step.querySelector('.step-title h2');
+  if(title)title.textContent="¿Qué deseas reservar?";
+  if(!step.querySelector('.v23-step-help')){
+    const help=document.createElement('p');
+    help.className='v23-step-help';
+    help.textContent='Toca un servicio para continuar. Podrás cambiarlo antes de confirmar.';
+    step.querySelector('.step-title')?.insertAdjacentElement('afterend',help);
+  }
+
+  const search=document.querySelector('#serviceSearch');
+  if(search){
+    search.placeholder='Buscar servicio...';
+    search.setAttribute('enterkeyhint','search');
+    search.setAttribute('inputmode','search');
+  }
+
+  if(!document.querySelector('#v23FilterPanel')){
+    const panel=document.createElement('div');
+    panel.id='v23FilterPanel';
+    panel.className='v23-filter-panel';
+    document.querySelector('.search-row')?.insertAdjacentElement('afterend',panel);
+  }
+
+  if(!document.querySelector('#v23SelectedSummary')){
+    const selected=document.createElement('div');
+    selected.id='v23SelectedSummary';
+    selected.className='v23-selected-summary';
+    step.querySelector('.actions')?.insertAdjacentElement('beforebegin',selected);
+  }
+
+  if(!document.querySelector('#v23FeaturedLayer')){
+    const layer=document.createElement('div');
+    layer.id='v23FeaturedLayer';
+    layer.className='v23-featured-layer';
+    layer.setAttribute('aria-hidden','true');
+    layer.innerHTML=`
+      <div class="v23-featured-panel" role="dialog" aria-modal="true" aria-labelledby="v23FeaturedTitle">
+        <div class="v23-premium-kicker">✦ SERVICIOS DESTACADOS</div>
+        <h2 id="v23FeaturedTitle">Elige cómo quieres empezar</h2>
+        <p class="v23-featured-intro">Selecciona una opción y pasa directamente a elegir fecha.</p>
+        <div class="v23-featured-grid" id="v23FeaturedGrid"></div>
+        <div class="v23-featured-selected" id="v23FeaturedSelected"></div>
+        <div class="v23-featured-actions">
+          <button type="button" class="v23-more" id="v23MoreServices">Ver más servicios</button>
+          <button type="button" class="btn btn-primary" id="v23FeaturedContinue" disabled>${icon("i-calendar")}Elegir fecha</button>
+        </div>
+      </div>`;
+    document.querySelector('#booking')?.appendChild(layer);
+  }
+
+  if(!document.querySelector('#v23-styles')){
+    const style=document.createElement('style');
+    style.id='v23-styles';
+    style.textContent=`
+      .v23-step-help{margin:-7px 0 12px;color:var(--muted);font-size:.77rem;line-height:1.4}
+      .search-row{grid-template-columns:minmax(0,1fr) 94px!important}
+      #sortBtn{font-size:.75rem;padding:0 8px}
+      .v23-filter-panel{display:none;background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:17px;padding:11px;margin:-1px 0 10px;box-shadow:var(--shadow)}
+      .v23-filter-panel.show{display:block}
+      .v23-filter-title{font-size:.68rem;font-weight:900;color:var(--navy);margin:0 0 7px;text-transform:uppercase;letter-spacing:.055em}
+      .v23-filter-chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}.v23-filter-chips::-webkit-scrollbar{display:none}
+      .v23-filter-chip{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:999px;padding:8px 10px;white-space:nowrap;font-size:.69rem;font-weight:800}
+      .v23-filter-chip.active{background:var(--navy);border-color:var(--navy);color:#fff}
+      .v23-filter-order{display:flex;gap:7px;margin-top:9px}.v23-filter-order button{flex:1;border:1px solid var(--line);background:#f8fbfb;color:var(--navy);border-radius:12px;padding:9px;font-size:.7rem;font-weight:800}.v23-filter-order button.active{border-color:var(--teal2);color:var(--teal2);background:#edf8f6}
+      .v23-clear-filter{width:100%;margin-top:8px;border:0;background:transparent;color:var(--muted);font-size:.68rem;font-weight:800;text-decoration:underline;text-underline-offset:3px;padding:6px}
+      .service-list{max-height:calc(100dvh - 340px)!important;gap:8px!important}
+      .v23-category{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff;box-shadow:0 10px 28px -24px rgba(7,30,54,.45)}
+      .v23-category-head{width:100%;border:0;padding:13px 14px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;text-align:left;color:#fff;font-weight:900;letter-spacing:.002em}
+      .v23-category-head small{display:block;color:rgba(255,255,255,.78);font-weight:600;font-size:.66rem;margin-top:2px}
+      .v23-category-head .icon{transition:transform .2s}.v23-category.open .v23-category-head .icon{transform:rotate(90deg)}
+      .v23-category[data-tone="navy"] .v23-category-head{background:#0b2e4f}.v23-category[data-tone="teal"] .v23-category-head{background:#0f827a}.v23-category[data-tone="aqua"] .v23-category-head{background:#138f89}.v23-category[data-tone="green"] .v23-category-head{background:#197a73}.v23-category[data-tone="blue"] .v23-category-head{background:#164f73}.v23-category[data-tone="deep"] .v23-category-head{background:#12395b}
+      .v23-category-body{display:none;padding:8px;background:#f7fbfb}.v23-category.open .v23-category-body{display:grid;gap:7px}
+      .v23-service{border:1px solid #dce9e9;background:#eef8f7;border-radius:14px;padding:11px 12px;text-align:left;display:grid;grid-template-columns:1fr auto;gap:9px;align-items:center;color:var(--navy)}
+      .v23-category[data-tone="navy"] .v23-service{background:#f1f5f8}.v23-category[data-tone="blue"] .v23-service,.v23-category[data-tone="deep"] .v23-service{background:#f1f6f9}
+      .v23-service b{display:block;font-size:.84rem}.v23-service small{display:block;color:var(--muted);font-size:.69rem;margin-top:3px}.v23-service .icon{color:var(--teal2);width:19px;height:19px}
+      .v23-service.active{border-color:var(--teal2);background:#e2f5f2;box-shadow:0 0 0 2px rgba(15,130,122,.12)}
+      .v23-service.active b:before{content:"✓ ";color:var(--teal2)}
+      .v23-empty{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;text-align:center;color:var(--muted);font-size:.78rem}
+      .v23-selected-summary{display:none;margin:9px 2px 0;padding:9px 11px;background:#e9f7f5;border:1px solid #cde9e5;border-radius:14px;color:var(--navy)}
+      .v23-selected-summary.show{display:block}.v23-selected-summary small{display:block;color:var(--teal2);font-size:.63rem;font-weight:900;text-transform:uppercase;letter-spacing:.055em}.v23-selected-summary b{display:block;font-size:.78rem;margin-top:2px}
+      .v23-featured-layer{display:none;position:fixed;z-index:18;inset:0;padding:86px 14px 18px;align-items:flex-start;justify-content:center;background:rgba(7,31,54,.24);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);overflow:auto}
+      .v23-featured-layer.show{display:flex}.v23-featured-panel{width:min(100%,580px);background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(239,249,248,.98));border:1px solid rgba(205,232,229,.98);border-radius:24px;padding:17px;box-shadow:0 28px 75px -24px rgba(0,20,38,.62);animation:v23PanelIn .25s ease-out both}
+      @keyframes v23PanelIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+      .v23-premium-kicker{display:inline-flex;padding:6px 9px;border-radius:999px;background:linear-gradient(90deg,#0b2e4f,#0f827a);color:#fff;font-size:.62rem;font-weight:900;letter-spacing:.07em}
+      .v23-featured-panel h2{font:700 1.7rem/1.04 "Fraunces",serif;margin:10px 0 5px;color:var(--navy)}.v23-featured-intro{margin:0 0 12px;color:var(--muted);font-size:.76rem}
+      .v23-featured-grid{display:grid;gap:8px}.v23-featured-card{border:1px solid #d9e7e7;background:#fff;border-radius:15px;padding:11px 12px;display:grid;grid-template-columns:1fr auto;gap:9px;text-align:left;color:var(--navy);box-shadow:0 9px 24px -22px rgba(4,35,55,.5)}
+      .v23-featured-card em{display:inline-block;font-style:normal;font-size:.57rem;font-weight:900;color:var(--teal2);background:#e8f6f4;border-radius:999px;padding:4px 7px;margin-bottom:4px}.v23-featured-card b{display:block;font-size:.83rem}.v23-featured-card small{display:block;color:var(--muted);font-size:.68rem;margin-top:2px}.v23-featured-card .icon{color:var(--teal2);align-self:center}.v23-featured-card.active{border-color:var(--teal2);background:#e9f8f5;box-shadow:0 0 0 3px rgba(15,130,122,.11)}
+      .v23-featured-selected{display:none;margin-top:9px;padding:8px 10px;border-radius:12px;background:#f4faf9;color:var(--navy);font-size:.7rem}.v23-featured-selected.show{display:block}.v23-featured-selected b{color:var(--teal2)}
+      .v23-featured-actions{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:8px;margin-top:11px}.v23-more{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:999px;padding:10px 8px;font-weight:800;font-size:.72rem}.v23-featured-actions .btn{min-height:48px;padding:10px;font-size:.75rem}.v23-featured-actions .btn[disabled]{opacity:.38;box-shadow:none}
+      @media(max-width:430px){.v23-featured-layer{padding:78px 10px 12px}.v23-featured-panel{padding:14px;border-radius:21px}.v23-featured-grid{gap:7px}.v23-featured-card{padding:10px}.v23-featured-panel h2{font-size:1.52rem}}
+    `;
+    document.head.appendChild(style);
+  }
+}
+
+function v23RenderFilterPanel(){
+  const panel=document.querySelector('#v23FilterPanel');
+  if(!panel)return;
+  panel.classList.toggle('show',V23_STATE.filtersOpen);
+  panel.innerHTML=`
+    <div class="v23-filter-title">Filtrar por categoría</div>
+    <div class="v23-filter-chips">
+      <button type="button" class="v23-filter-chip ${V23_STATE.filterCategory==='all'?'active':''}" data-v23-filter="all">Todas</button>
+      ${V23_CATEGORIES.map(c=>`<button type="button" class="v23-filter-chip ${V23_STATE.filterCategory===c.id?'active':''}" data-v23-filter="${c.id}">${c.label}</button>`).join('')}
+    </div>
+    <div class="v23-filter-order">
+      <button type="button" data-v23-sort="az" class="${state.sort==='az'?'active':''}">Orden A–Z</button>
+      <button type="button" data-v23-sort="za" class="${state.sort==='za'?'active':''}">Orden Z–A</button>
+    </div>
+    <button type="button" class="v23-clear-filter" id="v23ClearFilters">Limpiar búsqueda y filtros</button>`;
+
+  panel.querySelectorAll('[data-v23-filter]').forEach(btn=>btn.onclick=()=>{
+    markScheduleInteraction();
+    V23_STATE.filterCategory=btn.dataset.v23Filter;
+    V23_STATE.filtersOpen=true;
+    renderServices();
+  });
+  panel.querySelectorAll('[data-v23-sort]').forEach(btn=>btn.onclick=()=>{
+    markScheduleInteraction();
+    state.sort=btn.dataset.v23Sort;
+    V23_STATE.filtersOpen=true;
+    renderServices();
+  });
+  panel.querySelector('#v23ClearFilters').onclick=()=>{
+    V23_STATE.appliedQuery='';
+    V23_STATE.filterCategory='all';
+    V23_STATE.filtersOpen=false;
+    state.sort='az';
+    const input=document.querySelector('#serviceSearch');if(input)input.value='';
+    renderServices();
+  };
+}
+
+function v23RenderSelectedSummary(){
+  const box=document.querySelector('#v23SelectedSummary');
+  if(!box)return;
+  if(!state.service){box.classList.remove('show');box.innerHTML='';return}
+  box.classList.add('show');
+  box.innerHTML=`<small>Seleccionado</small><b>${state.service.name}</b>`;
+}
+
+renderServices=function(){
+  v23EnsureUI();
+  v23RenderFilterPanel();
+  const query=norm(V23_STATE.appliedQuery.trim());
+  let list=[...SERVICES];
+  if(V23_STATE.filterCategory!=='all')list=list.filter(s=>s.category===V23_STATE.filterCategory);
+  if(query)list=list.filter(s=>norm(`${s.name} ${s.unit} ${s.price} ${v23CategoryLabel(s.category)}`).includes(query));
+  list.sort((a,b)=>state.sort==='az'?a.name.localeCompare(b.name,'es'):b.name.localeCompare(a.name,'es'));
+
+  const host=document.querySelector('#serviceList');
+  if(!host)return;
+  if(!list.length){
+    host.innerHTML='<div class="v23-empty">No encontramos coincidencias. Prueba con otra palabra o limpia los filtros.</div>';
+    setPrimary(document.querySelector('#toStep2'),!!state.service);
+    v23RenderSelectedSummary();
+    return;
+  }
+
+  const expandAll=v23ShouldExpandAll();
+  host.innerHTML=V23_CATEGORIES.map(cat=>{
+    const items=list.filter(s=>s.category===cat.id);
+    if(!items.length)return '';
+    const open=expandAll||V23_STATE.openCategory===cat.id||items.some(s=>s.id===state.service?.id);
+    return `<section class="v23-category ${open?'open':''}" data-category="${cat.id}" data-tone="${cat.tone}">
+      <button type="button" class="v23-category-head" data-v23-category="${cat.id}" aria-expanded="${open?'true':'false'}">
+        <span>${cat.label}<small>${items.length} ${items.length===1?'servicio':'servicios'}</small></span>${icon('i-arrow')}
+      </button>
+      <div class="v23-category-body">
+        ${items.map(s=>`<button type="button" class="v23-service ${state.service?.id===s.id?'active':''}" data-svc="${s.id}"><span><b>${s.name}</b><small>${s.unit} · ${s.price}</small></span>${icon('i-arrow')}</button>`).join('')}
+      </div>
+    </section>`;
+  }).join('');
+
+  host.querySelectorAll('[data-v23-category]').forEach(btn=>btn.onclick=()=>{
+    markScheduleInteraction();
+    if(v23ShouldExpandAll()){
+      const section=btn.closest('.v23-category');
+      const open=section.classList.toggle('open');
+      btn.setAttribute('aria-expanded',String(open));
+      return;
+    }
+    V23_STATE.openCategory=V23_STATE.openCategory===btn.dataset.v23Category?'':btn.dataset.v23Category;
+    renderServices();
+  });
+
+  host.querySelectorAll('[data-svc]').forEach(btn=>btn.onclick=()=>{
+    markScheduleInteraction();
+    state.service=SERVICES.find(s=>s.id===btn.dataset.svc)||null;
+    if(state.service)V23_STATE.openCategory=v23CategoryForService(state.service);
+    trackEvent('service_selected');
+    renderServices();
+    setPrimary(document.querySelector('#toStep2'),!!state.service);
+    saveDraft();
+  });
+
+  setPrimary(document.querySelector('#toStep2'),!!state.service);
+  v23RenderSelectedSummary();
+};
+
+function v23RenderFeatured(){
+  v23EnsureUI();
+  const grid=document.querySelector('#v23FeaturedGrid');
+  if(!grid)return;
+  grid.innerHTML=V23_FEATURED.map((item,index)=>{
+    const active=state.service?.id===item.serviceId && !(index===5&&state.service?.id==='consulta'&&V23_STATE.featuredChoice!==5);
+    return `<button type="button" class="v23-featured-card ${active?'active':''}" data-v23-featured="${index}"><span><em>${item.tag}</em><b>${item.label}</b><small>${item.meta}</small></span>${icon('i-arrow')}</button>`;
+  }).join('');
+  grid.querySelectorAll('[data-v23-featured]').forEach(btn=>btn.onclick=()=>{
+    markScheduleInteraction();
+    const index=Number(btn.dataset.v23Featured);
+    const item=V23_FEATURED[index];
+    V23_STATE.featuredChoice=index;
+    state.service=SERVICES.find(s=>s.id===item.serviceId)||null;
+    if(state.service)V23_STATE.openCategory=v23CategoryForService(state.service);
+    setPrimary(document.querySelector('#toStep2'),!!state.service);
+    saveDraft();
+    v23RenderFeatured();
+  });
+  const selected=document.querySelector('#v23FeaturedSelected');
+  if(state.service){selected.classList.add('show');selected.innerHTML=`Seleccionado: <b>${state.service.name}</b>`}else{selected.classList.remove('show');selected.innerHTML=''}
+  const next=document.querySelector('#v23FeaturedContinue');
+  if(next)next.disabled=!state.service;
+}
+
+function v23ShowFeatured(){
+  v23EnsureUI();
+  V23_STATE.featuredOpen=true;
+  const layer=document.querySelector('#v23FeaturedLayer');
+  layer?.classList.add('show');
+  layer?.setAttribute('aria-hidden','false');
+  v23RenderFeatured();
+  setTimeout(()=>document.querySelector('#v23FeaturedPanel, #v23FeaturedLayer .v23-featured-card')?.focus(),40);
+}
+function v23HideFeatured(){
+  V23_STATE.featuredOpen=false;
+  const layer=document.querySelector('#v23FeaturedLayer');
+  layer?.classList.remove('show');
+  layer?.setAttribute('aria-hidden','true');
+}
+
+const v23OpenBookingBase=openBooking;
+openBooking=function(serviceId='',options={}){
+  v23OpenBookingBase(serviceId,options);
+  v23EnsureUI();
+  if(serviceId){
+    const svc=SERVICES.find(s=>s.id===serviceId);
+    if(svc)V23_STATE.openCategory=v23CategoryForService(svc);
+    v23HideFeatured();
+    renderServices();
+    return;
+  }
+  renderServices();
+  const direct=new URLSearchParams(location.search).get('reserva')==='1';
+  if(direct&&!options.skipFeatured)setTimeout(v23ShowFeatured,35);
+};
+
+const v23CloseBookingBase=closeBooking;
+closeBooking=function(){v23HideFeatured();v23CloseBookingBase()};
+
+const v23GoBase=go;
+go=function(n){
+  v23GoBase(n);
+  const head=document.querySelector('.booking-head-row b');
+  const labels={1:'Servicio',2:'Fecha y hora',3:'Tus datos',4:'Confirmación'};
+  if(head)head.textContent=n<=4?`Paso ${n} de 4 · ${labels[n]}`:'Agendar cita';
+};
+
+v23EnsureUI();
+renderServices();
+
+document.querySelector('#serviceSearch')?.addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;
+  e.preventDefault();
+  markScheduleInteraction();
+  V23_STATE.appliedQuery=e.currentTarget.value.trim();
+  V23_STATE.filtersOpen=false;
+  renderServices();
+});
+
+document.querySelector('#v23MoreServices')?.addEventListener('click',()=>{
+  markScheduleInteraction();
+  v23HideFeatured();
+  renderServices();
+  setTimeout(()=>document.querySelector('#serviceSearch')?.focus(),80);
+});
+
+document.querySelector('#v23FeaturedContinue')?.addEventListener('click',()=>{
+  if(!state.service)return;
+  markScheduleInteraction();
+  v23HideFeatured();
+  go(2);
+});
+
+// part06b define posteriormente el onclick original de A→Z. Este ajuste corre después
+// y lo reemplaza por un panel de filtros sin interferir con el resto de eventos.
+setTimeout(()=>{
+  const filterBtn=document.querySelector('#sortBtn');
+  if(filterBtn){
+    filterBtn.textContent='Filtros';
+    filterBtn.setAttribute('aria-expanded','false');
+    filterBtn.onclick=()=>{
+      markScheduleInteraction();
+      V23_STATE.filtersOpen=!V23_STATE.filtersOpen;
+      filterBtn.setAttribute('aria-expanded',String(V23_STATE.filtersOpen));
+      renderServices();
+    };
+  }
+},0);
