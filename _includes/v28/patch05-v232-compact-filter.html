@@ -1,5 +1,5 @@
-// ===== V23.4 · SELECTOR DE SERVICIOS ESTABLE =====
-// Objetivo: filtros horizontales + acordeón sin huecos + scroll vertical real + búsqueda instantánea plana.
+// ===== V23.5 · SELECTOR DE SERVICIOS ESTABLE =====
+// Filtros horizontales + acordeón compacto + scroll vertical + búsqueda instantánea con retorno intuitivo.
 (function(){
   if(typeof V23_STATE==='undefined'||typeof V23_CATEGORIES==='undefined'||typeof SERVICES==='undefined')return;
 
@@ -9,7 +9,7 @@
   const LIST=document.querySelector('#serviceList');
   if(!STEP1||!BOOKING||!INPUT||!LIST)return;
 
-  const V234={
+  const V235={
     searchMode:false,
     blurTimer:null,
     filterScrollLeft:0,
@@ -20,23 +20,23 @@
   V23_STATE.openCategory=null;
   V23_STATE.filterCategory='all';
   V23_STATE.appliedQuery='';
+  // El orden manual A–Z/Z–A se retira. Se respeta el orden configurado del catálogo.
+  state.sort='az';
 
   const FILTER_LABELS={
     all:'Todas',consulta:'Consulta',metabolismo:'Metabolismo',estetica:'Estética',
     regenerativa:'Regenerativa',dolor:'Dolor',novare:'NOVARE'
   };
 
-  function v234CategoryLabel(id){
+  function v235CategoryLabel(id){
     return V23_CATEGORIES.find(c=>c.id===id)?.label||id;
   }
 
-  function v234Sorted(list){
-    return [...list].sort((a,b)=>state.sort==='za'
-      ?b.name.localeCompare(a.name,'es')
-      :a.name.localeCompare(b.name,'es'));
+  function v235List(list){
+    return [...list];
   }
 
-  function v234CleanTop(){
+  function v235CleanTop(){
     STEP1.querySelectorAll('.v23-step-help').forEach(el=>el.remove());
     const title=STEP1.querySelector('.step-title h2');
     if(title)title.textContent='¿Qué deseas reservar?';
@@ -48,7 +48,7 @@
     }
   }
 
-  function v234SelectedSummary(){
+  function v235SelectedSummary(){
     const box=document.querySelector('#v23SelectedSummary');
     if(!box)return;
     if(!state.service){
@@ -60,22 +60,22 @@
     box.innerHTML=`<small>Seleccionado</small><b>${state.service.name}</b>`;
   }
 
-  function v234Dirty(){
-    return V23_STATE.filterCategory!=='all'||state.sort==='za';
+  function v235Dirty(){
+    return V23_STATE.filterCategory!=='all';
   }
 
-  function v234TrashSvg(){
+  function v235TrashSvg(){
     return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M9 7V4h6v3m-8 0 1 13h8l1-13M10 11v5m4-5v5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   }
 
-  function v234RememberStrip(){
-    const old=document.querySelector('#v234FilterStrip');
-    if(old)V234.filterScrollLeft=old.scrollLeft;
+  function v235RememberStrip(){
+    const old=document.querySelector('#v235FilterStrip');
+    if(old)V235.filterScrollLeft=old.scrollLeft;
   }
 
-  function v234EnsureFilterVisible(row,id){
+  function v235EnsureFilterVisible(row,id){
     if(!row||!id)return;
-    const chip=row.querySelector(`[data-v234-filter="${id}"]`);
+    const chip=row.querySelector(`[data-v235-filter="${id}"]`);
     if(!chip)return;
     const left=chip.offsetLeft;
     const right=left+chip.offsetWidth;
@@ -85,131 +85,133 @@
     else if(right>viewRight-4)row.scrollLeft=Math.max(0,right-row.clientWidth+8);
   }
 
-  function v234RenderFilterRow(){
+  function v235RenderFilterRow(){
     const panel=document.querySelector('#v23FilterPanel');
     if(!panel)return;
-    v234RememberStrip();
-
-    if(V234.searchMode){
-      panel.style.display='none';
-      panel.innerHTML='';
-      return;
-    }
+    v235RememberStrip();
 
     panel.style.display='block';
     panel.classList.add('show');
-    const dirty=v234Dirty();
+
+    if(V235.searchMode){
+      panel.innerHTML=`
+        <div class="v235-search-nav">
+          <button type="button" class="v235-back-categories" id="v235BackCategories" aria-label="Volver a categorías">
+            <span aria-hidden="true">←</span><b>Categorías</b>
+          </button>
+          <span>Resultados en tiempo real</span>
+        </div>`;
+      panel.querySelector('#v235BackCategories').onclick=()=>{
+        if(V235.blurTimer){clearTimeout(V235.blurTimer);V235.blurTimer=null}
+        INPUT.blur();
+        v235ExitSearch();
+      };
+      return;
+    }
+
+    const dirty=v235Dirty();
     panel.innerHTML=`
-      <div class="v234-filter-strip" id="v234FilterStrip" aria-label="Filtrar servicios por categoría">
-        <button type="button" class="v234-filter-chip ${V23_STATE.filterCategory==='all'?'active':''}" data-v234-filter="all">Todas</button>
-        ${V23_CATEGORIES.map(c=>`<button type="button" class="v234-filter-chip ${V23_STATE.filterCategory===c.id?'active':''}" data-v234-filter="${c.id}">${FILTER_LABELS[c.id]||c.label}</button>`).join('')}
-        <button type="button" class="v234-sort ${state.sort==='za'?'active':''}" id="v234Sort" aria-label="Cambiar orden alfabético">${state.sort==='za'?'Z–A':'A–Z'}</button>
-        <button type="button" class="v234-clear ${dirty?'active':''}" id="v234Clear" aria-label="Limpiar filtros" title="Limpiar filtros" ${dirty?'':'disabled'}>${v234TrashSvg()}</button>
+      <div class="v235-filter-strip" id="v235FilterStrip" aria-label="Filtrar servicios por categoría">
+        <button type="button" class="v235-filter-chip ${V23_STATE.filterCategory==='all'?'active':''}" data-v235-filter="all">Todas</button>
+        ${V23_CATEGORIES.map(c=>`<button type="button" class="v235-filter-chip ${V23_STATE.filterCategory===c.id?'active':''}" data-v235-filter="${c.id}">${FILTER_LABELS[c.id]||c.label}</button>`).join('')}
+        <button type="button" class="v235-clear ${dirty?'active':''}" id="v235Clear" aria-label="Limpiar filtro de categoría" title="Limpiar filtro" ${dirty?'':'disabled'}>${v235TrashSvg()}</button>
       </div>`;
 
-    const row=panel.querySelector('#v234FilterStrip');
+    const row=panel.querySelector('#v235FilterStrip');
     requestAnimationFrame(()=>{
-      row.scrollLeft=V234.filterScrollLeft;
-      if(V234.ensureFilter){
-        v234EnsureFilterVisible(row,V234.ensureFilter);
-        V234.filterScrollLeft=row.scrollLeft;
-        V234.ensureFilter=null;
+      row.scrollLeft=V235.filterScrollLeft;
+      if(V235.ensureFilter){
+        v235EnsureFilterVisible(row,V235.ensureFilter);
+        V235.filterScrollLeft=row.scrollLeft;
+        V235.ensureFilter=null;
       }
     });
 
-    row.addEventListener('scroll',()=>{V234.filterScrollLeft=row.scrollLeft},{passive:true});
+    row.addEventListener('scroll',()=>{V235.filterScrollLeft=row.scrollLeft},{passive:true});
 
-    row.querySelectorAll('[data-v234-filter]').forEach(btn=>btn.onclick=()=>{
+    row.querySelectorAll('[data-v235-filter]').forEach(btn=>btn.onclick=()=>{
       markScheduleInteraction();
-      V234.filterScrollLeft=row.scrollLeft;
-      V23_STATE.filterCategory=btn.dataset.v234Filter;
+      V235.filterScrollLeft=row.scrollLeft;
+      V23_STATE.filterCategory=btn.dataset.v235Filter;
       V23_STATE.openCategory=V23_STATE.filterCategory==='all'?null:V23_STATE.filterCategory;
-      V234.ensureFilter=V23_STATE.filterCategory;
+      V235.ensureFilter=V23_STATE.filterCategory;
       renderServices();
     });
 
-    row.querySelector('#v234Sort').onclick=()=>{
-      markScheduleInteraction();
-      V234.filterScrollLeft=row.scrollLeft;
-      state.sort=state.sort==='za'?'az':'za';
-      renderServices();
-    };
-
-    const clear=row.querySelector('#v234Clear');
+    const clear=row.querySelector('#v235Clear');
     if(clear&&!clear.disabled)clear.onclick=()=>{
       markScheduleInteraction();
       V23_STATE.filterCategory='all';
       V23_STATE.openCategory=null;
-      state.sort='az';
-      V234.filterScrollLeft=0;
-      V234.ensureFilter='all';
+      V235.filterScrollLeft=0;
+      V235.ensureFilter='all';
       renderServices();
     };
   }
 
-  function v234ServiceButton(s,searchResult=false){
+  function v235ServiceButton(s,searchResult=false){
     const active=state.service?.id===s.id?'active':'';
-    const category=searchResult?`<span class="v234-result-category">${v234CategoryLabel(s.category)}</span>`:'';
-    return `<button type="button" class="v23-service v234-service ${active}" data-v234-svc="${s.id}">
+    const category=searchResult?`<span class="v235-result-category">${v235CategoryLabel(s.category)}</span>`:'';
+    return `<button type="button" class="v23-service v235-service ${active}" data-v235-svc="${s.id}">
       <div>${category}<b>${s.name}</b><small>${s.unit} · ${s.price}</small></div>${icon('i-arrow')}
     </button>`;
   }
 
-  function v234RenderSearchResults(){
+  function v235RenderSearchResults(){
     const q=norm(INPUT.value.trim());
-    let results=v234Sorted(SERVICES);
-    if(q)results=results.filter(s=>norm(`${s.name} ${s.unit} ${s.price} ${v234CategoryLabel(s.category)}`).includes(q));
+    let results=v235List(SERVICES);
+    if(q)results=results.filter(s=>norm(`${s.name} ${s.unit} ${s.price} ${v235CategoryLabel(s.category)}`).includes(q));
 
-    LIST.classList.add('v234-search-results');
+    LIST.classList.add('v235-search-results');
     if(!results.length){
-      LIST.innerHTML=`<div class="v234-empty" role="status"><b>No encontramos ese servicio</b><span>Prueba con otro término.</span></div>`;
+      LIST.innerHTML=`<div class="v235-empty" role="status"><b>No encontramos ese servicio</b><span>Prueba con otro término.</span></div>`;
       return;
     }
-    LIST.innerHTML=results.map(s=>v234ServiceButton(s,true)).join('');
+    LIST.innerHTML=results.map(s=>v235ServiceButton(s,true)).join('');
   }
 
-  function v234RenderCategories(){
-    LIST.classList.remove('v234-search-results');
+  function v235RenderCategories(){
+    LIST.classList.remove('v235-search-results');
     const categories=V23_STATE.filterCategory==='all'
       ?V23_CATEGORIES
       :V23_CATEGORIES.filter(c=>c.id===V23_STATE.filterCategory);
 
     LIST.innerHTML=categories.map(cat=>{
-      const services=v234Sorted(SERVICES.filter(s=>s.category===cat.id));
+      const services=v235List(SERVICES.filter(s=>s.category===cat.id));
       const open=V23_STATE.openCategory===cat.id;
-      // IMPORTANTE: si está cerrado NO se renderiza cuerpo. Así no existe ningún cajón blanco residual.
-      const body=open?`<div class="v23-category-body">${services.map(s=>v234ServiceButton(s,false)).join('')}</div>`:'';
-      return `<section class="v23-category ${open?'open':''}" data-tone="${cat.tone}" data-v234-category="${cat.id}">
-        <button type="button" class="v23-category-head" data-v234-cat-toggle="${cat.id}" aria-expanded="${open?'true':'false'}">
+      // Cerrada = solo barra de categoría. No existe cuerpo ni espacio residual.
+      const body=open?`<div class="v23-category-body">${services.map(s=>v235ServiceButton(s,false)).join('')}</div>`:'';
+      return `<section class="v23-category ${open?'open':''}" data-tone="${cat.tone}" data-v235-category="${cat.id}">
+        <button type="button" class="v23-category-head" data-v235-cat-toggle="${cat.id}" aria-expanded="${open?'true':'false'}">
           <span><b>${cat.label}</b><small>${services.length} ${services.length===1?'servicio':'servicios'}</small></span>${icon('i-arrow')}
         </button>${body}
       </section>`;
     }).join('');
   }
 
-  function v234BindServiceEvents(){
-    LIST.querySelectorAll('[data-v234-cat-toggle]').forEach(btn=>btn.onclick=()=>{
+  function v235BindServiceEvents(){
+    LIST.querySelectorAll('[data-v235-cat-toggle]').forEach(btn=>btn.onclick=()=>{
       markScheduleInteraction();
-      const id=btn.dataset.v234CatToggle;
+      const id=btn.dataset.v235CatToggle;
       V23_STATE.openCategory=V23_STATE.openCategory===id?null:id;
       renderServices();
       requestAnimationFrame(()=>{
-        const opened=LIST.querySelector(`[data-v234-category="${V23_STATE.openCategory||''}"]`);
+        const opened=LIST.querySelector(`[data-v235-category="${V23_STATE.openCategory||''}"]`);
         if(opened)opened.scrollIntoView({block:'nearest'});
       });
     });
 
-    LIST.querySelectorAll('[data-v234-svc]').forEach(btn=>btn.onclick=()=>{
-      if(V234.blurTimer){clearTimeout(V234.blurTimer);V234.blurTimer=null}
+    LIST.querySelectorAll('[data-v235-svc]').forEach(btn=>btn.onclick=()=>{
+      if(V235.blurTimer){clearTimeout(V235.blurTimer);V235.blurTimer=null}
       markScheduleInteraction();
-      const svc=SERVICES.find(s=>s.id===btn.dataset.v234Svc);
+      const svc=SERVICES.find(s=>s.id===btn.dataset.v235Svc);
       if(!svc)return;
       state.service=svc;
       setPrimary(document.querySelector('#toStep2'),true);
       saveDraft();
 
-      if(V234.searchMode){
-        V234.searchMode=false;
+      if(V235.searchMode){
+        V235.searchMode=false;
         INPUT.value='';
         V23_STATE.appliedQuery='';
         V23_STATE.filterCategory='all';
@@ -220,46 +222,46 @@
     });
   }
 
-  // Sustituimos renderServices de V23 únicamente para el Paso 1.
   renderServices=function(){
     v23EnsureUI();
-    v234CleanTop();
-    v234RenderFilterRow();
-    if(V234.searchMode)v234RenderSearchResults();
-    else v234RenderCategories();
-    v234BindServiceEvents();
-    v234SelectedSummary();
+    v235CleanTop();
+    v235RenderFilterRow();
+    if(V235.searchMode)v235RenderSearchResults();
+    else v235RenderCategories();
+    v235BindServiceEvents();
+    v235SelectedSummary();
     setPrimary(document.querySelector('#toStep2'),!!state.service);
-    requestAnimationFrame(v234Fit);
+    requestAnimationFrame(v235Fit);
   };
 
-  function v234EnterSearch(){
-    if(V234.blurTimer){clearTimeout(V234.blurTimer);V234.blurTimer=null}
-    V234.searchMode=true;
+  function v235EnterSearch(){
+    if(V235.blurTimer){clearTimeout(V235.blurTimer);V235.blurTimer=null}
+    V235.searchMode=true;
     V23_STATE.appliedQuery='';
     renderServices();
-    requestAnimationFrame(()=>{LIST.scrollTop=0;v234Fit()});
+    requestAnimationFrame(()=>{LIST.scrollTop=0;v235Fit()});
   }
 
-  function v234ExitSearch(){
-    V234.searchMode=false;
+  function v235ExitSearch(){
+    if(V235.blurTimer){clearTimeout(V235.blurTimer);V235.blurTimer=null}
+    V235.searchMode=false;
     INPUT.value='';
     V23_STATE.appliedQuery='';
     V23_STATE.filterCategory='all';
     V23_STATE.openCategory=null;
     renderServices();
-    requestAnimationFrame(()=>{LIST.scrollTop=0;v234Fit()});
+    requestAnimationFrame(()=>{LIST.scrollTop=0;v235Fit()});
   }
 
-  // Captura antes de listeners antiguos: búsqueda EN VIVO, sin Enter y sin auto-scroll heredado.
+  // Búsqueda en vivo: sin Enter. Al enfocar se muestra lista plana.
   INPUT.addEventListener('focus',e=>{
     e.stopImmediatePropagation();
-    v234EnterSearch();
+    v235EnterSearch();
   },true);
 
   INPUT.addEventListener('input',e=>{
     e.stopImmediatePropagation();
-    if(!V234.searchMode)V234.searchMode=true;
+    if(!V235.searchMode)V235.searchMode=true;
     renderServices();
     LIST.scrollTop=0;
   },true);
@@ -270,204 +272,214 @@
   },true);
 
   INPUT.addEventListener('blur',()=>{
-    V234.blurTimer=setTimeout(()=>{
-      V234.blurTimer=null;
-      if(V234.searchMode)v234ExitSearch();
+    V235.blurTimer=setTimeout(()=>{
+      V235.blurTimer=null;
+      if(V235.searchMode)v235ExitSearch();
     },180);
   });
 
-  // "Ver más servicios" debe abrir catálogo normal, NO enfocar automáticamente el buscador.
   document.querySelector('#v23MoreServices')?.addEventListener('click',e=>{
     e.preventDefault();
     e.stopImmediatePropagation();
     markScheduleInteraction();
     v23HideFeatured();
-    V234.searchMode=false;
+    V235.searchMode=false;
     INPUT.value='';
     V23_STATE.filterCategory='all';
     V23_STATE.openCategory=null;
     renderServices();
   },true);
 
-  function v234SetMode(active){
-    BOOKING.classList.toggle('v234-service-mode',!!active);
+  function v235SetMode(active){
+    BOOKING.classList.toggle('v235-service-mode',!!active);
     if(!active)return;
-    v234CleanTop();
+    v235CleanTop();
     const head=document.querySelector('.booking-head-row b');
     if(head)head.textContent='PASO 1/4 · SERVICIO';
-    requestAnimationFrame(v234Fit);
+    requestAnimationFrame(v235Fit);
   }
 
-  function v234Fit(){
+  function v235Fit(){
     if(!STEP1.classList.contains('active'))return;
     const vh=window.visualViewport?.height||window.innerHeight;
     const head=document.querySelector('.booking-head');
     const headH=head?.getBoundingClientRect().height||52;
     const available=Math.max(270,Math.floor(vh-headH-4));
-    BOOKING.style.setProperty('--v234-step-h',`${available}px`);
+    BOOKING.style.setProperty('--v235-step-h',`${available}px`);
   }
 
-  // La función real del flujo es go(n). Se envuelve directamente, sin alias showStep.
-  const v234GoBase=go;
+  const v235GoBase=go;
   go=function(n){
-    v234GoBase(n);
-    v234SetMode(Number(n)===1);
+    v235GoBase(n);
+    v235SetMode(Number(n)===1);
   };
 
-  if(!document.querySelector('#v234-styles')){
+  if(!document.querySelector('#v235-styles')){
     const style=document.createElement('style');
-    style.id='v234-styles';
+    style.id='v235-styles';
     style.textContent=`
       /* ===== CONTENEDOR PASO 1 ===== */
-      .booking.v234-service-mode{overflow:hidden!important}
-      .booking.v234-service-mode .booking-head{padding:6px 12px!important;min-height:0!important}
-      .booking.v234-service-mode .booking-head-row b{font:900 .75rem/1 system-ui,-apple-system,sans-serif!important;letter-spacing:.055em!important}
-      .booking.v234-service-mode .close-btn{width:38px!important;height:38px!important}
-      .booking.v234-service-mode .progress{height:3px!important;margin-top:5px!important}
-      .booking.v234-service-mode .booking-inner{
+      .booking.v235-service-mode{overflow:hidden!important}
+      .booking.v235-service-mode .booking-head{padding:6px 12px!important;min-height:0!important}
+      .booking.v235-service-mode .booking-head-row b{font:900 .75rem/1 system-ui,-apple-system,sans-serif!important;letter-spacing:.055em!important}
+      .booking.v235-service-mode .close-btn{width:38px!important;height:38px!important}
+      .booking.v235-service-mode .progress{height:3px!important;margin-top:5px!important}
+      .booking.v235-service-mode .booking-inner{
         width:min(calc(100% - 20px),700px)!important;
-        height:var(--v234-step-h,calc(100dvh - 52px))!important;
+        height:var(--v235-step-h,calc(100dvh - 52px))!important;
         margin:4px auto 0!important;
         overflow:hidden!important;
       }
-      .booking.v234-service-mode .step[data-step="1"].active{
+      .booking.v235-service-mode .step[data-step="1"].active{
         height:100%!important;min-height:0!important;overflow:hidden!important;
         display:grid!important;
         grid-template-rows:auto auto auto minmax(0,1fr) auto auto!important;
         align-content:stretch!important;
       }
       .step[data-step="1"] .v23-step-help{display:none!important}
-      .booking.v234-service-mode .step-title{min-height:31px!important;margin:2px 0 4px!important;gap:6px!important}
-      .booking.v234-service-mode .step-title .icon{width:19px!important;height:19px!important}
-      .booking.v234-service-mode .step-title h2{font:700 clamp(1.3rem,6vw,1.62rem)/1.02 "Fraunces",serif!important;margin:0!important}
+      .booking.v235-service-mode .step-title{min-height:31px!important;margin:2px 0 4px!important;gap:6px!important}
+      .booking.v235-service-mode .step-title .icon{width:19px!important;height:19px!important}
+      .booking.v235-service-mode .step-title h2{font:700 clamp(1.3rem,6vw,1.62rem)/1.02 "Fraunces",serif!important;margin:0!important}
 
       /* ===== BUSCADOR ===== */
-      .booking.v234-service-mode .search-row{
+      .booking.v235-service-mode .search-row{
         position:static!important;display:grid!important;grid-template-columns:1fr!important;
-        margin:0 0 4px!important;padding:0!important;background:transparent!important;
+        margin:0 0 3px!important;padding:0!important;background:transparent!important;
       }
-      .booking.v234-service-mode .search-box{height:40px!important;min-height:40px!important;border-radius:12px!important;padding:0 10px!important;gap:7px!important}
-      .booking.v234-service-mode .search-box .icon{width:19px!important;height:19px!important}
-      .booking.v234-service-mode #serviceSearch{font-size:.82rem!important}
-      .booking.v234-service-mode #sortBtn{display:none!important}
+      .booking.v235-service-mode .search-box{height:40px!important;min-height:40px!important;border-radius:12px!important;padding:0 10px!important;gap:7px!important}
+      .booking.v235-service-mode .search-box .icon{width:19px!important;height:19px!important}
+      .booking.v235-service-mode #serviceSearch{font-size:.82rem!important}
+      .booking.v235-service-mode #sortBtn{display:none!important}
 
-      /* ===== FILTROS: UNA SOLA FILA HORIZONTAL, SCROLL INDEPENDIENTE ===== */
-      .booking.v234-service-mode .v23-filter-panel,
-      .booking.v234-service-mode .v23-filter-panel.show{
-        display:block;margin:0 0 5px!important;padding:0!important;border:0!important;
+      /* ===== FILTROS: UNA SOLA FILA HORIZONTAL ===== */
+      .booking.v235-service-mode .v23-filter-panel,
+      .booking.v235-service-mode .v23-filter-panel.show{
+        display:block!important;margin:0 0 3px!important;padding:0!important;border:0!important;
         background:transparent!important;box-shadow:none!important;min-width:0!important;
       }
-      .v234-filter-strip{
-        display:flex!important;align-items:center!important;gap:5px!important;
+      .v235-filter-strip{
+        display:flex!important;align-items:center!important;gap:4px!important;
         width:100%!important;height:34px!important;overflow-x:auto!important;overflow-y:hidden!important;
         overscroll-behavior-x:contain!important;-webkit-overflow-scrolling:touch!important;
         scrollbar-width:none!important;touch-action:pan-x!important;padding:0 1px 2px!important;
         scroll-behavior:smooth!important;
       }
-      .v234-filter-strip::-webkit-scrollbar{display:none!important}
-      .v234-filter-chip,.v234-sort,.v234-clear{
+      .v235-filter-strip::-webkit-scrollbar{display:none!important}
+      .v235-filter-chip,.v235-clear{
         flex:0 0 auto!important;height:31px!important;min-height:31px!important;
         border:1px solid var(--line)!important;border-radius:10px!important;background:#fff!important;
         color:var(--navy)!important;padding:0 11px!important;font-size:.61rem!important;font-weight:850!important;
         white-space:nowrap!important;display:grid!important;place-items:center!important;
       }
-      .v234-filter-chip.active{background:var(--navy)!important;border-color:var(--navy)!important;color:#fff!important}
-      .v234-sort.active{border-color:var(--teal2)!important;color:var(--teal2)!important;background:#eef8f7!important}
-      .v234-clear{width:31px!important;padding:0!important;color:#9aa8ad!important}
-      .v234-clear svg{width:15px!important;height:15px!important}
-      .v234-clear.active{color:var(--teal2)!important;border-color:#cce7e4!important;background:#eef8f7!important}
-      .v234-clear:disabled{opacity:.35!important}
+      .v235-filter-chip.active{background:var(--navy)!important;border-color:var(--navy)!important;color:#fff!important}
+      .v235-clear{width:31px!important;padding:0!important;color:#9aa8ad!important}
+      .v235-clear svg{width:15px!important;height:15px!important}
+      .v235-clear.active{color:var(--teal2)!important;border-color:#cce7e4!important;background:#eef8f7!important}
+      .v235-clear:disabled{opacity:.35!important}
 
-      /* ===== CATÁLOGO: ÚNICO SCROLL VERTICAL REAL ===== */
-      .booking.v234-service-mode .service-list{
+      /* ===== NAVEGACIÓN DEL MODO BÚSQUEDA ===== */
+      .v235-search-nav{
+        min-height:31px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;
+        gap:8px!important;padding:0 2px!important;
+      }
+      .v235-back-categories{
+        height:30px!important;border:1px solid #cfe3e2!important;background:#eef8f7!important;color:var(--teal2)!important;
+        border-radius:10px!important;padding:0 10px!important;display:inline-flex!important;align-items:center!important;gap:5px!important;
+        font-size:.64rem!important;font-weight:850!important;
+      }
+      .v235-back-categories span{font-size:.9rem!important;line-height:1!important}
+      .v235-search-nav>span{font-size:.56rem!important;color:var(--muted)!important;white-space:nowrap!important}
+
+      /* ===== CATÁLOGO: SCROLL VERTICAL Y CATEGORÍAS CASI JUNTAS ===== */
+      .booking.v235-service-mode .service-list{
         min-height:0!important;height:auto!important;max-height:none!important;
+        display:flex!important;flex-direction:column!important;justify-content:flex-start!important;align-content:flex-start!important;
         overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior-y:contain!important;
         -webkit-overflow-scrolling:touch!important;touch-action:pan-y!important;
-        padding:1px 2px 10px!important;gap:6px!important;
+        padding:1px 2px 8px!important;gap:3px!important;
         background:transparent!important;scroll-padding:46px 0 12px!important;
       }
-      .booking.v234-service-mode .v23-category{
-        display:block!important;border:0!important;border-radius:13px!important;overflow:visible!important;
-        background:transparent!important;box-shadow:none!important;margin:0!important;
+      .booking.v235-service-mode .v23-category{
+        flex:0 0 auto!important;display:block!important;border:0!important;border-radius:13px!important;overflow:visible!important;
+        background:transparent!important;box-shadow:none!important;margin:0!important;padding:0!important;
       }
-      .booking.v234-service-mode .v23-category-head{
+      .booking.v235-service-mode .v23-category-head{
         width:100%!important;min-height:45px!important;padding:7px 10px!important;border-radius:13px!important;
         display:grid!important;grid-template-columns:1fr auto!important;align-items:center!important;gap:7px!important;
-        position:relative!important;z-index:2!important;
+        position:relative!important;z-index:2!important;margin:0!important;
       }
-      .booking.v234-service-mode .v23-category.open .v23-category-head{
+      .booking.v235-service-mode .v23-category.open .v23-category-head{
         position:sticky!important;top:0!important;z-index:5!important;border-radius:13px 13px 8px 8px!important;
       }
-      .booking.v234-service-mode .v23-category-head b{font-size:.76rem!important;line-height:1.05!important}
-      .booking.v234-service-mode .v23-category-head small{font-size:.53rem!important;margin-top:1px!important}
-      .booking.v234-service-mode .v23-category-head .icon{width:17px!important;height:17px!important}
-
-      /* NO existe cajón residual en categorías cerradas. */
-      .booking.v234-service-mode .v23-category:not(.open) .v23-category-body{display:none!important}
-      .booking.v234-service-mode .v23-category-body{
+      .booking.v235-service-mode .v23-category-head b{font-size:.76rem!important;line-height:1.05!important}
+      .booking.v235-service-mode .v23-category-head small{font-size:.53rem!important;margin-top:1px!important}
+      .booking.v235-service-mode .v23-category-head .icon{width:17px!important;height:17px!important}
+      .booking.v235-service-mode .v23-category:not(.open) .v23-category-body{display:none!important}
+      .booking.v235-service-mode .v23-category-body{
         display:grid!important;gap:4px!important;padding:5px!important;margin:0!important;
         background:#f6faf9!important;border-radius:0 0 13px 13px!important;
       }
-      .booking.v234-service-mode .v23-service{
-        min-height:45px!important;padding:7px 9px!important;border-radius:10px!important;gap:6px!important;
+      .booking.v235-service-mode .v23-service{
+        flex:0 0 auto!important;min-height:45px!important;padding:7px 9px!important;border-radius:10px!important;gap:6px!important;
       }
-      .booking.v234-service-mode .v23-service b{font-size:.71rem!important;line-height:1.08!important}
-      .booking.v234-service-mode .v23-service small{font-size:.56rem!important;margin-top:2px!important;line-height:1.08!important}
-      .booking.v234-service-mode .v23-service .icon{width:17px!important;height:17px!important}
+      .booking.v235-service-mode .v23-service b{font-size:.71rem!important;line-height:1.08!important}
+      .booking.v235-service-mode .v23-service small{font-size:.56rem!important;margin-top:2px!important;line-height:1.08!important}
+      .booking.v235-service-mode .v23-service .icon{width:17px!important;height:17px!important}
 
-      /* ===== MODO BÚSQUEDA: SIN CATEGORÍAS NI FILTROS ===== */
-      .booking.v234-service-mode .service-list.v234-search-results{
-        display:flex!important;flex-direction:column!important;gap:5px!important;
-        padding-top:2px!important;background:transparent!important;
+      /* ===== MODO BÚSQUEDA: LISTA PLANA ===== */
+      .booking.v235-service-mode .service-list.v235-search-results{
+        display:flex!important;flex-direction:column!important;justify-content:flex-start!important;gap:4px!important;
+        padding-top:1px!important;background:transparent!important;
       }
-      .booking.v234-service-mode .v234-search-results .v23-service{
+      .booking.v235-service-mode .v235-search-results .v23-service{
         flex:0 0 auto!important;background:#f3f9f8!important;border:1px solid #dce9e9!important;
       }
-      .v234-result-category{
+      .v235-result-category{
         display:block!important;color:var(--teal2)!important;font-size:.49rem!important;font-weight:850!important;
         text-transform:uppercase!important;letter-spacing:.035em!important;margin-bottom:2px!important;
       }
-      .v234-empty{
+      .v235-empty{
         min-height:140px!important;display:flex!important;flex-direction:column!important;align-items:center!important;
         justify-content:center!important;text-align:center!important;padding:20px!important;color:var(--navy)!important;
       }
-      .v234-empty b{font-size:.9rem!important}
-      .v234-empty span{font-size:.68rem!important;color:var(--muted)!important;margin-top:5px!important}
+      .v235-empty b{font-size:.9rem!important}
+      .v235-empty span{font-size:.68rem!important;color:var(--muted)!important;margin-top:5px!important}
 
       /* ===== SELECCIÓN + CTA ===== */
-      .booking.v234-service-mode .v23-selected-summary{margin:3px 1px 0!important;padding:5px 7px!important;border-radius:9px!important}
-      .booking.v234-service-mode .v23-selected-summary:not(.show){display:none!important}
-      .booking.v234-service-mode .v23-selected-summary small{font-size:.48rem!important}
-      .booking.v234-service-mode .v23-selected-summary b{font-size:.61rem!important}
-      .booking.v234-service-mode .actions{
+      .booking.v235-service-mode .v23-selected-summary{margin:3px 1px 0!important;padding:5px 7px!important;border-radius:9px!important}
+      .booking.v235-service-mode .v23-selected-summary:not(.show){display:none!important}
+      .booking.v235-service-mode .v23-selected-summary small{font-size:.48rem!important}
+      .booking.v235-service-mode .v23-selected-summary b{font-size:.61rem!important}
+      .booking.v235-service-mode .actions{
         position:static!important;grid-template-columns:52px minmax(0,1fr)!important;gap:6px!important;
         min-height:54px!important;padding:5px 0 4px!important;background:linear-gradient(180deg,rgba(244,247,248,.7),var(--bg) 40%)!important;
       }
-      .booking.v234-service-mode .actions .back-btn,.booking.v234-service-mode .actions .btn{
+      .booking.v235-service-mode .actions .back-btn,.booking.v235-service-mode .actions .btn{
         min-height:48px!important;height:48px!important;border-radius:16px!important;
       }
-      .booking.v234-service-mode .actions .btn{font-size:.79rem!important}
+      .booking.v235-service-mode .actions .btn{font-size:.79rem!important}
 
       @media(max-height:680px){
-        .booking.v234-service-mode .booking-head{padding:4px 10px!important}
-        .booking.v234-service-mode .close-btn{width:34px!important;height:34px!important}
-        .booking.v234-service-mode .booking-inner{margin-top:2px!important}
-        .booking.v234-service-mode .step-title{min-height:27px!important;margin:0 0 3px!important}
-        .booking.v234-service-mode .step-title h2{font-size:1.18rem!important}
-        .booking.v234-service-mode .search-box{height:36px!important;min-height:36px!important}
-        .v234-filter-strip{height:31px!important}.v234-filter-chip,.v234-sort,.v234-clear{height:28px!important;min-height:28px!important}
-        .booking.v234-service-mode .v23-category-head{min-height:40px!important;padding:6px 9px!important}
-        .booking.v234-service-mode .actions{min-height:49px!important;padding-top:3px!important}
-        .booking.v234-service-mode .actions .back-btn,.booking.v234-service-mode .actions .btn{height:44px!important;min-height:44px!important}
+        .booking.v235-service-mode .booking-head{padding:4px 10px!important}
+        .booking.v235-service-mode .close-btn{width:34px!important;height:34px!important}
+        .booking.v235-service-mode .booking-inner{margin-top:2px!important}
+        .booking.v235-service-mode .step-title{min-height:27px!important;margin:0 0 3px!important}
+        .booking.v235-service-mode .step-title h2{font-size:1.18rem!important}
+        .booking.v235-service-mode .search-box{height:36px!important;min-height:36px!important}
+        .v235-filter-strip{height:31px!important}.v235-filter-chip,.v235-clear{height:28px!important;min-height:28px!important}
+        .v235-search-nav{min-height:28px!important}.v235-back-categories{height:27px!important}
+        .booking.v235-service-mode .v23-category-head{min-height:40px!important;padding:6px 9px!important}
+        .booking.v235-service-mode .actions{min-height:49px!important;padding-top:3px!important}
+        .booking.v235-service-mode .actions .back-btn,.booking.v235-service-mode .actions .btn{height:44px!important;min-height:44px!important}
       }
     `;
     document.head.appendChild(style);
   }
 
-  v234CleanTop();
+  v235CleanTop();
   renderServices();
-  v234SetMode(STEP1.classList.contains('active'));
+  v235SetMode(STEP1.classList.contains('active'));
 
-  window.addEventListener('resize',v234Fit,{passive:true});
-  window.visualViewport?.addEventListener('resize',v234Fit,{passive:true});
+  window.addEventListener('resize',v235Fit,{passive:true});
+  window.visualViewport?.addEventListener('resize',v235Fit,{passive:true});
 })();
