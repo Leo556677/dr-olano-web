@@ -9,12 +9,6 @@ permalink: /
 {% capture v28_part03 %}{% include v28/part03.html %}{% endcapture %}{{ v28_part03
   | replace: 'assets/hero-doctor.jpg?v=16', 'assets/dr-olano-actual-1229.webp?v=18'
   | replace: 'assets/hero-doctor-640.webp?v=16', 'assets/dr-olano-actual-1229.webp?v=18'
-  | replace: 'assets/unidad-estetica.jpg?v=16', 'assets/unidad-estetica-v19.webp?v=19'
-  | replace: 'assets/unidad-estetica-640.webp?v=16', 'assets/unidad-estetica-v19.webp?v=19'
-  | replace: 'assets/unidad-dolor.jpg?v=16', 'assets/unidad-dolor-v19.webp?v=19'
-  | replace: 'assets/unidad-dolor-640.webp?v=16', 'assets/unidad-dolor-v19.webp?v=19'
-  | replace: 'assets/unidad-metabolismo.jpg?v=16', 'assets/unidad-metabolismo-v19.webp?v=19'
-  | replace: 'assets/unidad-metabolismo-640.webp?v=16', 'assets/unidad-metabolismo-v19.webp?v=19'
   | replace: '51981214007', '51907108271'
 }}
 {% capture v28_part04 %}{% include v28/part04.html %}{% endcapture %}{{ v28_part04
@@ -33,4 +27,6 @@ initTracking();
 {% include v28/patch02-policy.html %}
 {% include v28/part06a.html %}
 {% include v28/part06b.html %}
-{% include v28/part07.html %}
+{% capture v28_part07 %}{% include v28/part07.html %}{% endcapture %}{{ v28_part07
+  | replace: '</body>', '<script src="assets/v20-images.js?v=20" defer></script></body>'
+}}
