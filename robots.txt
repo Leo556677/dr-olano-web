@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://leo556677.github.io/dr-olano-web/sitemap.xml
+Sitemap: https://doctorolano.pe/sitemap.xml
