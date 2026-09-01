@@ -1,6 +1,5 @@
 ---
 layout: seo-service
-permalink: /metabolismo-obesidad-carabayllo
 canonical: https://doctorolano.pe/metabolismo-obesidad-carabayllo
 title: "Metabolismo y Obesidad en Carabayllo | Dr. Olano"
 description: "Evaluación médica de metabolismo y obesidad en Carabayllo con Dr. Olano. Solicita una cita y conoce el enfoque de atención individual."
