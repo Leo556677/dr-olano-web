@@ -17,6 +17,12 @@ const BOOKING_PATH=window.location.pathname.replace(/\/+$/,"");
 const LEGACY_BOOKING_PARAMS=new URLSearchParams(window.location.search);
 const LEGACY_DIRECT_BOOKING=LEGACY_BOOKING_PARAMS.get("reserva")==="1";
 
+// Modos de entrada limpia:
+// /reserva   = panel visual de Medicina Estética Facial.
+// /reserva-s = lista completa de servicios.
+// ?reserva=1 = compatibilidad antigua; se normaliza visualmente a /reserva-s.
+const BOOKING_ENTRY_MODE=BOOKING_PATH==="/reserva"?"featured":((BOOKING_PATH==="/reserva-s"||LEGACY_DIRECT_BOOKING)?"services":"");
+
 // Los enlaces antiguos ?reserva=1 se normalizan visualmente a /reserva-s.
 // Se eliminan solo los parámetros técnicos antiguos reserva y v; UTMs y otros parámetros de campaña se conservan.
 if(LEGACY_DIRECT_BOOKING&&BOOKING_PATH!=="/reserva-s"){
@@ -26,7 +32,7 @@ if(LEGACY_DIRECT_BOOKING&&BOOKING_PATH!=="/reserva-s"){
   history.replaceState(null,"",`/reserva-s${remainingQuery?`?${remainingQuery}`:""}`);
 }
 
-const DIRECT_BOOKING=LEGACY_DIRECT_BOOKING||BOOKING_PATH==="/reserva"||BOOKING_PATH==="/reserva-s";
+const DIRECT_BOOKING=BOOKING_ENTRY_MODE!=="";
 
 function startLandingExperience(){
   // Todos los tiempos de la landing comienzan DESPUÉS de terminar el video.
@@ -34,9 +40,19 @@ function startLandingExperience(){
   updateDock();
   renderVerifiedBusinessFields();
 
-  // Entrada especial para anuncios: omite exploración y abre directamente la lista de servicios.
+  // Entradas directas: /reserva muestra el panel visual de Medicina Estética;
+  // /reserva-s y enlaces antiguos abren la lista completa de servicios.
   if(DIRECT_BOOKING){
-    setTimeout(()=>openBooking(),0);
+    setTimeout(()=>{
+      openBooking();
+      if(BOOKING_ENTRY_MODE==="featured"){
+        if(typeof v23ShowFeatured==="function")v23ShowFeatured();
+      }else{
+        if(typeof v23HideFeatured==="function")v23HideFeatured();
+        if(typeof renderServices==="function")renderServices();
+        setTimeout(()=>document.querySelector("#serviceList")?.scrollTo({top:0,behavior:"instant"}),30);
+      }
+    },0);
     return;
   }
 
