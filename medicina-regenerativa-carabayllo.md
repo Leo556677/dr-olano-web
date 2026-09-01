@@ -1,6 +1,5 @@
 ---
 layout: seo-service
-permalink: /medicina-regenerativa-carabayllo
 canonical: https://doctorolano.pe/medicina-regenerativa-carabayllo
 title: "Medicina Regenerativa en Carabayllo | Dr. Olano"
 description: "Información y evaluación médica en medicina regenerativa en Carabayllo con Dr. Olano. Conoce el enfoque de atención y solicita una cita."
