@@ -40,6 +40,32 @@
   }
 }
 </script>
+{% if page.person_name %}
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"Person",
+  "@id":"https://doctorolano.pe/doctor-olano#physician",
+  "name":{{ page.person_name | jsonify }},
+  "alternateName":{{ page.person_alternate_name | default: "Dr. Olano" | jsonify }},
+  "honorificPrefix":"Dr.",
+  "jobTitle":"Médico Cirujano",
+  "url":"https://doctorolano.pe/doctor-olano",
+  "image":"https://doctorolano.pe/assets/dr-olano-hero-v22.webp",
+  "identifier":{
+    "@type":"PropertyValue",
+    "propertyID":"CMP",
+    "value":{{ page.cmp | jsonify }}
+  },
+  "address":{
+    "@type":"PostalAddress",
+    "addressLocality":"Carabayllo",
+    "addressRegion":"Lima",
+    "addressCountry":"PE"
+  }
+}
+</script>
+{% endif %}
 <script type="application/ld+json">
 {
   "@context":"https://schema.org",
