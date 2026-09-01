@@ -13,7 +13,8 @@ function renderVerifiedBusinessFields(){
   if(BUSINESS.addressLine){document.querySelector(".footer-meta")?.insertAdjacentHTML("afterbegin",`<span>${BUSINESS.addressLine}</span>`)}
 }
 
-const DIRECT_BOOKING=new URLSearchParams(window.location.search).get("reserva")==="1";
+const CLEAN_BOOKING_PATH=window.location.pathname.replace(/\/+$/,"")==="/reserva";
+const DIRECT_BOOKING=new URLSearchParams(window.location.search).get("reserva")==="1"||CLEAN_BOOKING_PATH;
 
 function startLandingExperience(){
   // Todos los tiempos de la landing comienzan DESPUÉS de terminar el video.
