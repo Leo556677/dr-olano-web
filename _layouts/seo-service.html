@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>{{ page.title }}</title>
+<meta name="description" content="{{ page.description }}">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<link rel="canonical" href="{{ page.canonical }}">
+<link rel="icon" type="image/png" href="/assets/logo-isotipo.png">
+<meta name="theme-color" content="#0b2e4f">
+<meta property="og:locale" content="es_PE">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Dr. Olano">
+<meta property="og:title" content="{{ page.title }}">
+<meta property="og:description" content="{{ page.description }}">
+<meta property="og:url" content="{{ page.canonical }}">
+<meta property="og:image" content="https://doctorolano.pe/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ page.title }}">
+<meta name="twitter:description" content="{{ page.description }}">
+<meta name="twitter:image" content="https://doctorolano.pe/og-image.png">
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"WebPage",
+  "name":{{ page.title | jsonify }},
+  "description":{{ page.description | jsonify }},
+  "url":{{ page.canonical | jsonify }},
+  "inLanguage":"es-PE",
+  "about":{
+    "@type":"Person",
+    "name":"Dr. Olano",
+    "jobTitle":"Médico Cirujano"
+  },
+  "isPartOf":{
+    "@type":"WebSite",
+    "name":"Dr. Olano",
+    "url":"https://doctorolano.pe/"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"BreadcrumbList",
+  "itemListElement":[
+    {"@type":"ListItem","position":1,"name":"Dr. Olano","item":"https://doctorolano.pe/"},
+    {"@type":"ListItem","position":2,"name":{{ page.h1 | jsonify }},"item":{{ page.canonical | jsonify }}}
+  ]
+}
+</script>
+<style>
+:root{--navy:#0b2e4f;--navy2:#061d33;--teal:#0f827a;--bg:#f4f7f8;--muted:#5f707b;--line:#dce6e9;--white:#fff;--shadow:0 18px 48px -28px rgba(7,30,54,.34)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--navy);font:16px/1.6 Arial,sans-serif}a{color:inherit}.wrap{width:min(calc(100% - 32px),1040px);margin:auto}
+.top{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}.nav{min-height:70px;display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:800}.brand img{width:46px;height:46px;object-fit:contain}.navlinks{display:flex;gap:8px;flex-wrap:wrap}.navlinks a{padding:9px 12px;border-radius:999px;text-decoration:none;font-size:.82rem;font-weight:700}.navlinks .primary{background:var(--teal);color:#fff}
+.crumb{padding:18px 0 0;font-size:.78rem;color:var(--muted)}.crumb a{color:var(--teal)}
+.hero{padding:18px 0 26px}.hero-card{display:grid;grid-template-columns:1.05fr .95fr;background:#fff;border:1px solid var(--line);border-radius:26px;overflow:hidden;box-shadow:var(--shadow)}.hero-copy{padding:34px}.eyebrow{font-size:.73rem;text-transform:uppercase;letter-spacing:.07em;font-weight:800;color:var(--teal)}h1{font-size:clamp(2rem,5vw,3.45rem);line-height:1.05;margin:10px 0 14px}.lead{font-size:1.05rem;color:var(--muted);margin:0 0 20px}.hero-media{min-height:380px;background:#e8f0f1}.hero-media img{width:100%;height:100%;object-fit:cover}.actions{display:flex;gap:10px;flex-wrap:wrap}.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:11px 17px;border-radius:999px;text-decoration:none;font-weight:800}.btn-primary{background:var(--teal);color:#fff}.btn-secondary{border:1px solid var(--line);background:#fff}
+.content{padding:4px 0 28px}.article{background:#fff;border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:var(--shadow)}.article h2{font-size:1.55rem;line-height:1.2;margin:28px 0 9px}.article h2:first-child{margin-top:0}.article h3{font-size:1.05rem;margin:22px 0 6px}.article p,.article li{color:#435660}.article ul{padding-left:20px}.notice{margin:22px 0 0;padding:14px 16px;border-radius:16px;background:#eef7f6;color:#375a57;font-size:.88rem}
+.cluster{padding:0 0 32px}.cluster h2{font-size:1.4rem}.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.card{background:#fff;border:1px solid var(--line);border-radius:17px;padding:15px;text-decoration:none;font-weight:800}.card small{display:block;color:var(--muted);font-weight:400;margin-top:3px}
+.cta{background:var(--navy2);color:#fff;border-radius:24px;padding:25px;margin-bottom:32px}.cta h2{margin:0 0 7px}.cta p{color:#d9e5eb;margin:0 0 15px}.cta .btn-secondary{color:var(--navy);border:0}
+.footer{background:#071f36;color:#dbe8ee;padding:24px 0;font-size:.8rem}.footer a{color:#fff}
+@media(max-width:760px){.hero-card{grid-template-columns:1fr}.hero-copy{padding:24px}.hero-media{min-height:270px}.nav{align-items:flex-start;padding:10px 0}.navlinks{justify-content:flex-end}.cards{grid-template-columns:1fr}.article{padding:22px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap nav"><a class="brand" href="/"><img src="/assets/logo-isotipo.png" alt="Dr. Olano"><span>Dr. Olano</span></a><nav class="navlinks" aria-label="Navegación"><a href="/">Inicio</a><a href="/reserva-s">Servicios</a><a class="primary" href="{{ page.cta_url }}">Reservar</a></nav></div></header>
+<main>
+<div class="wrap crumb"><a href="/">Inicio</a> › {{ page.h1 }}</div>
+<section class="hero"><div class="wrap"><div class="hero-card"><div class="hero-copy"><div class="eyebrow">{{ page.eyebrow }}</div><h1>{{ page.h1 }}</h1><p class="lead">{{ page.lead }}</p><div class="actions"><a class="btn btn-primary" href="{{ page.cta_url }}">{{ page.cta_label }}</a><a class="btn btn-secondary" href="https://wa.me/51907108271?text=Hola%2C%20quisiera%20informaci%C3%B3n%20antes%20de%20reservar." rel="noopener">Consultar por WhatsApp</a></div></div><div class="hero-media"><img src="{{ page.image }}" alt="{{ page.image_alt }}"></div></div></div></section>
+<section class="content"><div class="wrap"><article class="article">{{ content }}<div class="notice">La información de esta página es orientativa y no sustituye una evaluación médica. La indicación de tratamientos o procedimientos depende de la valoración clínica de cada persona.</div></article></div></section>
+<section class="cluster"><div class="wrap"><h2>Conoce otras áreas de atención</h2><div class="cards"><a class="card" href="/medicina-estetica-carabayllo">Medicina estética en Carabayllo<small>Evaluación médica y opciones de estética facial.</small></a><a class="card" href="/manejo-del-dolor-carabayllo">Manejo del dolor en Carabayllo<small>Evaluación médica y alternativas según cada caso.</small></a><a class="card" href="/metabolismo-obesidad-carabayllo">Metabolismo y obesidad en Carabayllo<small>Evaluación y acompañamiento médico individual.</small></a><a class="card" href="/medicina-regenerativa-carabayllo">Medicina regenerativa en Carabayllo<small>Información y evaluación médica personalizada.</small></a></div></div></section>
+<section><div class="wrap"><div class="cta"><h2>¿Quieres solicitar una cita?</h2><p>Revisa los servicios disponibles y elige una fecha. La solicitud queda pendiente hasta la confirmación por WhatsApp.</p><div class="actions"><a class="btn btn-primary" href="{{ page.cta_url }}">Reservar cita</a><a class="btn btn-secondary" href="/reserva-s">Ver todos los servicios</a></div></div></div></section>
+</main>
+<footer class="footer"><div class="wrap">Dr. Olano · Carabayllo, Lima · Perú · <a href="/privacidad">Privacidad</a></div></footer>
+</body>
+</html>
