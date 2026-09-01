@@ -1,6 +1,5 @@
 ---
 layout: seo-service
-permalink: /medicina-estetica-carabayllo
 canonical: https://doctorolano.pe/medicina-estetica-carabayllo
 title: "Medicina Estética en Carabayllo | Dr. Olano"
 description: "Medicina estética en Carabayllo con Dr. Olano. Conoce opciones de evaluación facial y solicita una cita médica de forma sencilla."
