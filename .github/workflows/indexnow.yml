@@ -1,0 +1,47 @@
+name: Notify IndexNow
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "*.md"
+      - "*.html"
+      - "_includes/**"
+      - "_layouts/**"
+      - "sitemap.xml"
+      - "robots.txt"
+      - "scripts/indexnow.py"
+      - ".github/workflows/indexnow.yml"
+      - "be7240580e684d4d83924cbc43e8efc0.txt"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: indexnow-main
+  cancel-in-progress: true
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Notify IndexNow after production deploy
+        env:
+          INDEXNOW_KEY: be7240580e684d4d83924cbc43e8efc0
+          INDEXNOW_DEPLOY_WAIT: "180"
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: python scripts/indexnow.py
