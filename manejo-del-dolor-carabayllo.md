@@ -1,6 +1,5 @@
 ---
 layout: seo-service
-permalink: /manejo-del-dolor-carabayllo
 canonical: https://doctorolano.pe/manejo-del-dolor-carabayllo
 title: "Manejo del Dolor en Carabayllo | Dr. Olano"
 description: "Evaluación médica para manejo del dolor en Carabayllo con Dr. Olano. Conoce el enfoque de atención y solicita una cita."
