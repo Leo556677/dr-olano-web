@@ -31,6 +31,16 @@ Entre las opciones que pueden revisarse durante la evaluación se encuentran:
 
 La disponibilidad y pertinencia de cada opción dependen de la evaluación correspondiente.
 
+## Información específica sobre algunos servicios
+
+Si deseas conocer mejor el enfoque de evaluación antes de reservar, puedes revisar estas páginas:
+
+- [Armonización facial en Carabayllo](/armonizacion-facial-carabayllo)
+- [Rinomodelación en Carabayllo](/rinomodelacion-carabayllo)
+- [Relleno de labios en Carabayllo](/relleno-labios-carabayllo)
+
+Estas páginas son informativas. No reemplazan la evaluación médica ni garantizan que un procedimiento sea apropiado para todas las personas.
+
 ## ¿Cómo reservar?
 
 Puedes ingresar al flujo de reserva de Dr. Olano, elegir fecha y horario y completar tus datos de contacto. La solicitud se prepara desde la web y la confirmación final se realiza por WhatsApp.
