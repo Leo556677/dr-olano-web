@@ -2,16 +2,31 @@
 layout: seo-service
 permalink: /doctor-olano
 canonical: https://doctorolano.pe/doctor-olano
-title: "Dr. Olano | Médico en Carabayllo"
-description: "Conoce la atención de Dr. Olano en Carabayllo, sus principales áreas de consulta y cómo solicitar una cita desde la web oficial."
-h1: "Dr. Olano"
-eyebrow: "Médico Cirujano · Carabayllo, Lima"
-lead: "Atención médica con evaluación individual y orientación previa antes de definir tratamientos o procedimientos."
+title: "Dr. Kamo Martin Olano Paredes | CMP 069685 | Carabayllo"
+description: "Perfil profesional de Dr. Kamo Martin Olano Paredes, médico cirujano CMP 069685 en Carabayllo. Conoce áreas de atención y cómo solicitar una cita."
+h1: "Dr. Kamo Martin Olano Paredes"
+eyebrow: "Médico Cirujano · CMP 069685 · Carabayllo"
+lead: "Médico cirujano con colegiatura verificada en el Colegio Médico del Perú. Atención con evaluación individual y orientación previa antes de definir tratamientos o procedimientos."
 image: /assets/dr-olano-hero-v22.webp
-image_alt: "Dr. Olano en consulta médica en Carabayllo"
+image_alt: "Dr. Kamo Martin Olano Paredes en consulta médica en Carabayllo"
 cta_url: /reserva
 cta_label: "Reservar una cita"
+person_name: "Kamo Martin Olano Paredes"
+person_alternate_name: "Dr. Olano"
+cmp: "069685"
+cmp_status: "HÁBIL"
+cmp_council: "Consejo Regional III Lima"
+cmp_verification_url: "https://conoceatumedico.cmp.org.pe/Detallecolegiado"
 ---
+## Identidad profesional verificada
+
+**Nombre profesional:** Kamo Martin Olano Paredes  
+**Colegio Médico del Perú:** CMP 069685  
+**Estado de colegiatura:** HÁBIL, verificado el 1 de septiembre de 2026  
+**Consejo Regional:** Consejo Regional III Lima
+
+La identidad y condición de colegiatura fueron contrastadas con la consulta oficial **Conoce a tu Médico** del Colegio Médico del Perú. El estado de habilitación puede cambiar con el tiempo; para comprobar la condición vigente puedes [consultar el registro oficial del CMP](https://conoceatumedico.cmp.org.pe/Detallecolegiado).
+
 ## Atención médica en Carabayllo
 
 Dr. Olano brinda atención médica en Carabayllo, Lima. La consulta parte de una evaluación individual para revisar el motivo de atención, antecedentes relevantes y objetivos antes de definir el siguiente paso.
