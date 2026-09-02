@@ -1,6 +1,8 @@
 ---
 ---
+{% capture ga4_head %}<head>{% include analytics-ga4.html %}{% endcapture %}
 {% capture v28_part01 %}{% include v28/part01.html %}{% endcapture %}{{ v28_part01
+  | replace: '<head>', ga4_head
   | replace: 'assets/logo-isotipo-128.png', 'assets/logo-isotipo.png'
   | replace: '+51981214007', '+51907108271'
   | replace: 'https://leo556677.github.io/dr-olano-web/', 'https://doctorolano.pe/'
