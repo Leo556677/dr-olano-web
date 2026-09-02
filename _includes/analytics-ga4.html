@@ -1,0 +1,21 @@
+<!-- Google Analytics 4: medición base minimizada para un sitio médico -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VN4XKX25MW"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag("js", new Date());
+(function(){
+  var allowedCampaignParams = ["utm_source","utm_medium","utm_campaign","utm_content","utm_term","utm_id"];
+  var rawUrl = new URL(window.location.href);
+  var safeUrl = new URL(rawUrl.origin + rawUrl.pathname);
+  allowedCampaignParams.forEach(function(key){
+    if(rawUrl.searchParams.has(key)) safeUrl.searchParams.set(key, rawUrl.searchParams.get(key));
+  });
+  gtag("config", "G-VN4XKX25MW", {
+    allow_google_signals: false,
+    allow_ad_personalization_signals: false,
+    allow_interest_groups: false,
+    page_location: safeUrl.toString()
+  });
+})();
+</script>
