@@ -5,17 +5,46 @@ window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag("js", new Date());
 (function(){
-  var allowedCampaignParams = ["utm_source","utm_medium","utm_campaign","utm_content","utm_term","utm_id"];
   var rawUrl = new URL(window.location.href);
-  var safeUrl = new URL(rawUrl.origin + rawUrl.pathname);
-  allowedCampaignParams.forEach(function(key){
+  var neutralPath = "/contenido-medico";
+  var neutralTitle = "Contenido médico | Dr. Olano";
+
+  if(rawUrl.pathname === "/" || rawUrl.pathname === ""){
+    neutralPath = "/";
+    neutralTitle = "Inicio | Dr. Olano";
+  }else if(rawUrl.pathname === "/doctor-olano"){
+    neutralPath = "/perfil-profesional";
+    neutralTitle = "Perfil profesional | Dr. Olano";
+  }else if(rawUrl.pathname === "/reserva" || rawUrl.pathname === "/reserva-s"){
+    neutralPath = "/reserva";
+    neutralTitle = "Reserva | Dr. Olano";
+  }else if(rawUrl.pathname === "/privacidad"){
+    neutralPath = "/privacidad";
+    neutralTitle = "Privacidad | Dr. Olano";
+  }
+
+  var safeUrl = new URL(rawUrl.origin + neutralPath);
+  ["utm_source","utm_medium","utm_campaign","utm_content","utm_term","utm_id"].forEach(function(key){
     if(rawUrl.searchParams.has(key)) safeUrl.searchParams.set(key, rawUrl.searchParams.get(key));
   });
+
+  var safeReferrer = "";
+  if(document.referrer){
+    try{
+      var ref = new URL(document.referrer);
+      safeReferrer = ref.origin === rawUrl.origin ? rawUrl.origin + "/" : ref.origin + "/";
+    }catch(e){
+      safeReferrer = "";
+    }
+  }
+
   gtag("config", "G-VN4XKX25MW", {
     allow_google_signals: false,
     allow_ad_personalization_signals: false,
     allow_interest_groups: false,
-    page_location: safeUrl.toString()
+    page_location: safeUrl.toString(),
+    page_title: neutralTitle,
+    page_referrer: safeReferrer
   });
 })();
 </script>
