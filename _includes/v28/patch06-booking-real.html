@@ -1,0 +1,106 @@
+<!-- V2.8 PATCH06 · REAL BOOKING BACKEND · PREPARED, NOT ACTIVE UNTIL INCLUDED -->
+<script>
+(() => {
+  const BOOKING_API = "https://xnlzsgulskqyecfgzhwa.supabase.co/functions/v1/dr-olano-booking";
+  const TURNSTILE_SITE_KEY = "0x4AAAAAAEquPSErt1V9EL1G";
+  const TURNSTILE_ACTION = "booking";
+  let turnstileWidgetId = null;
+  let turnstileToken = "";
+
+  function getDeviceId(){
+    const key="olanoBookingDeviceId";
+    try{
+      let id=localStorage.getItem(key);
+      if(!id){id=(crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`);localStorage.setItem(key,id)}
+      return id;
+    }catch{return `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`}
+  }
+
+  async function api(body){
+    const res=await fetch(BOOKING_API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    let data={};
+    try{data=await res.json()}catch{}
+    if(!res.ok){const err=new Error(data.message||data.code||"No se pudo completar la operación");err.code=data.code||"API_ERROR";err.status=res.status;throw err}
+    return data;
+  }
+
+  function loadTurnstile(){
+    if(document.querySelector('script[data-olano-turnstile]'))return;
+    const s=document.createElement("script");
+    s.src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    s.async=true;s.defer=true;s.dataset.olanoTurnstile="1";
+    document.head.appendChild(s);
+  }
+
+  function ensureTurnstileHost(){
+    let host=document.querySelector("#olanoTurnstileHost");
+    if(host)return host;
+    host=document.createElement("div");host.id="olanoTurnstileHost";host.style.cssText="margin:12px 0 4px;min-height:66px;display:flex;justify-content:center";
+    const btn=document.querySelector("#sendBooking");
+    btn?.parentElement?.insertAdjacentElement("beforebegin",host);
+    return host;
+  }
+
+  function renderTurnstile(){
+    const host=ensureTurnstileHost();
+    if(!host||!window.turnstile)return;
+    if(turnstileWidgetId!==null){try{window.turnstile.reset(turnstileWidgetId)}catch{};return}
+    turnstileWidgetId=window.turnstile.render(host,{sitekey:TURNSTILE_SITE_KEY,action:TURNSTILE_ACTION,theme:"light",size:"flexible",callback:(token)=>{turnstileToken=token||""},"expired-callback":()=>{turnstileToken=""},"error-callback":()=>{turnstileToken=""}});
+  }
+
+  async function getAvailability(){
+    if(!state.service||!state.date)return [];
+    const data=await api({action:"availability",service_code:state.service.id,date:state.date});
+    return Array.isArray(data.slots)?data.slots:[];
+  }
+
+  const originalRenderTimes=window.renderTimes;
+  window.renderTimes=async function(){
+    const box=$("#times");box.innerHTML="";
+    if(!state.date)return;
+    box.innerHTML='<div style="grid-column:1/-1;padding:12px;text-align:center;color:var(--muted);font-size:.78rem">Consultando disponibilidad real…</div>';
+    try{
+      const slots=await getAvailability();
+      box.innerHTML="";
+      if(!slots.length){box.innerHTML='<div style="grid-column:1/-1;padding:14px;text-align:center;color:var(--muted);font-size:.78rem">No quedan horarios disponibles para esta fecha.</div>';state.time="";setPrimary($("#toStep3"),false);return}
+      slots.forEach(slot=>{const t=String(slot.time||"");box.insertAdjacentHTML("beforeend",`<button class="time ${state.time===t?"selected":""}" data-time="${t}">${t}</button>`)});
+      $$("[data-time]").forEach(b=>b.onclick=()=>{markScheduleInteraction();state.time=b.dataset.time;trackEvent("time_selected");window.renderTimes();setPrimary($("#toStep3"),true);saveDraft();setTimeout(()=>$("#toStep3").scrollIntoView({behavior:"smooth",block:"center"}),120)});
+      if(state.time&&!slots.some(s=>String(s.time)===state.time)){state.time="";setPrimary($("#toStep3"),false)}
+    }catch(e){box.innerHTML='<div style="grid-column:1/-1;padding:14px;text-align:center;color:var(--muted);font-size:.78rem">No pudimos consultar la agenda. Intenta nuevamente.</div>';state.time="";setPrimary($("#toStep3"),false)}
+  };
+
+  async function sendRealBooking(){
+    if(!state.service||!state.date||!state.time||!state.name||!state.phone)return;
+    if(!turnstileToken){renderTurnstile();alert("Completa la verificación de seguridad para reservar.");return}
+    const btn=$("#sendBooking");const old=btn.innerHTML;btn.disabled=true;btn.textContent="Reservando…";
+    try{
+      const data=await api({action:"book",service_code:state.service.id,date:state.date,time:state.time,name:state.name,phone:state.phone,device_id:getDeviceId(),turnstile_token:turnstileToken});
+      const b=data.booking||{};
+      state.id=b.code||"";state.url="";
+      $("#bookingCode").textContent=state.id;
+      const done=$("#booking .step[data-step='5']");
+      if(done){const h=done.querySelector("h2");const p=done.querySelector("p");if(h)h.textContent="Cita reservada";if(p)p.textContent=`Tu cita quedó registrada para ${state.date} a las ${state.time}.`}
+      const wa=$("#openWhatsApp");if(wa){wa.style.display="none"}
+      saveDraft("confirmed");trackEvent("booking_confirmed");go(5);
+    }catch(e){
+      turnstileToken="";if(turnstileWidgetId!==null&&window.turnstile){try{window.turnstile.reset(turnstileWidgetId)}catch{}}
+      const code=e?.code||"";
+      if(code==="RATE_LIMIT_1H")alert("Ya se registró una cita desde este celular, red o dispositivo. Podrás reservar nuevamente en 1 hora.");
+      else if(code==="HOUR_FULL")alert("Esa hora acaba de completar sus 3 cupos. Elige otro horario.");
+      else if(code==="TURNSTILE_FAILED"||code==="TURNSTILE_REQUIRED")alert("No se pudo validar la verificación de seguridad. Intenta nuevamente.");
+      else alert("No se pudo registrar la cita. Intenta nuevamente.");
+      try{window.renderTimes()}catch{}
+    }finally{btn.disabled=false;btn.innerHTML=old}
+  }
+
+  document.addEventListener("DOMContentLoaded",()=>{
+    loadTurnstile();
+    const btn=$("#sendBooking");
+    if(btn){btn.textContent="Reservar cita";btn.onclick=(ev)=>{ev.preventDefault();ev.stopImmediatePropagation();sendRealBooking()}}
+    const observer=new MutationObserver(()=>{if(document.querySelector('.step[data-step="4"].active')){let tries=0;const timer=setInterval(()=>{tries++;if(window.turnstile){clearInterval(timer);renderTurnstile()}else if(tries>20)clearInterval(timer)},150)}});
+    const booking=$("#booking");if(booking)observer.observe(booking,{subtree:true,attributes:true,attributeFilter:["class"]});
+  });
+
+  window.OLANO_REAL_BOOKING={api:getAvailability,endpoint:BOOKING_API,siteKey:TURNSTILE_SITE_KEY};
+})();
+</script>
