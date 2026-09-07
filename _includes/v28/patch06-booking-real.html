@@ -90,6 +90,26 @@
     return Array.isArray(data.slots)?data.slots:[]
   }
 
+  function buildWhatsAppHandoff(){
+    const businessPhone=String(CONFIG?.phone||"").replace(/\D/g,"");
+    if(!businessPhone)return "";
+    const serviceName=String(state.service?.name||state.service?.id||"");
+    const dateLabel=state.date?fmt(fromIso(state.date)):"";
+    const message=[
+      "Hola, acabo de reservar una cita desde doctorolano.pe.",
+      "",
+      `Código: ${state.id}`,
+      `Paciente: ${state.name}`,
+      `Celular: ${state.phone}`,
+      `Servicio: ${serviceName}`,
+      `Fecha: ${dateLabel}`,
+      `Hora: ${state.time}`,
+      "",
+      "Quisiera mantener este chat como canal de contacto para mi cita."
+    ].join("\n");
+    return `https://wa.me/${businessPhone}?text=${encodeURIComponent(message)}`
+  }
+
   renderTimes=async function(){
     const box=$("#times");
     box.innerHTML="";
@@ -166,7 +186,17 @@
         if(paragraphs[1])paragraphs[1].textContent=`Código de reserva: ${state.id}`
       }
       const wa=$("#openWhatsApp");
-      if(wa)wa.style.display="none";
+      if(wa){
+        const waUrl=buildWhatsAppHandoff();
+        if(waUrl){
+          wa.href=waUrl;
+          wa.style.display="inline-flex";
+          wa.innerHTML=`${icon("i-send")}Enviar confirmación por WhatsApp`;
+          wa.onclick=()=>trackEvent("booking_whatsapp_handoff",{source:"booking_success"})
+        }else{
+          wa.style.display="none"
+        }
+      }
       try{localStorage.removeItem("olanoDraft")}catch{}
       updateDock();
       trackEvent("booking_confirmed");
@@ -187,6 +217,9 @@
       btn.innerHTML=old
     }
   }
+
+  const dataNote=document.querySelector(".data-note");
+  if(dataNote)dataNote.textContent="Tus datos se utilizan para registrar y gestionar tu cita. Después de reservar podrás abrir WhatsApp con el reporte preparado para establecer el canal de contacto con el centro.";
 
   loadBookingTurnstile();
   const sendButton=$("#sendBooking");
