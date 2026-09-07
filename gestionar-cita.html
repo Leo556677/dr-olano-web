@@ -1,0 +1,81 @@
+---
+permalink: /gestionar-cita/
+---
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<title>Gestionar cita · Dr. Olano</title>
+<style>
+:root{--navy:#0c2e4f;--teal:#15958d;--bg:#f4f8f8;--card:#fff;--text:#17324a;--muted:#697b89;--line:#d9e6e8;--ok:#14734a;--danger:#b52a3c;--shadow:0 18px 45px rgba(12,46,79,.10)}*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#edf6f6 0,#f8fafb 45%,#f3f7f8 100%);color:var(--text);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;min-height:100vh}.wrap{width:min(760px,100%);margin:auto;padding:18px}.brand{display:flex;align-items:center;gap:12px;margin:4px 0 18px}.brand img{width:48px;height:48px;border-radius:13px}.brand h1{font-size:20px;margin:0;color:var(--navy)}.brand p{margin:2px 0 0;color:var(--muted);font-size:13px}.card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:20px;margin-bottom:14px}.hidden{display:none!important}.loading{text-align:center;padding:34px;color:var(--muted)}h2,h3{color:var(--navy);margin:0}.status{display:inline-flex;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:850;margin-top:8px}.s-confirmada,.s-pendiente{background:#e9f7f1;color:var(--ok)}.s-cancelada{background:#fff0f2;color:var(--danger)}.s-completada,.s-no_asistio{background:#f0f3f8;color:#5e6c78}.details{display:grid;gap:0;margin-top:14px;border:1px solid var(--line);border-radius:16px;overflow:hidden}.row{display:grid;grid-template-columns:145px 1fr;gap:14px;padding:12px 14px;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}.row span{color:var(--muted);font-size:13px}.row b{color:var(--navy);text-align:right}.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}button,.btn,input{font:inherit}.btn,button{border:0;border-radius:13px;padding:12px 14px;font-weight:850;cursor:pointer;text-decoration:none;text-align:center}.primary{background:var(--navy);color:#fff}.teal{background:var(--teal);color:#fff}.ghost{background:#fff;color:var(--navy);border:1px solid var(--line)}.danger{background:#fff2f3;color:var(--danger);border:1px solid #efc8ce}.msg{margin-top:12px;padding:11px 13px;border-radius:12px;background:#edf7f6;color:#0d6d66}.msg.err{background:#fff0f2;color:var(--danger)}label{display:block;font-weight:800;color:var(--navy);margin:13px 0 6px}input{width:100%;border:1px solid #cbdade;border-radius:12px;padding:12px 13px;color:var(--navy);background:#fff}.times{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.time{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:12px;padding:11px;font-weight:800}.time.selected{background:var(--navy);color:#fff;border-color:var(--navy)}.hint{font-size:12px;color:var(--muted);margin-top:7px}.foot{display:flex;justify-content:space-between;gap:10px;align-items:center;color:var(--muted);font-size:12px;padding:6px 2px 20px}.foot a{color:var(--teal);font-weight:800;text-decoration:none}@media(max-width:560px){.wrap{padding:12px}.card{padding:16px}.row{grid-template-columns:1fr;gap:3px}.row b{text-align:left}.actions{grid-template-columns:1fr}.times{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><img src="/assets/logo-isotipo-128.png" alt="Dr. Olano"><div><h1>Gestionar mi cita</h1><p>Dr. Olano · Agenda segura</p></div></div>
+
+  <section id="loading" class="card loading">Consultando tu cita…</section>
+  <section id="errorCard" class="card hidden"><h2>No pudimos abrir esta cita</h2><p id="errorText" class="hint" style="font-size:14px"></p><div class="actions"><a class="btn teal" href="https://wa.me/51907108271" rel="noopener">Contactar por WhatsApp</a><a class="btn ghost" href="/">Volver al sitio</a></div></section>
+
+  <main id="app" class="hidden">
+    <section class="card">
+      <h2>Tu cita</h2>
+      <div id="status" class="status"></div>
+      <div class="details">
+        <div class="row"><span>Paciente</span><b id="patient"></b></div>
+        <div class="row"><span>Servicio</span><b id="service"></b></div>
+        <div class="row"><span>Fecha</span><b id="date"></b></div>
+        <div class="row"><span>Hora</span><b id="time"></b></div>
+        <div id="noteRow" class="row hidden"><span>Comentario</span><b id="note"></b></div>
+      </div>
+      <div id="mainActions" class="actions"><button id="rescheduleBtn" class="primary">Reprogramar cita</button><button id="cancelBtn" class="danger">Cancelar cita</button></div>
+      <div id="mainMsg" class="msg hidden"></div>
+    </section>
+
+    <section id="rescheduleCard" class="card hidden">
+      <h3>Elegir nueva fecha y hora</h3>
+      <p class="hint">Solo se muestran horarios realmente disponibles.</p>
+      <label for="newDate">Nueva fecha</label>
+      <input id="newDate" type="date">
+      <div id="dayHint" class="hint"></div>
+      <div id="times" class="times"></div>
+      <div id="resMsg" class="msg hidden"></div>
+      <div class="actions"><button id="saveReschedule" class="teal" disabled>Guardar nueva fecha</button><button id="closeReschedule" class="ghost">Cerrar</button></div>
+    </section>
+  </main>
+
+  <div class="foot"><span>Enlace privado de gestión de cita</span><a href="https://wa.me/51907108271" rel="noopener">WhatsApp Dr. Olano</a></div>
+</div>
+<script>
+(()=>{
+  const API='https://xnlzsgulskqyecfgzhwa.supabase.co/functions/v1/dr-olano-booking';
+  const KEY='sb_publishable_s9YdJaMe_ll4QehPkADlKQ_KkuvWt32';
+  const $=id=>document.getElementById(id);
+  let appointment=null,selectedTime='';
+  const q=new URLSearchParams(location.search),fromUrl=q.get('t')||'';
+  if(fromUrl){try{sessionStorage.setItem('olanoManageToken',fromUrl)}catch{};history.replaceState(null,'',location.pathname)}
+  const token=fromUrl||(()=>{try{return sessionStorage.getItem('olanoManageToken')||''}catch{return ''}})();
+
+  const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const fmtDate=iso=>new Intl.DateTimeFormat('es-PE',{timeZone:'America/Lima',weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date(iso));
+  const fmtTime=iso=>new Intl.DateTimeFormat('es-PE',{timeZone:'America/Lima',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(iso));
+  const ymd=d=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Lima'}).format(d);
+  function msg(el,text,type=''){el.textContent=text;el.className='msg'+(type?' '+type:'');el.classList.toggle('hidden',!text)}
+  async function api(body){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json','apikey':KEY},body:JSON.stringify(body)});let d={};try{d=await r.json()}catch{}if(!r.ok){const e=new Error(d.message||d.code||'No se pudo completar la operación');e.code=d.code;e.status=r.status;throw e}return d}
+  function error(text){$('loading').classList.add('hidden');$('app').classList.add('hidden');$('errorCard').classList.remove('hidden');$('errorText').textContent=text}
+  function render(){if(!appointment)return;$('loading').classList.add('hidden');$('errorCard').classList.add('hidden');$('app').classList.remove('hidden');$('patient').textContent=appointment.paciente||'Paciente';$('service').textContent=appointment.servicio||'Cita';$('date').textContent=fmtDate(appointment.inicio);$('time').textContent=fmtTime(appointment.inicio);$('status').textContent=String(appointment.estado||'').replace('_',' ');$('status').className='status s-'+appointment.estado;const note=String(appointment.motivo_consulta||'').trim();$('noteRow').classList.toggle('hidden',!note);$('note').textContent=note;const editable=['confirmada','pendiente'].includes(appointment.estado);$('mainActions').classList.toggle('hidden',!editable);if(!editable&&appointment.estado==='cancelada')msg($('mainMsg'),'Esta cita fue cancelada. Si necesitas una nueva, contáctanos por WhatsApp.');else if(!editable)msg($('mainMsg'),'Esta cita ya no admite cambios desde este enlace.');else msg($('mainMsg'),'')}
+  async function load(){if(!token){error('El enlace de gestión no contiene una credencial válida.');return}try{const d=await api({action:'manage_get',token});appointment=d.appointment;render()}catch(e){error(e.message||'El enlace no es válido o venció.')}}
+  async function loadTimes(){selectedTime='';$('saveReschedule').disabled=true;const date=$('newDate').value,box=$('times');box.innerHTML='';msg($('resMsg'),'');if(!date)return;box.innerHTML='<div class="hint" style="grid-column:1/-1;text-align:center;padding:12px">Consultando horarios…</div>';try{const d=await api({action:'availability',service_code:appointment.servicio_codigo,date}),slots=Array.isArray(d.slots)?d.slots:[];box.innerHTML='';if(!slots.length){const allowed=d.service_meta?.allowed_weekdays||[];$('dayHint').textContent=allowed.length===3&&allowed.includes(5)&&allowed.includes(6)&&allowed.includes(0)?'NOVARE se agenda viernes, sábado y domingo.':'';box.innerHTML='<div class="hint" style="grid-column:1/-1;text-align:center;padding:12px">No hay horarios disponibles para esta fecha.</div>';return}$('dayHint').textContent='';for(const s of slots){const b=document.createElement('button');b.type='button';b.className='time';b.textContent=s.time;b.onclick=()=>{selectedTime=s.time;box.querySelectorAll('.time').forEach(x=>x.classList.toggle('selected',x===b));$('saveReschedule').disabled=false};box.appendChild(b)}}catch(e){box.innerHTML='';msg($('resMsg'),e.message||'No se pudo consultar la agenda.','err')}}
+  $('rescheduleBtn').onclick=()=>{$('rescheduleCard').classList.remove('hidden');const today=new Date(),max=new Date(today.getTime()+60*86400000);$('newDate').min=ymd(today);$('newDate').max=ymd(max);$('newDate').value='';$('times').innerHTML='';$('dayHint').textContent='';selectedTime='';$('saveReschedule').disabled=true;$('rescheduleCard').scrollIntoView({behavior:'smooth',block:'start'})};
+  $('closeReschedule').onclick=()=>{$('rescheduleCard').classList.add('hidden')};
+  $('newDate').onchange=loadTimes;
+  $('saveReschedule').onclick=async()=>{const date=$('newDate').value;if(!date||!selectedTime)return;const b=$('saveReschedule');b.disabled=true;b.textContent='Guardando…';try{await api({action:'manage_reschedule',token,date,time:selectedTime});msg($('resMsg'),'Cita reprogramada. La actualización de Google Calendar quedó en proceso.');$('rescheduleCard').classList.add('hidden');await load()}catch(e){msg($('resMsg'),e.message||'No se pudo reprogramar.','err')}finally{b.textContent='Guardar nueva fecha';b.disabled=!selectedTime}};
+  $('cancelBtn').onclick=async()=>{if(!confirm('¿Seguro que deseas cancelar esta cita?'))return;const b=$('cancelBtn');b.disabled=true;b.textContent='Cancelando…';try{await api({action:'manage_cancel',token});await load();msg($('mainMsg'),'Cita cancelada. Google Calendar se actualizará automáticamente.')}catch(e){msg($('mainMsg'),e.message||'No se pudo cancelar.','err');b.disabled=false;b.textContent='Cancelar cita'}};
+  load();
+})();
+</script>
+</body>
+</html>
