@@ -1,4 +1,4 @@
-// V2.8 PATCH06 · REAL BOOKING BACKEND · NOVARE DIRECT BOOKING + PATIENT NOTE + AUTO WHATSAPP
+// V2.8 PATCH06 · REAL BOOKING BACKEND · NOVARE DIRECT BOOKING + PATIENT NOTE + SELF MANAGE + AUTO WHATSAPP
 (() => {
   const BOOKING_API = "https://xnlzsgulskqyecfgzhwa.supabase.co/functions/v1/dr-olano-booking";
   const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_s9YdJaMe_ll4QehPkADlKQ_KkuvWt32";
@@ -10,6 +10,7 @@
   let realBookingConfirmed = sessionStorage.getItem("olanoRealBookingConfirmed")==="1";
 
   state.bookingNote = state.bookingNote || "";
+  state.manageUrl = state.manageUrl || "";
 
   function isNovareService(){return state.service?.category==="novare"||state.service?.unit==="NOVARE"}
   function clearConfirmedUi(){
@@ -33,6 +34,7 @@
   openBooking=function(serviceId="",options={}){
     realBookingConfirmed=false;
     state.bookingNote="";
+    state.manageUrl="";
     try{sessionStorage.removeItem("olanoRealBookingConfirmed")}catch{}
     const pending=$("#pendingBtn");if(pending)pending.style.display="";
     return legacyOpenBooking(serviceId,options)
@@ -137,7 +139,9 @@
     const businessPhone=String(CONFIG?.phone||"").replace(/\D/g,"");if(!businessPhone)return "";
     const lines=["Hola, acabo de reservar una cita desde doctorolano.pe.","",`Código: ${state.id}`,`Paciente: ${state.name}`,`Celular: ${state.phone}`,`Servicio: ${String(state.service?.name||state.service?.id||"")}`];
     const note=String(state.bookingNote||"").trim();if(isNovareService()&&note)lines.push(`Comentario: ${note}`);
-    lines.push(`Fecha: ${state.date?fmt(fromIso(state.date)):""}`,`Hora: ${state.time}`,"","Quisiera mantener este chat como canal de contacto para mi cita.");
+    lines.push(`Fecha: ${state.date?fmt(fromIso(state.date)):""}`,`Hora: ${state.time}`);
+    if(state.manageUrl)lines.push("",`Gestionar / reprogramar / cancelar: ${state.manageUrl}`);
+    lines.push("","Quisiera mantener este chat como canal de contacto para mi cita.");
     return `https://wa.me/${businessPhone}?text=${encodeURIComponent(lines.join("\n"))}`
   }
 
@@ -150,9 +154,14 @@
     const btn=$("#sendBooking"),old=btn.innerHTML;btn.disabled=true;btn.textContent="Reservando…";
     try{
       const data=await bookingApi({action:"book",service_code:state.service.id,date:state.date,time:state.time,name:state.name,phone:state.phone,note,device_id:getDeviceId(),turnstile_token:turnstileToken});
-      const b=data.booking||{};state.id=b.code||"";$("#bookingCode").textContent=state.id;
+      const b=data.booking||{};state.id=b.code||"";state.manageUrl=String(b.manage_url||"");$("#bookingCode").textContent=state.id;
       const done=document.querySelector('#booking .step[data-step="5"]');
-      if(done){const h=done.querySelector("h2"),paragraphs=done.querySelectorAll("p");if(h)h.textContent="Cita reservada";if(paragraphs[0])paragraphs[0].textContent=`Tu cita quedó registrada para ${fmt(fromIso(state.date))} a las ${state.time}.`;if(paragraphs[1])paragraphs[1].textContent=`Código de reserva: ${state.id}`}
+      if(done){
+        const h=done.querySelector("h2"),paragraphs=done.querySelectorAll("p");if(h)h.textContent="Cita reservada";if(paragraphs[0])paragraphs[0].textContent=`Tu cita quedó registrada para ${fmt(fromIso(state.date))} a las ${state.time}.`;if(paragraphs[1])paragraphs[1].textContent=`Código de reserva: ${state.id}`;
+        let manage=done.querySelector("#manageBookingLink");
+        if(state.manageUrl&&!manage){manage=document.createElement("a");manage.id="manageBookingLink";manage.href=state.manageUrl;manage.textContent="Gestionar mi cita";manage.style.cssText="display:inline-flex;margin-top:8px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;color:var(--navy);font-weight:800;text-decoration:none;background:#fff";done.querySelector(".actions")?.appendChild(manage)}
+        if(manage)manage.href=state.manageUrl||"#";
+      }
       const waUrl=buildWhatsAppHandoff();state.url=waUrl;const wa=$("#openWhatsApp");if(wa&&waUrl){wa.href=waUrl;wa.style.display="inline-flex";wa.innerHTML=`${icon("i-send")}Abrir WhatsApp`}
       clearConfirmedUi();trackEvent("booking_confirmed");go(5);
       if(waUrl){trackEvent("booking_whatsapp_handoff",{source:"auto_redirect"});requestAnimationFrame(()=>window.location.assign(waUrl))}
