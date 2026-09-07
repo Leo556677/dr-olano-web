@@ -1,257 +1,177 @@
-// V2.8 PATCH06 · REAL BOOKING BACKEND · ACTIVE ONLY WHEN INCLUDED AFTER part06b
+// V2.8 PATCH06 · REAL BOOKING BACKEND · NOVARE RULES + AUTO WHATSAPP
 (() => {
   const BOOKING_API = "https://xnlzsgulskqyecfgzhwa.supabase.co/functions/v1/dr-olano-booking";
   const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_s9YdJaMe_ll4QehPkADlKQ_KkuvWt32";
   const TURNSTILE_SITE_KEY = "0x4AAAAAAEquPSErt1V9EL1G";
   const TURNSTILE_ACTION = "booking";
+  const NOVARE_DAYS = new Set([0,5,6]);
   let turnstileWidgetId = null;
   let turnstileToken = "";
+  let realBookingConfirmed = sessionStorage.getItem("olanoRealBookingConfirmed")==="1";
+
+  state.bookingModality = state.bookingModality || "";
+
+  function isNovareService(){return state.service?.category==="novare"||state.service?.unit==="NOVARE"}
+  function modalityLabel(v){return v==="videollamada"?"Videollamada":"Presencial"}
+  function clearConfirmedUi(){
+    try{localStorage.removeItem("olanoDraft")}catch{}
+    realBookingConfirmed=true;
+    try{sessionStorage.setItem("olanoRealBookingConfirmed","1")}catch{}
+    const pending=$("#pendingBtn"),dock=$("#dock");
+    if(pending)pending.style.display="none";
+    if(dock)dock.classList.remove("has-draft");
+    const stage=$("#mainSocialStage");
+    if(stage)stage.classList.toggle("reserve-dock",!!state.heroOut)
+  }
+  if(realBookingConfirmed)clearConfirmedUi();
+
+  const legacySaveDraft=saveDraft;
+  saveDraft=function(status="draft"){
+    if(realBookingConfirmed){try{localStorage.removeItem("olanoDraft")}catch{};clearConfirmedUi();return}
+    legacySaveDraft(status)
+  };
+  const legacyOpenBooking=openBooking;
+  openBooking=function(serviceId="",options={}){
+    realBookingConfirmed=false;
+    try{sessionStorage.removeItem("olanoRealBookingConfirmed")}catch{}
+    const pending=$("#pendingBtn");if(pending)pending.style.display="";
+    return legacyOpenBooking(serviceId,options)
+  };
 
   function getDeviceId(){
     const key="olanoBookingDeviceId";
     try{
       let id=localStorage.getItem(key);
-      if(!id){
-        id=crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
-        localStorage.setItem(key,id)
-      }
-      return id;
-    }catch{
-      return `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`
-    }
+      if(!id){id=crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;localStorage.setItem(key,id)}
+      return id
+    }catch{return `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`}
   }
 
   async function bookingApi(body){
-    const res=await fetch(BOOKING_API,{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "apikey":SUPABASE_PUBLISHABLE_KEY
-      },
-      body:JSON.stringify(body)
-    });
-    let data={};
-    try{data=await res.json()}catch{}
-    if(!res.ok){
-      const err=new Error(data.message||data.code||"No se pudo completar la operación");
-      err.code=data.code||"API_ERROR";
-      err.status=res.status;
-      throw err
-    }
+    const res=await fetch(BOOKING_API,{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPABASE_PUBLISHABLE_KEY},body:JSON.stringify(body)});
+    let data={};try{data=await res.json()}catch{}
+    if(!res.ok){const err=new Error(data.message||data.code||"No se pudo completar la operación");err.code=data.code||"API_ERROR";err.status=res.status;throw err}
     return data
   }
 
   function loadBookingTurnstile(){
     if(document.querySelector('script[data-olano-turnstile]'))return;
-    const s=document.createElement("script");
-    s.src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-    s.async=true;
-    s.defer=true;
-    s.dataset.olanoTurnstile="1";
-    document.head.appendChild(s)
+    const s=document.createElement("script");s.src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";s.async=true;s.defer=true;s.dataset.olanoTurnstile="1";document.head.appendChild(s)
   }
-
   function ensureBookingTurnstileHost(){
-    let host=document.querySelector("#olanoTurnstileHost");
-    if(host)return host;
-    host=document.createElement("div");
-    host.id="olanoTurnstileHost";
-    host.style.cssText="margin:12px 0 4px;min-height:66px;display:flex;justify-content:center";
-    const btn=document.querySelector("#sendBooking");
-    btn?.parentElement?.insertAdjacentElement("beforebegin",host);
-    return host
+    let host=$("#olanoTurnstileHost");if(host)return host;
+    host=document.createElement("div");host.id="olanoTurnstileHost";host.style.cssText="margin:12px 0 4px;min-height:66px;display:flex;justify-content:center";
+    $("#sendBooking")?.parentElement?.insertAdjacentElement("beforebegin",host);return host
   }
-
   function renderBookingTurnstile(){
-    const host=ensureBookingTurnstileHost();
-    if(!host||!window.turnstile)return;
-    if(turnstileWidgetId!==null){
-      try{window.turnstile.reset(turnstileWidgetId)}catch{}
-      return
+    const host=ensureBookingTurnstileHost();if(!host||!window.turnstile)return;
+    if(turnstileWidgetId!==null){try{window.turnstile.reset(turnstileWidgetId)}catch{};return}
+    turnstileWidgetId=window.turnstile.render(host,{sitekey:TURNSTILE_SITE_KEY,action:TURNSTILE_ACTION,theme:"light",size:"flexible",callback:t=>{turnstileToken=t||""},"expired-callback":()=>{turnstileToken=""},"error-callback":()=>{turnstileToken=""}})
+  }
+
+  function ensureNovareModeUi(){
+    const step=document.querySelector('.step[data-step="2"]');if(!step)return;
+    let box=$("#novareModeBox");
+    if(!box){
+      box=document.createElement("div");box.id="novareModeBox";box.className="novare-mode-box";
+      box.innerHTML=`<div class="novare-mode-title">Consulta previa NOVARE · S/70</div><div class="novare-mode-help">Disponible viernes, sábado y domingo. Elige cómo deseas realizar la consulta previa.</div><div class="novare-mode-grid"><button type="button" data-novare-mode="presencial"><b>Consulta presencial</b><small>S/70</small></button><button type="button" data-novare-mode="videollamada"><b>Videollamada</b><small>S/70</small></button></div>`;
+      step.querySelector(".calendar-head")?.insertAdjacentElement("beforebegin",box);
+      box.querySelectorAll("[data-novare-mode]").forEach(btn=>btn.addEventListener("click",()=>{markScheduleInteraction();state.bookingModality=btn.dataset.novareMode||"";state.date="";state.time="";renderNovareModeUi();renderCalendar();saveDraft()}))
     }
-    turnstileWidgetId=window.turnstile.render(host,{
-      sitekey:TURNSTILE_SITE_KEY,
-      action:TURNSTILE_ACTION,
-      theme:"light",
-      size:"flexible",
-      callback:(token)=>{turnstileToken=token||""},
-      "expired-callback":()=>{turnstileToken=""},
-      "error-callback":()=>{turnstileToken=""}
-    })
+    renderNovareModeUi()
+  }
+  function renderNovareModeUi(){
+    const box=$("#novareModeBox");if(!box)return;
+    const show=isNovareService();box.style.display=show?"block":"none";
+    if(!show)state.bookingModality="";
+    box.querySelectorAll("[data-novare-mode]").forEach(btn=>btn.classList.toggle("active",btn.dataset.novareMode===state.bookingModality))
   }
 
-  async function getRealAvailability(){
-    if(!state.service||!state.date)return [];
-    const data=await bookingApi({
-      action:"availability",
-      service_code:state.service.id,
-      date:state.date
-    });
-    return Array.isArray(data.slots)?data.slots:[]
-  }
+  const style=document.createElement("style");style.id="olano-real-booking-styles";style.textContent=`.novare-mode-box{margin:0 0 14px;padding:14px;border:1px solid var(--line);border-radius:18px;background:#f7fbfb}.novare-mode-title{font-weight:900;color:var(--navy);font-size:.88rem}.novare-mode-help{margin-top:4px;color:var(--muted);font-size:.7rem;line-height:1.35}.novare-mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.novare-mode-grid button{border:1px solid #d8e5e7;background:#fff;color:var(--navy);border-radius:14px;padding:11px 9px;text-align:left}.novare-mode-grid button b{display:block;font-size:.78rem}.novare-mode-grid button small{display:block;margin-top:3px;color:var(--teal2);font-weight:900}.novare-mode-grid button.active{border-color:var(--teal2);background:#e7f7f4;box-shadow:0 0 0 2px rgba(15,130,122,.12)}@media(max-width:420px){.novare-mode-grid{grid-template-columns:1fr}}`;document.head.appendChild(style);
 
-  function buildWhatsAppHandoff(){
-    const businessPhone=String(CONFIG?.phone||"").replace(/\D/g,"");
-    if(!businessPhone)return "";
-    const serviceName=String(state.service?.name||state.service?.id||"");
-    const dateLabel=state.date?fmt(fromIso(state.date)):"";
-    const message=[
-      "Hola, acabo de reservar una cita desde doctorolano.pe.",
-      "",
-      `Código: ${state.id}`,
-      `Paciente: ${state.name}`,
-      `Celular: ${state.phone}`,
-      `Servicio: ${serviceName}`,
-      `Fecha: ${dateLabel}`,
-      `Hora: ${state.time}`,
-      "",
-      "Quisiera mantener este chat como canal de contacto para mi cita."
-    ].join("\n");
-    return `https://wa.me/${businessPhone}?text=${encodeURIComponent(message)}`
-  }
+  SERVICES.filter(s=>s.category==="novare").forEach(s=>{s.price="Consulta previa S/70"});
+  const heroCopy=document.querySelector(".hero-copy > p:not(.hero-focus)");if(heroCopy)heroCopy.textContent="Elige el servicio y horario. Tu cita queda registrada y te conectamos por WhatsApp.";
+  const trustItems=document.querySelectorAll(".hero-copy .trust > div");
+  if(trustItems[0])trustItems[0].innerHTML="<b>Lun–Dom</b><span>09:00–12:00 · 14:00–21:00</span>";
+  if(trustItems[1])trustItems[1].innerHTML="<b>20 min</b><span>intervalos</span>";
+  if(trustItems[2])trustItems[2].innerHTML="<b>WhatsApp</b><span>contacto inmediato</span>";
+  document.querySelectorAll(".trust-chip").forEach(el=>{if(/Lun|Sáb|09:00|21:00/.test(el.textContent||""))el.textContent="Lun–Dom · 09:00–12:00 / 14:00–21:00"});
+  document.querySelectorAll(".footer-meta span").forEach(el=>{if(/Lunes|sábado|09:00|21:00/i.test(el.textContent||""))el.textContent="Lunes a domingo · 09:00–12:00 y 14:00–21:00"});
+  const footerNote=document.querySelector(".footer-note");if(footerNote)footerNote.textContent="La cita queda registrada al completar la reserva. Después te conectamos con el centro por WhatsApp.";
+  document.querySelectorAll("#faq details").forEach(detail=>{const summary=detail.querySelector("summary"),p=detail.querySelector("p");if(summary?.textContent.includes("¿La cita queda confirmada al enviarla?")&&p){summary.textContent="¿La cita queda registrada al reservar?";p.textContent="Sí. El horario se registra al completar la reserva y luego te conectamos con el centro por WhatsApp."}});
 
-  renderTimes=async function(){
-    const box=$("#times");
-    box.innerHTML="";
-    if(!state.date)return;
-    box.innerHTML='<div style="grid-column:1/-1;padding:12px;text-align:center;color:var(--muted);font-size:.78rem">Consultando disponibilidad real…</div>';
-    try{
-      const slots=await getRealAvailability();
-      box.innerHTML="";
-      if(!slots.length){
-        box.innerHTML='<div style="grid-column:1/-1;padding:14px;text-align:center;color:var(--muted);font-size:.78rem">No quedan horarios disponibles para esta fecha.</div>';
-        state.time="";
-        setPrimary($("#toStep3"),false);
-        return
-      }
-      slots.forEach(slot=>{
-        const t=String(slot.time||"");
-        box.insertAdjacentHTML("beforeend",`<button class="time ${state.time===t?"selected":""}" data-time="${t}">${t}</button>`)
-      });
-      $$("[data-time]").forEach(b=>b.onclick=()=>{
-        markScheduleInteraction();
-        state.time=b.dataset.time;
-        trackEvent("time_selected");
-        renderTimes();
-        setPrimary($("#toStep3"),true);
-        saveDraft();
-        setTimeout(()=>$("#toStep3").scrollIntoView({behavior:"smooth",block:"center"}),120)
-      });
-      if(state.time&&!slots.some(s=>String(s.time)===state.time)){
-        state.time="";
-        setPrimary($("#toStep3"),false)
-      }
-    }catch{
-      box.innerHTML='<div style="grid-column:1/-1;padding:14px;text-align:center;color:var(--muted);font-size:.78rem">No pudimos consultar la agenda. Intenta nuevamente.</div>';
-      state.time="";
-      setPrimary($("#toStep3"),false)
-    }
+  async function getRealAvailability(){if(!state.service||!state.date)return {slots:[],service_meta:null};return await bookingApi({action:"availability",service_code:state.service.id,date:state.date})}
+
+  renderCalendar=function(){
+    ensureNovareModeUi();
+    let m=state.month,days=$("#calendarDays"),today=new Date();today.setHours(0,0,0,0);let max=new Date(today);max.setDate(max.getDate()+CONFIG.maxDays);
+    $("#monthTitle").textContent=new Intl.DateTimeFormat("es-PE",{month:"long",year:"numeric"}).format(m);days.innerHTML="";
+    let first=new Date(m.getFullYear(),m.getMonth(),1),last=new Date(m.getFullYear(),m.getMonth()+1,0);for(let i=0;i<first.getDay();i++)days.insertAdjacentHTML("beforeend","<span></span>");
+    const novare=isNovareService(),modeMissing=novare&&!state.bookingModality;
+    for(let d=1;d<=last.getDate();d++){const dt=new Date(m.getFullYear(),m.getMonth(),d),key=iso(dt),serviceDayBlocked=novare&&!NOVARE_DAYS.has(dt.getDay()),off=dt<today||dt>max||serviceDayBlocked||modeMissing;days.insertAdjacentHTML("beforeend",`<button class="day ${state.date===key?"selected":""}" data-day="${key}" ${off?"disabled":""}>${d}</button>`)}
+    $$('[data-day]').forEach(b=>b.onclick=()=>{markScheduleInteraction();state.date=b.dataset.day;state.time="";trackEvent("date_selected");renderCalendar();renderTimes();saveDraft();setTimeout(()=>$("#timesWrap").scrollIntoView({behavior:"smooth",block:"start"}),120)});
+    renderTimes();setPrimary($("#toStep3"),!!(state.date&&state.time&&(!novare||state.bookingModality)))
   };
 
-  async function sendRealBooking(){
-    state.name=$("#clientName").value.trim();
-    state.phone=$("#clientPhone").value.replace(/\s+/g,"");
-    if(!state.service||!state.date||!state.time||state.name.length<3||state.phone.length<7)return;
-    if(!turnstileToken){
-      renderBookingTurnstile();
-      alert("Completa la verificación de seguridad para reservar.");
-      return
-    }
-
-    const btn=$("#sendBooking");
-    const old=btn.innerHTML;
-    btn.disabled=true;
-    btn.textContent="Reservando…";
+  renderTimes=async function(){
+    const box=$("#times");box.innerHTML="";if(!state.date)return;
+    if(isNovareService()&&!state.bookingModality){box.innerHTML='<div style="grid-column:1/-1;padding:14px;text-align:center;color:var(--muted);font-size:.78rem">Selecciona primero presencial o videollamada.</div>';setPrimary($("#toStep3"),false);return}
+    box.innerHTML='<div style="grid-column:1/-1;padding:12px;text-align:center;color:var(--muted);font-size:.78rem">Consultando disponibilidad real…</div>';
     try{
-      const data=await bookingApi({
-        action:"book",
-        service_code:state.service.id,
-        date:state.date,
-        time:state.time,
-        name:state.name,
-        phone:state.phone,
-        device_id:getDeviceId(),
-        turnstile_token:turnstileToken
-      });
-      const b=data.booking||{};
-      state.id=b.code||"";
-      state.url="";
-      $("#bookingCode").textContent=state.id;
-      const done=$("#booking .step[data-step='5']");
-      if(done){
-        const h=done.querySelector("h2");
-        const paragraphs=done.querySelectorAll("p");
-        if(h)h.textContent="Cita reservada";
-        if(paragraphs[0])paragraphs[0].textContent=`Tu cita quedó registrada para ${fmt(fromIso(state.date))} a las ${state.time}.`;
-        if(paragraphs[1])paragraphs[1].textContent=`Código de reserva: ${state.id}`
-      }
-      const wa=$("#openWhatsApp");
-      if(wa){
-        const waUrl=buildWhatsAppHandoff();
-        if(waUrl){
-          wa.href=waUrl;
-          wa.style.display="inline-flex";
-          wa.innerHTML=`${icon("i-send")}Enviar confirmación por WhatsApp`;
-          wa.onclick=()=>trackEvent("booking_whatsapp_handoff",{source:"booking_success"})
-        }else{
-          wa.style.display="none"
-        }
-      }
-      try{localStorage.removeItem("olanoDraft")}catch{}
-      updateDock();
-      trackEvent("booking_confirmed");
-      go(5)
+      const data=await getRealAvailability(),slots=Array.isArray(data.slots)?data.slots:[];box.innerHTML="";
+      if(!slots.length){box.innerHTML='<div style="grid-column:1/-1;padding:14px;text-align:center;color:var(--muted);font-size:.78rem">No quedan horarios disponibles para esta fecha.</div>';state.time="";setPrimary($("#toStep3"),false);return}
+      slots.forEach(slot=>{const t=String(slot.time||"");box.insertAdjacentHTML("beforeend",`<button class="time ${state.time===t?"selected":""}" data-time="${t}">${t}</button>`)});
+      $$('[data-time]').forEach(b=>b.onclick=()=>{markScheduleInteraction();state.time=b.dataset.time;trackEvent("time_selected");renderTimes();setPrimary($("#toStep3"),true);saveDraft();setTimeout(()=>$("#toStep3").scrollIntoView({behavior:"smooth",block:"center"}),120)});
+      if(state.time&&!slots.some(s=>String(s.time)===state.time)){state.time="";setPrimary($("#toStep3"),false)}
+    }catch{box.innerHTML='<div style="grid-column:1/-1;padding:14px;text-align:center;color:var(--muted);font-size:.78rem">No pudimos consultar la agenda. Intenta nuevamente.</div>';state.time="";setPrimary($("#toStep3"),false)}
+  };
+
+  renderSummary=function(){
+    trackEvent("booking_review");const novare=isNovareService();
+    const modeRow=novare?`<div class="summary-row"><span class="summary-key">${icon("i-phone")}Modalidad</span><b>${modalityLabel(state.bookingModality)}</b></div><div class="summary-row"><span class="summary-key">${icon("i-check")}Consulta previa</span><b>S/70</b></div>`:"";
+    $("#summary").innerHTML=`<div class="summary-row"><span class="summary-key">${icon("i-service")}Servicio</span><b>${state.service.name}</b></div>${modeRow}<div class="summary-row"><span class="summary-key">${icon("i-user")}Nombre</span><b>${state.name}</b></div><div class="summary-row"><span class="summary-key">${icon("i-calendar")}Fecha</span><b>${fmt(fromIso(state.date))}</b></div><div class="summary-row"><span class="summary-key">${icon("i-clock")}Hora</span><b>${state.time}</b></div><div class="summary-row"><span class="summary-key">${icon("i-check")}Estado</span><b>Se registrará al reservar</b></div>`
+  };
+
+  function buildWhatsAppHandoff(){
+    const businessPhone=String(CONFIG?.phone||"").replace(/\D/g,"");if(!businessPhone)return "";
+    const lines=["Hola, acabo de reservar una cita desde doctorolano.pe.","",`Código: ${state.id}`,`Paciente: ${state.name}`,`Celular: ${state.phone}`,`Servicio: ${String(state.service?.name||state.service?.id||"")}`];
+    if(isNovareService()){lines.push(`Modalidad: ${modalityLabel(state.bookingModality)}`);lines.push("Consulta previa: S/70")}
+    lines.push(`Fecha: ${state.date?fmt(fromIso(state.date)):""}`,`Hora: ${state.time}`,"","Quisiera mantener este chat como canal de contacto para mi cita.");
+    return `https://wa.me/${businessPhone}?text=${encodeURIComponent(lines.join("\n"))}`
+  }
+
+  async function sendRealBooking(){
+    state.name=$("#clientName").value.trim();state.phone=$("#clientPhone").value.replace(/\s+/g,"");
+    if(!state.service||!state.date||!state.time||state.name.length<3||state.phone.length<7)return;
+    if(isNovareService()&&!state.bookingModality){alert("Selecciona si la consulta previa NOVARE será presencial o por videollamada.");go(2);ensureNovareModeUi();return}
+    if(!turnstileToken){renderBookingTurnstile();alert("Completa la verificación de seguridad para reservar.");return}
+    const btn=$("#sendBooking"),old=btn.innerHTML;btn.disabled=true;btn.textContent="Reservando…";
+    try{
+      const data=await bookingApi({action:"book",service_code:state.service.id,date:state.date,time:state.time,name:state.name,phone:state.phone,modality:isNovareService()?state.bookingModality:"",device_id:getDeviceId(),turnstile_token:turnstileToken});
+      const b=data.booking||{};state.id=b.code||"";$("#bookingCode").textContent=state.id;
+      const done=document.querySelector('#booking .step[data-step="5"]');
+      if(done){const h=done.querySelector("h2"),paragraphs=done.querySelectorAll("p");if(h)h.textContent="Cita reservada";if(paragraphs[0])paragraphs[0].textContent=`Tu cita quedó registrada para ${fmt(fromIso(state.date))} a las ${state.time}.`;if(paragraphs[1])paragraphs[1].textContent=`Código de reserva: ${state.id}`}
+      const waUrl=buildWhatsAppHandoff();state.url=waUrl;const wa=$("#openWhatsApp");if(wa&&waUrl){wa.href=waUrl;wa.style.display="inline-flex";wa.innerHTML=`${icon("i-send")}Abrir WhatsApp`}
+      clearConfirmedUi();trackEvent("booking_confirmed");go(5);
+      if(waUrl){trackEvent("booking_whatsapp_handoff",{source:"auto_redirect"});requestAnimationFrame(()=>window.location.assign(waUrl))}
     }catch(e){
-      turnstileToken="";
-      if(turnstileWidgetId!==null&&window.turnstile){
-        try{window.turnstile.reset(turnstileWidgetId)}catch{}
-      }
+      turnstileToken="";if(turnstileWidgetId!==null&&window.turnstile){try{window.turnstile.reset(turnstileWidgetId)}catch{}}
       const code=e?.code||"";
       if(code==="RATE_LIMIT_1H")alert("Ya se registró una cita desde este celular, red o dispositivo. Podrás reservar nuevamente en 1 hora.");
       else if(code==="HOUR_FULL")alert("Esa hora acaba de completar sus 3 cupos. Elige otro horario.");
+      else if(code==="SERVICE_DAY_UNAVAILABLE")alert("Este servicio NOVARE solo está disponible viernes, sábado y domingo.");
+      else if(code==="INVALID_MODALITY")alert("Selecciona presencial o videollamada para la consulta previa NOVARE.");
       else if(code==="TURNSTILE_FAILED"||code==="TURNSTILE_REQUIRED"||code==="TURNSTILE_HOSTNAME_MISMATCH"||code==="TURNSTILE_ACTION_MISMATCH")alert("No se pudo validar la verificación de seguridad. Intenta nuevamente.");
       else alert("No se pudo registrar la cita. Intenta nuevamente.");
       try{renderTimes()}catch{}
-    }finally{
-      btn.disabled=false;
-      btn.innerHTML=old
-    }
+    }finally{btn.disabled=false;btn.innerHTML=old}
   }
 
-  const dataNote=document.querySelector(".data-note");
-  if(dataNote)dataNote.textContent="Tus datos se utilizan para registrar y gestionar tu cita. Después de reservar podrás abrir WhatsApp con el reporte preparado para establecer el canal de contacto con el centro.";
+  const dataNote=document.querySelector(".data-note");if(dataNote)dataNote.textContent="Tus datos se utilizan para registrar y gestionar tu cita. Al reservar, te enviaremos automáticamente al WhatsApp oficial del centro con el reporte preparado.";
+  ensureNovareModeUi();loadBookingTurnstile();
+  const toStep2=$("#toStep2");if(toStep2)toStep2.onclick=()=>{if(!state.service)return;state.date="";state.time="";if(!isNovareService())state.bookingModality="";go(2);ensureNovareModeUi();renderCalendar()};
+  const sendButton=$("#sendBooking");if(sendButton){sendButton.innerHTML=`${icon("i-check")}Reservar cita`;sendButton.onclick=e=>{e.preventDefault();sendRealBooking()}};
+  const bookingRoot=$("#booking");if(bookingRoot){const observer=new MutationObserver(()=>{if(document.querySelector('.step[data-step="2"].active'))ensureNovareModeUi();if(!document.querySelector('.step[data-step="4"].active'))return;let tries=0;const timer=setInterval(()=>{tries++;if(window.turnstile){clearInterval(timer);renderBookingTurnstile()}else if(tries>30)clearInterval(timer)},150)});observer.observe(bookingRoot,{subtree:true,attributes:true,attributeFilter:["class"]})}
 
-  loadBookingTurnstile();
-  const sendButton=$("#sendBooking");
-  if(sendButton){
-    sendButton.innerHTML=`${icon("i-check")}Reservar cita`;
-    sendButton.onclick=e=>{
-      e.preventDefault();
-      sendRealBooking()
-    }
-  }
-
-  const bookingRoot=$("#booking");
-  if(bookingRoot){
-    const observer=new MutationObserver(()=>{
-      if(!document.querySelector('.step[data-step="4"].active'))return;
-      let tries=0;
-      const timer=setInterval(()=>{
-        tries++;
-        if(window.turnstile){
-          clearInterval(timer);
-          renderBookingTurnstile()
-        }else if(tries>30){
-          clearInterval(timer)
-        }
-      },150)
-    });
-    observer.observe(bookingRoot,{subtree:true,attributes:true,attributeFilter:["class"]})
-  }
-
-  window.OLANO_REAL_BOOKING={
-    endpoint:BOOKING_API,
-    siteKey:TURNSTILE_SITE_KEY,
-    availability:getRealAvailability
-  };
+  window.OLANO_REAL_BOOKING={endpoint:BOOKING_API,siteKey:TURNSTILE_SITE_KEY,availability:getRealAvailability};
 })();
