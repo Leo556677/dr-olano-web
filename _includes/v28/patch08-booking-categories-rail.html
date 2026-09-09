@@ -1,0 +1,292 @@
+// ===== V23.8 · CATEGORY RAIL + SELECTED SERVICE FOCUS =====
+// Desktop-first booking selector: true background blur, professional category rail,
+// one-category-at-a-time service panel, and central selected-service confirmation.
+(() => {
+  if(typeof SERVICES==='undefined'||typeof V23_CATEGORIES==='undefined'||typeof state==='undefined')return;
+
+  const STEP1=document.querySelector('.step[data-step="1"]');
+  const BOOKING=document.querySelector('#booking');
+  const INPUT=document.querySelector('#serviceSearch');
+  const LIST=document.querySelector('#serviceList');
+  const FILTER=document.querySelector('#v23FilterPanel');
+  const LEGACY_SELECTED=document.querySelector('#v23SelectedSummary');
+  const CTA=document.querySelector('#toStep2');
+  if(!STEP1||!BOOKING||!INPUT||!LIST||!CTA)return;
+
+  const UX={activeCategory:null};
+
+  const ICONS={
+    consulta:`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v5a4 4 0 0 0 8 0V3M6 3h4M14 3h4M12 12v2a5 5 0 0 0 10 0v-1"/><circle cx="20" cy="10" r="2"/></svg>`,
+    metabolismo:`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21S4 16.6 4 10.3A4.3 4.3 0 0 1 12 8a4.3 4.3 0 0 1 8 2.3C20 16.6 12 21 12 21Z"/><path d="M7 12h3l1.2-2.4L13 15l1.2-3H18"/></svg>`,
+    estetica:`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c4.2 0 7 3.3 7 7.6 0 5.3-3.6 9.4-7 10.4-3.4-1-7-5.1-7-10.4C5 6.3 7.8 3 12 3Z"/><path d="M9 10h.01M15 10h.01M9.5 15c1.5 1 3.5 1 5 0"/><path d="m19 3 .7 1.5L21 5.2l-1.3.7L19 7.4l-.7-1.5L17 5.2l1.3-.7L19 3Z"/></svg>`,
+    regenerativa:`<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><circle cx="12" cy="16" r="3"/><path d="M10.2 10.1 11 13M13.8 10.1 13 13M10.5 7.7h3"/></svg>`,
+    dolor:`<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 2v3M22 12h-3M12 22v-3M2 12h3"/></svg>`,
+    novare:`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c4.2 0 7 3.4 7 7.7 0 5-3.2 9-7 10.3-3.8-1.3-7-5.3-7-10.3C5 6.4 7.8 3 12 3Z"/><path d="M8.5 14c2.2 1.8 4.8 1.8 7 0"/><path d="M18.5 4.5 20 3m-1.5 1.5L20 6m-1.5-1.5L17 3m1.5 1.5L17 6"/></svg>`
+  };
+
+  const SHORT={
+    consulta:'Consulta',metabolismo:'Metabolismo',estetica:'Estética',
+    regenerativa:'Regenerativa',dolor:'Dolor',novare:'NOVARE'
+  };
+
+  function categoryLabel(id){return V23_CATEGORIES.find(c=>c.id===id)?.label||id}
+  function servicesFor(id){return SERVICES.filter(s=>s.category===id)}
+  function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+
+  function selectedPanel(){
+    if(!state.service)return `
+      <div class="v238-empty-stage">
+        <div class="v238-empty-mark">${ICONS.consulta}</div>
+        <strong>Elige una categoría</strong>
+        <span>Selecciona un icono de la izquierda para ver sus servicios.</span>
+      </div>`;
+
+    return `
+      <div class="v238-selected-stage" role="status" aria-live="polite">
+        <div class="v238-selected-card">
+          <span class="v238-selected-check" aria-hidden="true">✓</span>
+          <small>SERVICIO SELECCIONADO</small>
+          <strong>${esc(state.service.name)}</strong>
+          <span class="v238-selected-meta">${esc(state.service.unit)} · ${esc(state.service.price)}</span>
+          <p>Tu elección quedó registrada. Puedes cambiarla tocando otra categoría.</p>
+        </div>
+      </div>`;
+  }
+
+  function categoryPanel(id){
+    const services=servicesFor(id);
+    return `
+      <div class="v238-category-panel">
+        <div class="v238-category-title">
+          <span class="v238-category-title-icon">${ICONS[id]||ICONS.consulta}</span>
+          <div><small>CATEGORÍA</small><strong>${esc(categoryLabel(id))}</strong></div>
+        </div>
+        <div class="v238-service-grid">
+          ${services.map(s=>{
+            const active=state.service?.id===s.id;
+            return `<button type="button" class="v238-service-card ${active?'active':''}" data-v238-service="${esc(s.id)}" ${active?'aria-current="true"':''}>
+              <span class="v238-service-copy"><strong>${esc(s.name)}</strong><small>${esc(s.unit)} · ${esc(s.price)}</small></span>
+              <span class="v238-service-state">${active?'✓ Elegido':'Seleccionar'}</span>
+            </button>`;
+          }).join('')}
+        </div>
+      </div>`;
+  }
+
+  function searchPanel(q){
+    const n=norm(q);
+    const matches=SERVICES.filter(s=>norm(`${s.name} ${s.unit} ${s.price} ${categoryLabel(s.category)}`).includes(n));
+    return `
+      <div class="v238-category-panel">
+        <div class="v238-category-title">
+          <span class="v238-category-title-icon">${ICONS.consulta}</span>
+          <div><small>BÚSQUEDA</small><strong>${matches.length?`${matches.length} resultado${matches.length===1?'':'s'}`:'Sin resultados'}</strong></div>
+        </div>
+        ${matches.length?`<div class="v238-service-grid">${matches.map(s=>{
+          const active=state.service?.id===s.id;
+          return `<button type="button" class="v238-service-card ${active?'active':''}" data-v238-service="${esc(s.id)}">
+            <span class="v238-service-copy"><em>${esc(SHORT[s.category]||categoryLabel(s.category))}</em><strong>${esc(s.name)}</strong><small>${esc(s.unit)} · ${esc(s.price)}</small></span>
+            <span class="v238-service-state">${active?'✓ Elegido':'Seleccionar'}</span>
+          </button>`;
+        }).join('')}</div>`:`<div class="v238-no-results">Prueba con otro nombre o elige una categoría.</div>`}
+      </div>`;
+  }
+
+  function rail(){
+    return `<nav class="v238-rail" aria-label="Categorías de servicios">
+      ${V23_CATEGORIES.map(c=>`<button type="button" class="v238-rail-btn ${UX.activeCategory===c.id?'active':''} ${state.service?.category===c.id?'has-selected':''}" data-v238-category="${c.id}" title="${esc(c.label)}" aria-label="${esc(c.label)}">
+        <span class="v238-rail-icon">${ICONS[c.id]||ICONS.consulta}</span>
+        <span>${esc(SHORT[c.id]||c.label)}</span>
+      </button>`).join('')}
+    </nav>`;
+  }
+
+  function bind(){
+    LIST.querySelectorAll('[data-v238-category]').forEach(btn=>btn.onclick=()=>{
+      markScheduleInteraction();
+      UX.activeCategory=btn.dataset.v238Category;
+      INPUT.value='';
+      renderServices();
+    });
+
+    LIST.querySelectorAll('[data-v238-service]').forEach(btn=>btn.onclick=()=>{
+      markScheduleInteraction();
+      const svc=SERVICES.find(s=>s.id===btn.dataset.v238Service);
+      if(!svc)return;
+      state.service=svc;
+      setPrimary(CTA,true);
+      saveDraft();
+      btn.classList.add('v238-picked-now');
+      setTimeout(()=>{
+        UX.activeCategory=null;
+        INPUT.value='';
+        renderServices();
+      },260);
+    });
+  }
+
+  renderServices=function(){
+    STEP1.classList.add('v238-catalog-mode');
+    if(FILTER)FILTER.style.display='none';
+    if(LEGACY_SELECTED)LEGACY_SELECTED.style.display='none';
+
+    const q=INPUT.value.trim();
+    const stage=q?searchPanel(q):(UX.activeCategory?categoryPanel(UX.activeCategory):selectedPanel());
+    LIST.className='service-list v238-catalog';
+    LIST.innerHTML=`<div class="v238-shell">${rail()}<section class="v238-stage">${stage}</section></div>`;
+    bind();
+    setPrimary(CTA,!!state.service);
+  };
+
+  INPUT.addEventListener('input',e=>{
+    e.stopImmediatePropagation();
+    UX.activeCategory=null;
+    renderServices();
+  },true);
+  INPUT.addEventListener('focus',e=>{e.stopImmediatePropagation()},true);
+  INPUT.addEventListener('blur',e=>{e.stopImmediatePropagation()},true);
+
+  const goBase238=go;
+  go=function(n){
+    goBase238(n);
+    if(Number(n)===1)renderServices();
+  };
+
+  const style=document.createElement('style');
+  style.id='v238-category-rail-styles';
+  style.textContent=`
+    /* ===== BACKGROUND REALLY DIFFUSED WHILE BOOKING IS OPEN ===== */
+    @media(min-width:761px){
+      body.booking-open .top,
+      body.booking-open main,
+      body.booking-open footer,
+      body.booking-open .dock,
+      body.booking-open .main-social-stage,
+      body.booking-open .promo-count{
+        filter:blur(18px)!important;
+        opacity:.28!important;
+        transition:filter .22s ease,opacity .22s ease!important;
+      }
+      .booking{
+        background:rgba(3,16,29,.48)!important;
+        -webkit-backdrop-filter:blur(34px) saturate(.72) brightness(.82)!important;
+        backdrop-filter:blur(34px) saturate(.72) brightness(.82)!important;
+      }
+    }
+
+    /* ===== STEP 1 LAYOUT ===== */
+    .booking.v235-service-mode .step[data-step="1"].active{
+      grid-template-rows:auto auto minmax(0,1fr) auto!important;
+    }
+    .booking.v235-service-mode #v23FilterPanel,
+    .booking.v235-service-mode #v23SelectedSummary{display:none!important}
+    .booking.v235-service-mode .service-list.v238-catalog{
+      min-height:0!important;height:100%!important;max-height:none!important;
+      overflow:hidden!important;padding:3px 0 7px!important;display:block!important;
+    }
+    .v238-shell{
+      height:100%;min-height:0;display:grid;grid-template-columns:92px minmax(0,1fr);gap:12px;
+    }
+
+    /* ===== PROFESSIONAL CATEGORY ICON RAIL ===== */
+    .v238-rail{
+      min-height:0;display:flex;flex-direction:column;align-items:stretch;gap:7px;
+      padding:6px;background:linear-gradient(180deg,#edf4f5,#e7f0f1);border:1px solid #d5e3e6;
+      border-radius:18px;overflow-y:auto;scrollbar-width:none;
+    }
+    .v238-rail::-webkit-scrollbar{display:none}
+    .v238-rail-btn{
+      position:relative;flex:0 0 auto;min-height:68px;border:1px solid transparent;background:transparent;
+      color:#315164;border-radius:14px;padding:7px 4px;display:flex;flex-direction:column;align-items:center;
+      justify-content:center;gap:5px;font-size:.54rem;font-weight:850;line-height:1.08;text-align:center;
+      transition:background .18s ease,border-color .18s ease,transform .18s ease,color .18s ease;
+    }
+    .v238-rail-btn:hover{background:#fff;border-color:#cfe1e4;transform:translateY(-1px);color:var(--navy)}
+    .v238-rail-btn.active{background:var(--navy);border-color:var(--navy);color:#fff;box-shadow:0 9px 18px -14px #001b30}
+    .v238-rail-btn.has-selected:after{
+      content:"✓";position:absolute;right:5px;top:5px;width:17px;height:17px;border-radius:50%;display:grid;
+      place-items:center;background:var(--teal);color:#fff;font-size:.56rem;font-weight:950;border:2px solid #fff;
+    }
+    .v238-rail-icon{width:30px;height:30px;display:grid;place-items:center}
+    .v238-rail-icon svg,.v238-category-title-icon svg,.v238-empty-mark svg{
+      width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;
+    }
+
+    /* ===== CENTER STAGE ===== */
+    .v238-stage{
+      min-width:0;min-height:0;overflow-y:auto;padding:4px 8px 8px 2px;scrollbar-width:thin;
+    }
+    .v238-empty-stage,.v238-selected-stage{
+      min-height:100%;display:flex;align-items:center;justify-content:center;padding:18px;
+    }
+    .v238-empty-stage{flex-direction:column;text-align:center;color:#61727d}
+    .v238-empty-stage strong{color:var(--navy);font:800 1.15rem/1.1 "Fraunces",serif;margin-top:12px}
+    .v238-empty-stage span{font-size:.72rem;margin-top:6px;max-width:32ch}
+    .v238-empty-mark{width:58px;height:58px;color:var(--teal2);padding:12px;border-radius:18px;background:#e5f5f2;border:1px solid #c9e5e1}
+
+    .v238-category-panel{min-height:100%}
+    .v238-category-title{
+      position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:10px;padding:9px 10px;margin-bottom:8px;
+      border:1px solid #d5e3e6;border-radius:14px;background:rgba(248,251,251,.97);backdrop-filter:blur(8px);
+    }
+    .v238-category-title-icon{width:34px;height:34px;color:var(--teal2);padding:6px;border-radius:10px;background:#e5f5f2}
+    .v238-category-title small{display:block;color:var(--teal2);font-size:.52rem;font-weight:950;letter-spacing:.07em}
+    .v238-category-title strong{display:block;color:var(--navy);font-size:.88rem;line-height:1.1;margin-top:2px}
+    .v238-service-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    .v238-service-card{
+      position:relative;min-height:76px;border:1.5px solid #d7e4e7;background:#fff;border-radius:15px;padding:11px;
+      display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;text-align:left;color:var(--navy);
+      box-shadow:0 10px 24px -22px rgba(3,30,49,.65);transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;
+    }
+    .v238-service-card:hover{transform:translateY(-2px);border-color:#8fcac4;box-shadow:0 15px 28px -22px rgba(3,30,49,.7)}
+    .v238-service-copy{min-width:0}
+    .v238-service-copy em{display:block;color:var(--teal2);font-style:normal;font-size:.5rem;font-weight:900;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+    .v238-service-copy strong{display:block;font-size:.76rem;line-height:1.12}
+    .v238-service-copy small{display:block;color:var(--muted);font-size:.59rem;line-height:1.15;margin-top:4px}
+    .v238-service-state{font-size:.54rem;font-weight:900;color:var(--teal2);white-space:nowrap}
+
+    /* ===== INFINITE VISUAL EMPHASIS FOR SELECTED SERVICE ===== */
+    @keyframes v238SelectedBorder{
+      0%,100%{border-color:#0f827a;box-shadow:0 0 0 2px rgba(15,130,122,.12),0 0 0 0 rgba(26,167,157,0)}
+      50%{border-color:#00d8c8;box-shadow:0 0 0 4px rgba(0,216,200,.20),0 0 28px 3px rgba(0,216,200,.34)}
+    }
+    .v238-service-card.active,.v238-service-card.v238-picked-now{
+      background:linear-gradient(135deg,#e6fbf7,#fff)!important;
+      animation:v238SelectedBorder 1.45s ease-in-out infinite!important;
+    }
+    .v238-service-card.active .v238-service-copy strong{font-weight:950}
+
+    .v238-selected-card{
+      width:min(100%,490px);border:3px solid #0f827a;border-radius:24px;padding:28px 24px;text-align:center;
+      background:linear-gradient(145deg,#fff,#effaf8);color:var(--navy);
+      animation:v238SelectedBorder 1.65s ease-in-out infinite;
+    }
+    .v238-selected-check{
+      width:58px;height:58px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;
+      background:linear-gradient(145deg,var(--teal2),var(--teal));color:#fff;font-size:1.8rem;font-weight:950;
+      box-shadow:0 12px 25px -15px #045b55;
+    }
+    .v238-selected-card>small{display:block;color:var(--teal2);font-size:.62rem;font-weight:950;letter-spacing:.085em}
+    .v238-selected-card>strong{display:block;font:800 clamp(1.22rem,2.2vw,1.7rem)/1.08 "Fraunces",serif;margin:8px 0 7px}
+    .v238-selected-meta{display:block;color:#57717c;font-size:.73rem;font-weight:750}
+    .v238-selected-card p{margin:14px auto 0;color:#657780;font-size:.72rem;max-width:39ch}
+    .v238-no-results{padding:40px 18px;text-align:center;color:var(--muted);font-size:.75rem}
+
+    @media(max-width:760px){
+      body.booking-open .top,body.booking-open main,body.booking-open footer,body.booking-open .dock{filter:blur(10px)!important;opacity:.45!important}
+      .booking{background:rgba(3,16,29,.38)!important;-webkit-backdrop-filter:blur(22px) saturate(.82)!important;backdrop-filter:blur(22px) saturate(.82)!important}
+      .v238-shell{grid-template-columns:68px minmax(0,1fr);gap:8px}
+      .v238-rail{padding:4px;gap:5px;border-radius:15px}
+      .v238-rail-btn{min-height:58px;border-radius:11px;font-size:.47rem;padding:5px 2px}
+      .v238-rail-icon{width:25px;height:25px}
+      .v238-stage{padding-right:2px}
+      .v238-service-grid{grid-template-columns:1fr;gap:6px}
+      .v238-service-card{min-height:64px;padding:9px}
+      .v238-selected-card{padding:22px 15px;border-radius:20px}
+      .v238-selected-check{width:50px;height:50px;font-size:1.5rem}
+    }
+  `;
+  document.head.appendChild(style);
+
+  renderServices();
+})();
