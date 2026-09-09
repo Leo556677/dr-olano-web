@@ -1,4 +1,4 @@
-// ===== V24.0 · 4 CATEGORÍAS DESTACADAS =====
+// ===== V25.0 · 4 CATEGORÍAS DESTACADAS =====
 // Sustituye el bloque antiguo por 4 categorías visuales en orden fijo.
 // Cada tarjeta abre el agendamiento mostrando la categoría elegida; NO preselecciona un servicio.
 (() => {
@@ -12,28 +12,28 @@
       id:'estetica',
       title:'Medicina Estética',
       copy:'Evaluación facial y tratamientos estéticos personalizados.',
-      image:'assets/categoria-estetica-v24.svg',
+      image:'assets/categoria-estetica-v25.webp',
       alt:'Dr. Olano realizando una evaluación facial de medicina estética'
     },
     {
       id:'novare',
       title:'NOVARE',
       copy:'Cirugía plástica de rostro y evaluación especializada.',
-      image:'assets/categoria-novare-v24.svg',
+      image:'assets/categoria-novare-v25.webp',
       alt:'Dr. Olano evaluando el perfil facial de una paciente para cirugía plástica de rostro'
     },
     {
       id:'dolor',
       title:'Dolor',
       copy:'Manejo del dolor y procedimientos médicos ecoguiados.',
-      image:'assets/categoria-dolor-v24.svg',
+      image:'assets/categoria-dolor-v25.webp',
       alt:'Dr. Olano realizando una evaluación ecoguiada de hombro para manejo del dolor'
     },
     {
       id:'regenerativa',
       title:'Regenerativa',
       copy:'Terapias regenerativas y evaluación médica personalizada.',
-      image:'assets/categoria-regenerativa-v24.svg',
+      image:'assets/categoria-regenerativa-v25.webp',
       alt:'Dr. Olano explicando una terapia regenerativa con plasma a una paciente'
     }
   ];
@@ -47,7 +47,7 @@
     <article class="unit v240-unit" data-v240-category="${c.id}">
       <button type="button" class="v240-card-hit" aria-label="Ver servicios de ${c.title}">
         <div class="unit-media v240-media">
-          <img src="${c.image}" width="480" height="270" loading="${i===0?'eager':'lazy'}" decoding="async" alt="${c.alt}">
+          <img src="${c.image}" width="1280" height="720" loading="${i===0?'eager':'lazy'}" decoding="async" alt="${c.alt}">
         </div>
         <div class="unit-copy v240-copy">
           <b>${c.title}</b>
