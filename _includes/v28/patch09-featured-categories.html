@@ -1,0 +1,189 @@
+// ===== V24.0 · 4 CATEGORÍAS DESTACADAS =====
+// Sustituye el bloque antiguo por 4 categorías visuales en orden fijo.
+// Cada tarjeta abre el agendamiento mostrando la categoría elegida; NO preselecciona un servicio.
+(() => {
+  const section=document.querySelector('#unidades');
+  const grid=section?.querySelector('.units');
+  const head=section?.querySelector('.section-head');
+  if(!section||!grid)return;
+
+  const cards=[
+    {
+      id:'estetica',
+      title:'Medicina Estética',
+      copy:'Evaluación facial y tratamientos estéticos personalizados.',
+      image:'assets/categoria-estetica-v24.svg',
+      alt:'Dr. Olano realizando una evaluación facial de medicina estética'
+    },
+    {
+      id:'novare',
+      title:'NOVARE',
+      copy:'Cirugía plástica de rostro y evaluación especializada.',
+      image:'assets/categoria-novare-v24.svg',
+      alt:'Dr. Olano evaluando el perfil facial de una paciente para cirugía plástica de rostro'
+    },
+    {
+      id:'dolor',
+      title:'Dolor',
+      copy:'Manejo del dolor y procedimientos médicos ecoguiados.',
+      image:'assets/categoria-dolor-v24.svg',
+      alt:'Dr. Olano realizando una evaluación ecoguiada de hombro para manejo del dolor'
+    },
+    {
+      id:'regenerativa',
+      title:'Regenerativa',
+      copy:'Terapias regenerativas y evaluación médica personalizada.',
+      image:'assets/categoria-regenerativa-v24.svg',
+      alt:'Dr. Olano explicando una terapia regenerativa con plasma a una paciente'
+    }
+  ];
+
+  if(head){
+    head.innerHTML='<h2>Atención especializada</h2><p>Elige un área para ver sus servicios y agendar.</p>';
+  }
+
+  grid.classList.add('v240-featured-grid');
+  grid.innerHTML=cards.map((c,i)=>`
+    <article class="unit v240-unit" data-v240-category="${c.id}">
+      <button type="button" class="v240-card-hit" aria-label="Ver servicios de ${c.title}">
+        <div class="unit-media v240-media">
+          <img src="${c.image}" width="480" height="270" loading="${i===0?'eager':'lazy'}" decoding="async" alt="${c.alt}">
+        </div>
+        <div class="unit-copy v240-copy">
+          <b>${c.title}</b>
+          <p>${c.copy}</p>
+          <span class="v240-cta">Ver servicios y agendar <span aria-hidden="true">→</span></span>
+        </div>
+      </button>
+    </article>`).join('');
+
+  function openCategory(category){
+    if(typeof openBooking!=='function')return;
+    // No conservamos una selección previa: desde una tarjeta de categoría
+    // el usuario debe ver primero todos los servicios de esa categoría.
+    if(typeof state!=='undefined')state.service=null;
+    openBooking();
+    setTimeout(()=>{
+      const categoryBtn=document.querySelector(`[data-v238-category="${category}"]`);
+      if(categoryBtn){
+        categoryBtn.click();
+        setTimeout(()=>document.querySelector('.v238-stage')?.scrollTo({top:0,behavior:'instant'}),40);
+      }
+    },120);
+  }
+
+  grid.querySelectorAll('[data-v240-category]').forEach(card=>{
+    const hit=card.querySelector('.v240-card-hit');
+    if(!hit)return;
+    hit.onclick=()=>{
+      if(typeof markScheduleInteraction==='function')markScheduleInteraction();
+      openCategory(card.dataset.v240Category);
+    };
+  });
+
+  const style=document.createElement('style');
+  style.id='v240-featured-categories-styles';
+  style.textContent=`
+    #unidades .v240-featured-grid{
+      display:grid!important;
+      grid-template-columns:repeat(2,minmax(0,1fr))!important;
+      gap:16px!important;
+      align-items:stretch!important;
+    }
+    #unidades .v240-unit{
+      min-width:0!important;
+      overflow:hidden!important;
+      border:1px solid #d8e4e7!important;
+      border-radius:24px!important;
+      background:#fff!important;
+      box-shadow:0 18px 45px -32px rgba(5,36,58,.52)!important;
+      transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease!important;
+    }
+    #unidades .v240-unit:hover{
+      transform:translateY(-3px)!important;
+      border-color:rgba(15,130,122,.42)!important;
+      box-shadow:0 25px 52px -30px rgba(5,36,58,.6)!important;
+    }
+    #unidades .v240-card-hit{
+      width:100%!important;
+      height:100%!important;
+      display:flex!important;
+      flex-direction:column!important;
+      padding:0!important;
+      border:0!important;
+      background:#fff!important;
+      color:inherit!important;
+      text-align:left!important;
+      cursor:pointer!important;
+      font:inherit!important;
+    }
+    #unidades .v240-media{
+      width:100%!important;
+      aspect-ratio:16/9!important;
+      overflow:hidden!important;
+      background:#eaf4f4!important;
+    }
+    #unidades .v240-media img{
+      width:100%!important;
+      height:100%!important;
+      display:block!important;
+      object-fit:cover!important;
+      object-position:center center!important;
+      transform:scale(1.002);
+      transition:transform .3s ease!important;
+    }
+    #unidades .v240-unit:hover .v240-media img{transform:scale(1.035)}
+    #unidades .v240-copy{
+      flex:1!important;
+      display:flex!important;
+      flex-direction:column!important;
+      align-items:flex-start!important;
+      padding:17px 18px 18px!important;
+    }
+    #unidades .v240-copy b{
+      color:var(--navy)!important;
+      font-size:1.08rem!important;
+      line-height:1.15!important;
+      font-weight:900!important;
+    }
+    #unidades .v240-copy p{
+      margin:6px 0 14px!important;
+      color:var(--muted)!important;
+      font-size:.78rem!important;
+      line-height:1.42!important;
+    }
+    #unidades .v240-cta{
+      margin-top:auto!important;
+      display:inline-flex!important;
+      align-items:center!important;
+      gap:7px!important;
+      min-height:40px!important;
+      padding:0 13px!important;
+      border-radius:999px!important;
+      background:#eaf7f5!important;
+      color:var(--teal2)!important;
+      font-size:.78rem!important;
+      font-weight:900!important;
+    }
+    #unidades .v240-card-hit:focus-visible{
+      outline:3px solid var(--teal2)!important;
+      outline-offset:-3px!important;
+      border-radius:24px!important;
+    }
+    @media(max-width:760px){
+      #unidades .v240-featured-grid{grid-template-columns:1fr!important;gap:13px!important}
+      #unidades .v240-unit{border-radius:20px!important}
+      #unidades .v240-media{aspect-ratio:16/9!important}
+      #unidades .v240-copy{padding:14px 15px 15px!important}
+      #unidades .v240-copy b{font-size:1.02rem!important}
+      #unidades .v240-copy p{font-size:.75rem!important;margin-bottom:11px!important}
+      #unidades .v240-cta{min-height:38px!important;font-size:.75rem!important}
+    }
+    @media(min-width:761px) and (max-width:1100px){
+      #unidades .v240-featured-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important}
+      #unidades .v240-copy{padding:15px 16px 16px!important}
+    }
+  `;
+  document.querySelector('#v240-featured-categories-styles')?.remove();
+  document.head.appendChild(style);
+})();
