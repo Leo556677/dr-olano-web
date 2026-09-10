@@ -3,7 +3,7 @@ layout: seo-service
 permalink: /doctor-olano
 canonical: https://doctorolano.pe/doctor-olano
 title: "Dr. Kamo Martin Olano Paredes | CMP 069685 | Carabayllo"
-description: "Perfil profesional de Dr. Kamo Martin Olano Paredes, médico cirujano CMP 069685 en Carabayllo. Conoce áreas de atención y cómo solicitar una cita."
+description: "Perfil profesional de Dr. Kamo Martin Olano Paredes, médico cirujano CMP 069685 en Carabayllo. Conoce áreas de atención y cómo reservar una cita."
 h1: "Dr. Kamo Martin Olano Paredes"
 eyebrow: "Médico Cirujano · CMP 069685 · Carabayllo"
 lead: "Médico cirujano con colegiatura verificada en el Colegio Médico del Perú. Atención con evaluación individual y orientación previa antes de definir tratamientos o procedimientos."
@@ -31,7 +31,7 @@ La identidad y condición de colegiatura fueron contrastadas con la consulta ofi
 
 Dr. Olano brinda atención médica en Carabayllo, Lima. La consulta parte de una evaluación individual para revisar el motivo de atención, antecedentes relevantes y objetivos antes de definir el siguiente paso.
 
-La web oficial permite conocer las principales áreas de atención, revisar servicios y solicitar una cita. La reserva enviada desde el sitio queda pendiente hasta la confirmación por WhatsApp.
+La web oficial permite conocer las principales áreas de atención, revisar servicios y reservar una cita. Al completar la reserva, la cita queda registrada en el sistema y su sincronización con la agenda del Dr. Olano se realiza automáticamente; WhatsApp queda como canal de contacto y seguimiento.
 
 ## Principales áreas de atención
 
@@ -48,16 +48,16 @@ En medicina estética también puedes consultar información específica sobre [
 
 La información publicada en este sitio es orientativa. La conveniencia de un tratamiento, procedimiento o plan de atención depende de la valoración médica de cada persona.
 
-Por ese motivo, las páginas de servicios explican qué puede revisarse durante una consulta y cómo solicitar una cita, pero no sustituyen una evaluación presencial ni garantizan que un procedimiento sea indicado.
+Por ese motivo, las páginas de servicios explican qué puede revisarse durante una consulta y cómo reservar una cita, pero no sustituyen una evaluación presencial ni garantizan que un procedimiento sea indicado.
 
-## Cómo solicitar una cita
+## Cómo reservar una cita
 
-Puedes iniciar desde la ruta de [reserva](/reserva), elegir una fecha y horario y completar tus datos de contacto. También puedes revisar primero la [lista de servicios](/reserva-s).
+Puedes iniciar desde la ruta de [reserva](/reserva), elegir un servicio, una fecha y un horario y completar tus datos de contacto. También puedes revisar primero la [lista de servicios](/reserva-s).
 
 ### ¿Dónde atiende Dr. Olano?
 
 La atención es en Carabayllo, Lima, Perú.
 
-### ¿La reserva queda confirmada inmediatamente?
+### ¿Qué ocurre al completar la reserva?
 
-No. La solicitud se prepara desde la web y el cupo queda pendiente hasta que sea confirmado por WhatsApp.
+La cita queda registrada en el sistema de reservas y se envía automáticamente a sincronización con la agenda del Dr. Olano. No queda esperando una confirmación manual por WhatsApp; ese chat se utiliza como canal de contacto y seguimiento.
