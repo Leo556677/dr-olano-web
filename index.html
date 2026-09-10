@@ -12,10 +12,11 @@ permalink: /
   | replace: '<meta name="description" content="Agenda tu consulta con Dr. Olano en Carabayllo. Medicina estética, manejo del dolor y metabolismo. Elige servicio, fecha y horario; confirmamos por WhatsApp.">', '<meta name="description" content="Agenda tu cita con Dr. Olano en Carabayllo. Medicina estética, NOVARE, manejo del dolor y medicina regenerativa. Elige servicio, fecha y hora; tu cita queda registrada al reservar.">'
   | replace: '<meta property="og:title" content="Dr. Olano | Medicina Estética y Atención Médica en Carabayllo">', '<meta property="og:title" content="Dr. Olano | Médico Cirujano y reserva online en Carabayllo">'
   | replace: '<meta property="og:description" content="Elige servicio, fecha y horario para solicitar tu cita. Confirmación final por WhatsApp.">', '<meta property="og:description" content="Medicina estética, NOVARE, manejo del dolor y medicina regenerativa en Carabayllo. Reserva servicio, fecha y hora directamente desde la web.">'
-  | replace: '<meta property="og:image" content="https://doctorolano.pe/og-image.png">', '<meta property="og:image" content="https://doctorolano.pe/og-image.png?v=20260909"><meta property="og:image:secure_url" content="https://doctorolano.pe/og-image.png?v=20260909"><meta property="og:image:type" content="image/png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Dr. Olano · Médico Cirujano · atención y reserva online en Carabayllo">'
+  | replace: '<meta property="og:image" content="https://doctorolano.pe/og-image.png">', '<meta property="og:image" content="https://doctorolano.pe/assets/logo-isotipo.png?v=20260909"><meta property="og:image:secure_url" content="https://doctorolano.pe/assets/logo-isotipo.png?v=20260909"><meta property="og:image:type" content="image/png"><meta property="og:image:width" content="512"><meta property="og:image:height" content="512"><meta property="og:image:alt" content="Logo oficial de Dr. Olano · Médico Cirujano en Carabayllo">'
   | replace: '<meta name="twitter:title" content="Dr. Olano | Dr. Olano">', '<meta name="twitter:title" content="Dr. Olano | Médico Cirujano en Carabayllo">'
   | replace: '<meta name="twitter:title" content="Dr. Olano | Olano Medic">', '<meta name="twitter:title" content="Dr. Olano | Médico Cirujano en Carabayllo">'
   | replace: '<meta name="twitter:description" content="Medicina estética, manejo del dolor y metabolismo en Carabayllo. Solicita tu cita online.">', '<meta name="twitter:description" content="Medicina estética, NOVARE, manejo del dolor y medicina regenerativa en Carabayllo. Reserva tu cita online.">'
+  | replace: '<meta name="twitter:image" content="https://doctorolano.pe/og-image.png">', '<meta name="twitter:image" content="https://doctorolano.pe/assets/logo-isotipo.png?v=20260909">'
 }}
 {% include v28/part02.html %}
 {% capture v28_part03 %}{% include v28/part03.html %}{% endcapture %}{{ v28_part03
@@ -43,6 +44,8 @@ permalink: /
   | replace: '+51 981 214 007', '+51 907 108 271'
   | replace: '51981214007', '51907108271'
   | replace: 'Olano Medic', 'Dr. Olano'
+  | replace: '<span class="trust-chip">Lun–Sáb · 09:00–21:00</span>', '<span class="trust-chip">Lun–Dom · 09:00–12:00 / 14:00–21:00</span>'
+  | replace: '<span>Lunes a sábado · 09:00–21:00</span>', '<span>Lunes a domingo · 09:00–12:00 y 14:00–21:00</span>'
   | replace: '<span class="trust-chip">Confirmación por WhatsApp</span>', '<span class="trust-chip">Reserva web registrada</span>'
   | replace: '<details><summary>¿La cita queda confirmada al enviarla?</summary><p>No. Primero se envía la solicitud por WhatsApp y el centro confirma el cupo.</p></details>', '<details><summary>¿La cita queda registrada al reservar?</summary><p>Sí. Al completar la reserva, el horario queda registrado en el sistema y se sincroniza automáticamente con la agenda del Dr. Olano.</p></details>'
   | replace: 'retomarlo desde “Cita pendiente”', 'retomarlo desde “Reserva en curso”'
