@@ -48,5 +48,29 @@ gtag("js", new Date());
   });
 })();
 </script>
+
+<!-- Metricool: solo páginas públicas no sensibles. Se excluyen reserva, gestión de citas y paneles internos. -->
+<script>
+(function(){
+  var path=(window.location.pathname||"/").replace(/\/+$/,"/");
+  var blocked=["/reserva/","/reserva-s/","/gestionar-cita/","/agenda-admin/","/recordatorios-admin/"];
+  if(blocked.some(function(prefix){return path===prefix||path.indexOf(prefix)===0;}))return;
+
+  function loadScript(a){
+    var b=document.getElementsByTagName("head")[0],c=document.createElement("script");
+    c.type="text/javascript";
+    c.src="https://tracker.metricool.com/resources/be.js";
+    c.onreadystatechange=a;
+    c.onload=a;
+    b.appendChild(c);
+  }
+  loadScript(function(){
+    if(window.beTracker&&typeof window.beTracker.t==="function"){
+      window.beTracker.t({hash:"ceb5747e54ceed1315bef26305f52473"});
+    }
+  });
+})();
+</script>
+
 <!-- Componente público compartido: redes oficiales en el pie de página -->
 <script defer src="/assets/social-footer.js?v=20260909-1"></script>
