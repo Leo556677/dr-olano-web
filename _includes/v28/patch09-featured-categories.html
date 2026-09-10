@@ -1,6 +1,7 @@
-// ===== V25.0 · 4 CATEGORÍAS DESTACADAS =====
+// ===== V25.1 · 4 CATEGORÍAS DESTACADAS =====
 // Sustituye el bloque antiguo por 4 categorías visuales en orden fijo.
 // Cada tarjeta abre el agendamiento mostrando la categoría elegida; NO preselecciona un servicio.
+// Recupera movimiento tipo Ken Burns en las 4 imágenes y usa una de ellas al azar en la oferta.
 (() => {
   const section=document.querySelector('#unidades');
   const grid=section?.querySelector('.units');
@@ -59,8 +60,6 @@
 
   function openCategory(category){
     if(typeof openBooking!=='function')return;
-    // No conservamos una selección previa: desde una tarjeta de categoría
-    // el usuario debe ver primero todos los servicios de esa categoría.
     if(typeof state!=='undefined')state.service=null;
     openBooking();
     setTimeout(()=>{
@@ -81,9 +80,49 @@
     };
   });
 
+  function randomizePromoImage(){
+    const promoImg=document.querySelector('#promoOverlay .promo-img img');
+    if(!promoImg)return;
+    const picked=cards[Math.floor(Math.random()*cards.length)];
+    promoImg.removeAttribute('data-optimized');
+    promoImg.src=picked.image;
+    promoImg.alt=`Oferta especial de Dr. Olano · ${picked.title}`;
+  }
+
+  // triggerPromo ya existe cuando se carga este parche. Lo envolvemos para
+  // escoger una imagen distinta al azar justo antes de mostrar la oferta.
+  if(typeof triggerPromo==='function'){
+    const triggerPromoV25=triggerPromo;
+    triggerPromo=function(...args){
+      randomizePromoImage();
+      return triggerPromoV25.apply(this,args);
+    };
+  }
+
   const style=document.createElement('style');
   style.id='v240-featured-categories-styles';
   style.textContent=`
+    @keyframes v25EsteticaMove{
+      0%{transform:scale(1.025) translate3d(-1.8%,0,0)}
+      50%{transform:scale(1.115) translate3d(2.2%,1%,0)}
+      100%{transform:scale(1.045) translate3d(-.8%,-.5%,0)}
+    }
+    @keyframes v25NovareMove{
+      0%{transform:scale(1.035) translate3d(2%,0,0)}
+      50%{transform:scale(1.12) translate3d(-2.2%,.8%,0)}
+      100%{transform:scale(1.05) translate3d(1.1%,-.5%,0)}
+    }
+    @keyframes v25DolorMove{
+      0%{transform:scale(1.03) translate3d(-1.4%,-1%,0)}
+      50%{transform:scale(1.115) translate3d(2%,1.2%,0)}
+      100%{transform:scale(1.045) translate3d(-1.2%,0,0)}
+    }
+    @keyframes v25RegenerativaMove{
+      0%{transform:scale(1.03) translate3d(1.6%,.5%,0)}
+      50%{transform:scale(1.11) translate3d(-2%,0,0)}
+      100%{transform:scale(1.045) translate3d(.9%,-.7%,0)}
+    }
+
     #unidades .v240-featured-grid{
       display:grid!important;
       grid-template-columns:repeat(2,minmax(0,1fr))!important;
@@ -129,10 +168,20 @@
       display:block!important;
       object-fit:cover!important;
       object-position:center center!important;
-      transform:scale(1.002);
-      transition:transform .3s ease!important;
+      will-change:transform!important;
     }
-    #unidades .v240-unit:hover .v240-media img{transform:scale(1.035)}
+    #unidades .v240-unit[data-v240-category="estetica"] .v240-media img{
+      animation:v25EsteticaMove 7.2s ease-in-out infinite alternate!important;
+    }
+    #unidades .v240-unit[data-v240-category="novare"] .v240-media img{
+      animation:v25NovareMove 8.1s ease-in-out infinite alternate!important;
+    }
+    #unidades .v240-unit[data-v240-category="dolor"] .v240-media img{
+      animation:v25DolorMove 7.7s ease-in-out infinite alternate!important;
+    }
+    #unidades .v240-unit[data-v240-category="regenerativa"] .v240-media img{
+      animation:v25RegenerativaMove 8.6s ease-in-out infinite alternate!important;
+    }
     #unidades .v240-copy{
       flex:1!important;
       display:flex!important;
