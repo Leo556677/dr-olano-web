@@ -1,0 +1,173 @@
+// ===== V25.2 · DIRECT SERVICE LINKS + VISIBLE SELECTED SERVICE =====
+// Permite enlaces /reserva-s?servicio=<id> que abren directamente Fecha y hora.
+// Mantiene una confirmación visual fuerte del servicio elegido en PC, tablet y celular.
+(() => {
+  if(typeof SERVICES==='undefined'||typeof state==='undefined'||typeof openBooking!=='function'||typeof go!=='function')return;
+
+  const params=new URLSearchParams(window.location.search);
+  const requestedId=String(params.get('servicio')||params.get('service')||'').trim().toLowerCase();
+  const requestedService=SERVICES.find(s=>String(s.id).toLowerCase()===requestedId)||null;
+  const linkedServiceId=requestedService?.id||'';
+  let directHandled=false;
+
+  function esc(value){
+    return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  }
+
+  function ensureSelectedBanner(){
+    const step=document.querySelector('.step[data-step="2"]');
+    if(!step)return null;
+    let banner=document.querySelector('#v252SelectedServiceBanner');
+    if(!banner){
+      banner=document.createElement('div');
+      banner.id='v252SelectedServiceBanner';
+      banner.className='v252-selected-service-banner';
+      step.querySelector('.step-title')?.insertAdjacentElement('afterend',banner);
+    }
+    return banner;
+  }
+
+  function renderSelectedBanner(){
+    const banner=ensureSelectedBanner();
+    if(!banner)return;
+    if(!state.service){banner.hidden=true;banner.innerHTML='';return}
+
+    const fromLink=!!linkedServiceId&&state.service.id===linkedServiceId;
+    banner.hidden=false;
+    banner.innerHTML=`
+      <span class="v252-selected-check" aria-hidden="true">✓</span>
+      <span class="v252-selected-copy">
+        <small>${fromLink?'SERVICIO ELEGIDO DESDE TU ENLACE':'SERVICIO ELEGIDO'}</small>
+        <strong>${esc(state.service.name)}</strong>
+        <span>${esc(state.service.unit)} · ${esc(state.service.price)}</span>
+      </span>
+      <button type="button" class="v252-change-service">Cambiar</button>`;
+
+    const change=banner.querySelector('.v252-change-service');
+    if(change)change.onclick=()=>{
+      if(typeof markScheduleInteraction==='function')markScheduleInteraction();
+      state.date='';
+      state.time='';
+      go(1);
+      if(typeof renderServices==='function')renderServices();
+    };
+  }
+
+  const goBaseV252=go;
+  go=function(n){
+    const result=goBaseV252.apply(this,arguments);
+    if(Number(n)===2){
+      renderSelectedBanner();
+      const banner=document.querySelector('#v252SelectedServiceBanner');
+      if(banner){
+        banner.classList.remove('v252-arrive');
+        void banner.offsetWidth;
+        banner.classList.add('v252-arrive');
+      }
+    }
+    return result;
+  };
+
+  const openBookingBaseV252=openBooking;
+  openBooking=function(serviceId='',options={}){
+    const useDirect=!directHandled&&!!requestedService&&!serviceId;
+    const chosenId=useDirect?requestedService.id:serviceId;
+
+    if(useDirect){
+      directHandled=true;
+      state.service=requestedService;
+      state.date='';
+      state.time='';
+    }
+
+    const result=openBookingBaseV252.call(this,chosenId,options);
+
+    if(useDirect){
+      state.service=requestedService;
+      if(typeof setPrimary==='function')setPrimary(document.querySelector('#toStep2'),true);
+      setTimeout(()=>{
+        if(typeof v23HideFeatured==='function')v23HideFeatured();
+        state.service=requestedService;
+        state.date='';
+        state.time='';
+        go(2);
+        renderSelectedBanner();
+        document.querySelector('.step[data-step="2"]')?.scrollIntoView({behavior:'instant',block:'start'});
+      },80);
+    }
+
+    return result;
+  };
+
+  const style=document.createElement('style');
+  style.id='v252-direct-service-link-styles';
+  style.textContent=`
+    .v252-selected-service-banner{
+      display:grid!important;
+      grid-template-columns:46px minmax(0,1fr) auto!important;
+      gap:11px!important;
+      align-items:center!important;
+      margin:-2px 0 14px!important;
+      padding:13px 14px!important;
+      border:1px solid rgba(124,220,209,.58)!important;
+      border-radius:18px!important;
+      background:linear-gradient(135deg,#082d4d 0%,#0f827a 100%)!important;
+      color:#fff!important;
+      box-shadow:0 18px 36px -24px rgba(2,32,48,.9)!important;
+    }
+    .v252-selected-service-banner[hidden]{display:none!important}
+    .v252-selected-check{
+      width:46px!important;height:46px!important;border-radius:50%!important;
+      display:grid!important;place-items:center!important;
+      background:#fff!important;color:var(--teal2)!important;
+      font-size:1.35rem!important;font-weight:950!important;
+      box-shadow:0 0 0 5px rgba(255,255,255,.12)!important;
+    }
+    .v252-selected-copy{display:block!important;min-width:0!important}
+    .v252-selected-copy small{
+      display:block!important;margin:0 0 3px!important;
+      color:#aef3eb!important;font-size:.58rem!important;line-height:1.1!important;
+      font-weight:950!important;letter-spacing:.08em!important;
+    }
+    .v252-selected-copy strong{
+      display:block!important;color:#fff!important;
+      font-size:1rem!important;line-height:1.18!important;font-weight:950!important;
+      white-space:normal!important;overflow-wrap:anywhere!important;
+    }
+    .v252-selected-copy span{
+      display:block!important;margin-top:3px!important;
+      color:#e5f7f5!important;font-size:.68rem!important;line-height:1.25!important;font-weight:650!important;
+    }
+    .v252-change-service{
+      min-height:38px!important;border:1px solid rgba(255,255,255,.62)!important;
+      border-radius:999px!important;padding:8px 12px!important;
+      background:rgba(255,255,255,.12)!important;color:#fff!important;
+      font-size:.68rem!important;font-weight:900!important;white-space:nowrap!important;
+    }
+    .v252-change-service:hover{background:#fff!important;color:var(--navy)!important}
+    @keyframes v252Arrive{
+      0%{opacity:.25;transform:translateY(-7px) scale(.985);box-shadow:0 0 0 0 rgba(26,167,157,0)}
+      55%{opacity:1;transform:translateY(0) scale(1.012);box-shadow:0 0 0 7px rgba(26,167,157,.12)}
+      100%{opacity:1;transform:none;box-shadow:0 18px 36px -24px rgba(2,32,48,.9)}
+    }
+    .v252-selected-service-banner.v252-arrive{animation:v252Arrive .62s ease-out both!important}
+    @media(max-width:760px){
+      .v252-selected-service-banner{
+        grid-template-columns:42px minmax(0,1fr)!important;
+        gap:10px!important;padding:12px!important;margin:0 0 12px!important;border-radius:16px!important;
+      }
+      .v252-selected-check{width:42px!important;height:42px!important;font-size:1.2rem!important}
+      .v252-selected-copy strong{font-size:.94rem!important}
+      .v252-change-service{
+        grid-column:1/-1!important;width:100%!important;min-height:40px!important;margin-top:1px!important;
+        background:rgba(255,255,255,.16)!important;
+      }
+    }
+    @media(min-width:761px) and (max-width:1100px){
+      .v252-selected-service-banner{grid-template-columns:44px minmax(0,1fr) auto!important;padding:12px 13px!important}
+      .v252-selected-check{width:44px!important;height:44px!important}
+    }
+  `;
+  document.querySelector('#v252-direct-service-link-styles')?.remove();
+  document.head.appendChild(style);
+})();
