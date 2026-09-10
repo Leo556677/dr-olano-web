@@ -2,7 +2,7 @@
 layout: seo-service
 canonical: https://doctorolano.pe/medicina-regenerativa-carabayllo
 title: "Medicina Regenerativa en Carabayllo | Dr. Olano"
-description: "Información y evaluación médica en medicina regenerativa en Carabayllo con Dr. Olano. Conoce el enfoque de atención y solicita una cita."
+description: "Información y evaluación médica en medicina regenerativa en Carabayllo con Dr. Olano. Conoce el enfoque y reserva una cita desde la web."
 h1: "Medicina regenerativa en Carabayllo"
 eyebrow: "Dr. Olano · Atención médica en Carabayllo"
 lead: "Atención médica orientada a evaluar cada caso de forma individual antes de considerar opciones relacionadas con medicina regenerativa."
@@ -21,9 +21,9 @@ Dr. Olano brinda atención en Carabayllo y ofrece evaluación médica dentro de 
 
 No todas las opciones son adecuadas para todas las personas. La consulta permite revisar el contexto clínico y definir si corresponde continuar con una alternativa específica, solicitar información adicional o considerar otro tipo de atención.
 
-## Solicita una cita
+## Reserva una cita
 
-Desde la web puedes revisar la lista de servicios disponibles, seleccionar una fecha y horario y preparar tu solicitud. La confirmación final se realiza por WhatsApp.
+Desde la web puedes revisar la lista de servicios disponibles, seleccionar una fecha y horario y completar tu reserva. Al finalizar, la cita queda registrada en el sistema y se sincroniza automáticamente con la agenda del Dr. Olano; WhatsApp queda como canal de contacto y seguimiento.
 
 ### ¿La consulta garantiza un procedimiento?
 
