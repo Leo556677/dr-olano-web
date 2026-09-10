@@ -3,7 +3,7 @@ layout: seo-service
 permalink: /armonizacion-facial-carabayllo
 canonical: https://doctorolano.pe/armonizacion-facial-carabayllo
 title: "Armonización Facial en Carabayllo | Dr. Olano"
-description: "Evaluación para armonización facial en Carabayllo con Dr. Olano. Conoce cómo se planifica la atención y solicita una cita médica."
+description: "Evaluación para armonización facial en Carabayllo con Dr. Olano. Conoce cómo se planifica la atención y reserva una cita médica desde la web."
 h1: "Armonización facial en Carabayllo"
 eyebrow: "Dr. Olano · Medicina estética facial"
 lead: "Una evaluación facial permite revisar objetivos, proporciones y antecedentes antes de decidir si conviene tratar una zona o combinar diferentes opciones."
@@ -28,7 +28,7 @@ No se recomienda elegir un procedimiento únicamente por una tendencia, una foto
 
 Si has tenido procedimientos faciales previos, conviene comentarlo durante la consulta. También es útil explicar con claridad qué cambio buscas y qué aspecto deseas conservar.
 
-La web permite solicitar una cita y elegir fecha y horario. La cita queda pendiente hasta la confirmación por WhatsApp.
+La web permite reservar una cita y elegir fecha y horario. Al completar el flujo, la cita queda registrada en el sistema y se sincroniza automáticamente con la agenda del Dr. Olano; WhatsApp queda como canal de contacto y seguimiento.
 
 ### ¿Armonización facial significa tratar varias zonas?
 
