@@ -2,7 +2,7 @@
 layout: seo-service
 canonical: https://doctorolano.pe/metabolismo-obesidad-carabayllo
 title: "Metabolismo y Obesidad en Carabayllo | Dr. Olano"
-description: "Evaluación médica de metabolismo y obesidad en Carabayllo con Dr. Olano. Solicita una cita y conoce el enfoque de atención individual."
+description: "Evaluación médica de metabolismo y obesidad en Carabayllo con Dr. Olano. Reserva una cita desde la web y conoce el enfoque de atención individual."
 h1: "Metabolismo y obesidad en Carabayllo"
 eyebrow: "Dr. Olano · Atención médica en Carabayllo"
 lead: "Evaluación médica y acompañamiento individual para revisar objetivos relacionados con peso y metabolismo dentro de un contexto clínico."
@@ -23,11 +23,11 @@ El objetivo inicial es comprender el motivo de consulta y organizar una evaluaci
 
 ## Reserva de cita
 
-Puedes revisar los servicios actuales, elegir una fecha y horario y preparar tu solicitud desde la web. La cita queda pendiente hasta la confirmación por WhatsApp.
+Puedes revisar los servicios actuales, elegir una fecha y horario y completar tu reserva desde la web. Al finalizar, la cita queda registrada en el sistema y se sincroniza automáticamente con la agenda del Dr. Olano; WhatsApp queda como canal de contacto y seguimiento.
 
 ### ¿La web ofrece un tratamiento automático?
 
-No. La web facilita la solicitud de cita. La evaluación médica es la que permite determinar qué orientación corresponde en cada caso.
+No. La web facilita la reserva de una cita. La evaluación médica es la que permite determinar qué orientación corresponde en cada caso.
 
 ### ¿Dónde es la atención?
 
