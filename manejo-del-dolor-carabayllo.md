@@ -2,7 +2,7 @@
 layout: seo-service
 canonical: https://doctorolano.pe/manejo-del-dolor-carabayllo
 title: "Manejo del Dolor en Carabayllo | Dr. Olano"
-description: "Evaluación médica para manejo del dolor en Carabayllo con Dr. Olano. Conoce el enfoque de atención y solicita una cita."
+description: "Evaluación médica para manejo del dolor en Carabayllo con Dr. Olano. Conoce el enfoque de atención y reserva una cita desde la web."
 h1: "Manejo del dolor en Carabayllo"
 eyebrow: "Dr. Olano · Atención médica en Carabayllo"
 lead: "Evaluación médica orientada a comprender el motivo de consulta y revisar alternativas de manejo del dolor según cada caso."
@@ -21,13 +21,13 @@ Dr. Olano brinda atención en Carabayllo y dispone de servicios relacionados con
 
 La consulta está orientada a ordenar la información clínica disponible y definir el siguiente paso de forma individual. Dependiendo del caso, puede ser necesario complementar la evaluación antes de indicar un procedimiento.
 
-## Solicitud de cita desde la web
+## Reserva de cita desde la web
 
-Desde la página de servicios puedes revisar las opciones disponibles, seleccionar una fecha y horario y preparar la solicitud de cita. La confirmación final del cupo se realiza por WhatsApp.
+Desde la página de servicios puedes revisar las opciones disponibles, seleccionar una fecha y horario y completar la reserva. Al finalizar, la cita queda registrada en el sistema y se sincroniza automáticamente con la agenda del Dr. Olano; WhatsApp queda como canal de contacto y seguimiento.
 
 ### ¿La cita implica que se realizará un procedimiento?
 
-No. La reserva corresponde a una solicitud de atención. La indicación de cualquier procedimiento depende de la evaluación médica.
+No. La reserva corresponde a una cita de atención. La indicación de cualquier procedimiento depende de la evaluación médica.
 
 ### ¿Dónde atiende Dr. Olano?
 
