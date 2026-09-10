@@ -11,8 +11,70 @@
 
   state.bookingNote = state.bookingNote || "";
   state.manageUrl = state.manageUrl || "";
+  state.bookingModality = state.bookingModality || "";
+
+  // V26 · Catálogo comercial visible. Códigos estables = compatibilidad con links y backend.
+  const V26_SERVICES=[
+    {id:"consulta",category:"consulta",unit:"Consulta",name:"Consulta Médica Especializada",price:"Desde S/ 70"},
+    {id:"metabolismo",category:"metabolismo",unit:"Metabolismo",name:"Consulta de Metabolismo y Obesidad",price:"Desde S/ 70"},
+    {id:"control-peso-medico",category:"metabolismo",unit:"Metabolismo",name:"Tratamiento médico para control de peso",price:"Desde S/ 70"},
+    {id:"plan-nutricional",category:"metabolismo",unit:"Metabolismo",name:"Plan nutricional personalizado",price:"Desde S/ 70"},
+    {id:"estetica-facial",category:"estetica",unit:"Estética",name:"Evaluación de líneas de expresión",price:"Desde S/ 70"},
+    {id:"prp-hydrafacial",category:"estetica",unit:"Estética",name:"PRP",price:"Desde S/ 200"},
+    {id:"limpieza-facial",category:"estetica",unit:"Estética",name:"Limpieza facial con Hidrofacial",price:"Desde S/ 100"},
+    {id:"laser",category:"estetica",unit:"Estética",name:"Láser facial",price:"Desde S/ 900"},
+    {id:"armonizacion",category:"estetica",unit:"Estética",name:"Armonización facial",price:"Desde S/ 800"},
+    {id:"labios",category:"estetica",unit:"Estética",name:"Relleno de labios",price:"Desde S/ 900"},
+    {id:"tensado-facial",category:"estetica",unit:"Estética",name:"Tensado facial",price:"Desde S/ 900"},
+    {id:"endolifting",category:"estetica",unit:"Estética",name:"Endolifting / Endoláser",price:"Desde S/ 1000"},
+    {id:"lipolisis",category:"estetica",unit:"Estética",name:"Lipólisis / Hidrolipoclasia",price:"Desde S/ 200"},
+    {id:"lipopapada-estetica",category:"estetica",unit:"Estética",name:"Lipopapada",price:"Desde S/ 1800"},
+    {id:"bichectomia-estetica",category:"estetica",unit:"Estética",name:"Bichectomía",price:"Desde S/ 1200"},
+    {id:"relleno-menton",category:"estetica",unit:"Estética",name:"Relleno de mentón",price:"Desde S/ 800"},
+    {id:"botox",category:"estetica",unit:"Estética",name:"Botox",price:"Desde S/ 350"},
+    {id:"implante-capilar",category:"estetica",unit:"Estética",name:"Implante capilar",price:"Desde S/ 4000"},
+    {id:"prp-regenerativa",category:"regenerativa",unit:"Regenerativa",name:"PRP facial",price:"Desde S/ 200"},
+    {id:"prf",category:"regenerativa",unit:"Regenerativa",name:"PRF",price:"Desde S/ 200"},
+    {id:"ozonoterapia",category:"regenerativa",unit:"Regenerativa",name:"Ozonoterapia",price:"Desde S/ 100"},
+    {id:"celulas-madre",category:"regenerativa",unit:"Regenerativa",name:"Células madre",price:"Desde S/ 1200"},
+    {id:"exosomas",category:"regenerativa",unit:"Regenerativa",name:"Exosomas",price:"Desde S/ 800"},
+    {id:"acido-hialuronico-reg",category:"regenerativa",unit:"Regenerativa",name:"Ácido hialurónico",price:"Desde S/ 1550"},
+    {id:"hidrodisecciones-reg",category:"regenerativa",unit:"Regenerativa",name:"Hidrodisecciones",price:"Desde S/ 150"},
+    {id:"proloterapia-reg",category:"regenerativa",unit:"Regenerativa",name:"Proloterapia",price:"Desde S/ 100"},
+    {id:"electrolisis-intratisular",category:"regenerativa",unit:"Regenerativa",name:"Electrólisis percutánea intratisular",price:"Desde S/ 300"},
+    {id:"bloqueos",category:"dolor",unit:"Dolor",name:"Bloqueos nerviosos ecoguiados",price:"Desde S/ 400"},
+    {id:"dolor",category:"dolor",unit:"Dolor",name:"Infiltraciones ecoguiadas",price:"Desde S/ 200"},
+    {id:"electrolisis",category:"dolor",unit:"Dolor",name:"Electrólisis percutánea",price:"Desde S/ 300"},
+    {id:"neuromodulacion",category:"dolor",unit:"Dolor",name:"Neuromodulación",price:"Desde S/ 180"},
+    {id:"ozonoterapia-ecoguiada",category:"dolor",unit:"Dolor",name:"Ozonoterapia guiada",price:"Desde S/ 150"},
+    {id:"novare-consulta",category:"novare",unit:"NOVARE",name:"Consulta NOVARE",price:"Desde S/ 150"},
+    {id:"minilifting",category:"novare",unit:"NOVARE",name:"Minilifting facial",price:"Desde S/ 5000"},
+    {id:"rinofast",category:"novare",unit:"NOVARE",name:"Rinoplastia",price:"Desde S/ 5000"},
+    {id:"lipopapada",category:"novare",unit:"NOVARE",name:"Lipopapada",price:"Desde S/ 1800"},
+    {id:"mentoplastia",category:"novare",unit:"NOVARE",name:"Mentoplastia",price:"Desde S/ 2500"},
+    {id:"bichectomia",category:"novare",unit:"NOVARE",name:"Bichectomía",price:"Desde S/ 1200"},
+    {id:"lip-lift",category:"novare",unit:"NOVARE",name:"Lip Lift ambulatorio",price:"Desde S/ 1500"},
+    {id:"blefaroplastia",category:"novare",unit:"NOVARE",name:"Blefaroplastia",price:"Desde S/ 3000"},
+    {id:"frontoplastia",category:"novare",unit:"NOVARE",name:"Frontoplastia",price:"Desde S/ 5000"},
+    {id:"foxy-eyes",category:"novare",unit:"NOVARE",name:"Foxy Eyes",price:"Desde S/ 3000"},
+    {id:"lipofilling",category:"novare",unit:"NOVARE",name:"Lipofilling facial",price:"Desde S/ 2000"},
+    {id:"mini-lipoescultura",category:"novare",unit:"NOVARE",name:"Mini lipoescultura ambulatoria",price:"Desde S/ 2500"},
+    {id:"lifting-cejas",category:"novare",unit:"NOVARE",name:"Lifting de cejas / Castañares",price:"Desde S/ 3000"},
+    {id:"otoplastia",category:"novare",unit:"NOVARE",name:"Otoplastia / Lobuloplastia",price:"Desde S/ 2000"}
+  ];
+  SERVICES.splice(0,SERVICES.length,...V26_SERVICES);
+  if(typeof V23_FEATURED!=="undefined")V23_FEATURED.splice(0,V23_FEATURED.length,
+    {serviceId:"estetica-facial",label:"Líneas de expresión",meta:"Estética · Desde S/ 70",tag:"Estética"},
+    {serviceId:"novare-consulta",label:"Consulta NOVARE",meta:"Presencial o videollamada · Desde S/ 150",tag:"NOVARE"},
+    {serviceId:"prp-hydrafacial",label:"PRP",meta:"Estética · Desde S/ 200",tag:"Estética"},
+    {serviceId:"bloqueos",label:"Bloqueos nerviosos ecoguiados",meta:"Dolor · Desde S/ 400",tag:"Dolor"},
+    {serviceId:"metabolismo",label:"Metabolismo y Obesidad",meta:"Desde S/ 70",tag:"Metabolismo"},
+    {serviceId:"consulta",label:"No sé qué elegir",meta:"Empieza por una evaluación médica · Desde S/ 70",tag:"Orientación"}
+  );
+  if(state.service?.id)state.service=SERVICES.find(s=>s.id===state.service.id)||null;
 
   function isNovareService(){return state.service?.category==="novare"||state.service?.unit==="NOVARE"}
+  function isNovareConsult(){return state.service?.id==="novare-consulta"}
   function clearConfirmedUi(){
     try{localStorage.removeItem("olanoDraft")}catch{}
     realBookingConfirmed=true;
@@ -35,6 +97,7 @@
     realBookingConfirmed=false;
     state.bookingNote="";
     state.manageUrl="";
+    state.bookingModality="";
     try{sessionStorage.removeItem("olanoRealBookingConfirmed")}catch{}
     const pending=$("#pendingBtn");if(pending)pending.style.display="";
     return legacyOpenBooking(serviceId,options)
@@ -88,10 +151,39 @@
     const show=isNovareService();box.style.display=show?"block":"none";
     if(!show)state.bookingNote="";
     const ta=box.querySelector("#novarePatientNote");if(ta&&ta.value!==state.bookingNote)ta.value=state.bookingNote||"";
-    const count=box.querySelector("#novareNoteCount");if(count)count.textContent=String((state.bookingNote||"").length)
+    const count=box.querySelector("#novareNoteCount");if(count)count.textContent=String((state.bookingNote||"").length);
+    const days=box.querySelector(".novare-note-days");if(days)days.textContent=isNovareConsult()?"Consulta NOVARE: lunes y miércoles · presencial o videollamada.":"Procedimientos NOVARE: viernes, sábado y domingo."
+  }
+
+  function ensureNovareModalityUi(){
+    const step=document.querySelector('.step[data-step="2"]');if(!step)return;
+    let box=$("#novareConsultModeBox");
+    if(!box){
+      box=document.createElement("div");box.id="novareConsultModeBox";box.className="novare-consult-mode-box";
+      box.innerHTML=`<div class="novare-mode-title">¿Cómo deseas tu Consulta NOVARE?</div><div class="novare-mode-help">Elige una modalidad para continuar.</div><div class="novare-mode-grid"><button type="button" data-novare-mode="presencial">🏥 <span>Presencial</span></button><button type="button" data-novare-mode="videollamada">💻 <span>Videollamada</span></button></div><div class="novare-mode-policy"><strong>Desde S/ 150.</strong> Si posteriormente realizas un procedimiento NOVARE, este importe se considera dentro del servicio y no se cobra adicionalmente.</div>`;
+      step.querySelector(".calendar-head")?.insertAdjacentElement("beforebegin",box);
+      box.querySelectorAll("[data-novare-mode]").forEach(btn=>btn.addEventListener("click",()=>{state.bookingModality=btn.dataset.novareMode||"";renderNovareModalityUi();saveDraft()}));
+    }
+    renderNovareModalityUi()
+  }
+  function renderNovareModalityUi(){
+    const box=$("#novareConsultModeBox");if(!box)return;
+    const show=isNovareConsult();box.style.display=show?"block":"none";
+    if(!show){state.bookingModality="";return}
+    box.querySelectorAll("[data-novare-mode]").forEach(btn=>btn.classList.toggle("active",btn.dataset.novareMode===state.bookingModality))
   }
 
   const style=document.createElement("style");style.id="olano-real-booking-styles";style.textContent=`.novare-note-box{margin:0 0 14px;padding:14px;border:1px solid var(--line);border-radius:18px;background:#f7fbfb}.novare-note-title{font-weight:900;color:var(--navy);font-size:.88rem}.novare-note-help{margin-top:4px;color:var(--muted);font-size:.7rem;line-height:1.4}.novare-note-box textarea{width:100%;margin-top:10px;padding:11px 12px;border:1px solid #d8e5e7;border-radius:14px;background:#fff;color:var(--navy);font:inherit;line-height:1.4;resize:vertical;min-height:82px}.novare-note-box textarea:focus{outline:2px solid rgba(15,130,122,.16);border-color:var(--teal2)}.novare-note-counter{text-align:right;margin-top:4px;color:var(--muted);font-size:.64rem}.novare-note-days{margin-top:5px;color:var(--teal2);font-size:.68rem;font-weight:800}`;document.head.appendChild(style);
+  const v26Style=document.createElement("style");v26Style.id="olano-v26-booking-styles";v26Style.textContent=`
+    .novare-consult-mode-box{display:none;margin:0 0 14px;padding:14px;border:1px solid #cfe3e4;border-radius:18px;background:linear-gradient(135deg,#f7fbfb,#eef8f7)}
+    .novare-mode-title{font-weight:950;color:var(--navy);font-size:.9rem}.novare-mode-help{margin-top:3px;color:var(--muted);font-size:.7rem}
+    .novare-mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.novare-mode-grid button{min-height:48px;border:1px solid #cfe1e4;border-radius:14px;background:#fff;color:var(--navy);font-weight:900;font-size:.78rem}.novare-mode-grid button.active{background:var(--navy);border-color:var(--navy);color:#fff;box-shadow:0 10px 22px -15px #001d34,0 0 0 3px rgba(15,130,122,.13)}
+    .novare-mode-policy{margin-top:10px;padding:9px 10px;border-radius:12px;background:#fff;color:#49616c;font-size:.67rem;line-height:1.42}.novare-mode-policy strong{color:var(--teal2)}
+    .dock.show-cta{background:transparent!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;border-top:0!important;box-shadow:none!important}
+    .dock.show-cta .dock-inner{background:transparent!important;box-shadow:none!important;border:0!important}
+    .dock.show-cta .btn,.dock.show-cta .pending-btn{box-shadow:0 14px 28px -18px rgba(2,32,48,.78)!important}
+    @media(max-width:520px){.novare-mode-grid{grid-template-columns:1fr}.novare-mode-grid button{min-height:46px}.dock.show-cta{padding-left:8px!important;padding-right:8px!important}}
+  `;document.head.appendChild(v26Style);
 
   const heroCopy=document.querySelector(".hero-copy > p:not(.hero-focus)");if(heroCopy)heroCopy.textContent="Elige el servicio y horario. Tu cita queda registrada y te conectamos por WhatsApp.";
   const trustItems=document.querySelectorAll(".hero-copy .trust > div");
@@ -106,12 +198,12 @@
   async function getRealAvailability(){if(!state.service||!state.date)return {slots:[],service_meta:null};return await bookingApi({action:"availability",service_code:state.service.id,date:state.date})}
 
   renderCalendar=function(){
-    ensureNovareNoteUi();
+    ensureNovareNoteUi();ensureNovareModalityUi();
     let m=state.month,days=$("#calendarDays"),today=new Date();today.setHours(0,0,0,0);let max=new Date(today);max.setDate(max.getDate()+CONFIG.maxDays);
     $("#monthTitle").textContent=new Intl.DateTimeFormat("es-PE",{month:"long",year:"numeric"}).format(m);days.innerHTML="";
     let first=new Date(m.getFullYear(),m.getMonth(),1),last=new Date(m.getFullYear(),m.getMonth()+1,0);for(let i=0;i<first.getDay();i++)days.insertAdjacentHTML("beforeend","<span></span>");
-    const novare=isNovareService();
-    for(let d=1;d<=last.getDate();d++){const dt=new Date(m.getFullYear(),m.getMonth(),d),key=iso(dt),serviceDayBlocked=novare&&!NOVARE_DAYS.has(dt.getDay()),off=dt<today||dt>max||serviceDayBlocked;days.insertAdjacentHTML("beforeend",`<button class="day ${state.date===key?"selected":""}" data-day="${key}" ${off?"disabled":""}>${d}</button>`)}
+    const novare=isNovareService(),allowedDays=isNovareConsult()?new Set([1,3]):novare?NOVARE_DAYS:null;
+    for(let d=1;d<=last.getDate();d++){const dt=new Date(m.getFullYear(),m.getMonth(),d),key=iso(dt),serviceDayBlocked=!!allowedDays&&!allowedDays.has(dt.getDay()),off=dt<today||dt>max||serviceDayBlocked;days.insertAdjacentHTML("beforeend",`<button class="day ${state.date===key?"selected":""}" data-day="${key}" ${off?"disabled":""}>${d}</button>`)}
     $$('[data-day]').forEach(b=>b.onclick=()=>{markScheduleInteraction();state.date=b.dataset.day;state.time="";trackEvent("date_selected");renderCalendar();renderTimes();saveDraft();setTimeout(()=>$("#timesWrap").scrollIntoView({behavior:"smooth",block:"start"}),120)});
     renderTimes();setPrimary($("#toStep3"),!!(state.date&&state.time))
   };
@@ -131,16 +223,36 @@
   renderSummary=function(){
     trackEvent("booking_review");
     const note=String(state.bookingNote||"").trim();
-    const noteRow=isNovareService()&&note?`<div class="summary-row"><span class="summary-key">${icon("i-check")}Comentario</span><b>${note.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}</b></div>`:"";
-    $("#summary").innerHTML=`<div class="summary-row"><span class="summary-key">${icon("i-service")}Servicio</span><b>${state.service.name}</b></div>${noteRow}<div class="summary-row"><span class="summary-key">${icon("i-user")}Nombre</span><b>${state.name}</b></div><div class="summary-row"><span class="summary-key">${icon("i-calendar")}Fecha</span><b>${fmt(fromIso(state.date))}</b></div><div class="summary-row"><span class="summary-key">${icon("i-clock")}Hora</span><b>${state.time}</b></div><div class="summary-row"><span class="summary-key">${icon("i-check")}Estado</span><b>Se registrará al reservar</b></div>`
+    const escHtml=value=>String(value??"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    const noteRow=isNovareService()&&note?`<div class="summary-row"><span class="summary-key">${icon("i-check")}Comentario</span><b>${escHtml(note)}</b></div>`:"";
+    const modalityRow=isNovareConsult()?`<div class="summary-row"><span class="summary-key">${icon("i-phone")}Modalidad</span><b>${state.bookingModality==="videollamada"?"Videollamada":"Presencial"}</b></div>`:"";
+    const priceRow=`<div class="summary-row"><span class="summary-key">${icon("i-check")}Valor referencial</span><b>${escHtml(state.service?.price||"")}</b></div>`;
+    const priceNotice=`<div class="summary-row"><span class="summary-key">${icon("i-check")}Importante</span><b>Valor sujeto a evaluación médica.</b></div>`;
+    const novareCredit=isNovareConsult()?`<div class="summary-row"><span class="summary-key">${icon("i-check")}Consulta NOVARE</span><b>Si luego realizas un procedimiento NOVARE, este importe se considera dentro del servicio y no se cobra adicionalmente.</b></div>`:"";
+    $("#summary").innerHTML=`<div class="summary-row"><span class="summary-key">${icon("i-service")}Servicio</span><b>${escHtml(state.service.name)}</b></div>${priceRow}${priceNotice}${modalityRow}${novareCredit}${noteRow}<div class="summary-row"><span class="summary-key">${icon("i-user")}Nombre</span><b>${escHtml(state.name)}</b></div><div class="summary-row"><span class="summary-key">${icon("i-calendar")}Fecha</span><b>${fmt(fromIso(state.date))}</b></div><div class="summary-row"><span class="summary-key">${icon("i-clock")}Hora</span><b>${state.time}</b></div><div class="summary-row"><span class="summary-key">${icon("i-check")}Estado</span><b>Se registrará al reservar</b></div>`
   };
 
   function buildWhatsAppHandoff(){
     const businessPhone=String(CONFIG?.phone||"").replace(/\D/g,"");if(!businessPhone)return "";
-    const lines=["Hola, acabo de reservar una cita desde doctorolano.pe.","",`Código: ${state.id}`,`Paciente: ${state.name}`,`Celular: ${state.phone}`,`Servicio: ${String(state.service?.name||state.service?.id||"")}`];
-    const note=String(state.bookingNote||"").trim();if(isNovareService()&&note)lines.push(`Comentario: ${note}`);
-    lines.push(`Fecha: ${state.date?fmt(fromIso(state.date)):""}`,`Hora: ${state.time}`);
-    if(state.manageUrl)lines.push("",`Gestionar / reprogramar / cancelar: ${state.manageUrl}`);
+    const serviceName=String(state.service?.name||state.service?.id||"");
+    const value=String(state.service?.price||"").trim();
+    const lines=[
+      "✅ *Cita registrada · Dr. Olano*",
+      "",
+      `📋 Código: ${state.id}`,
+      `👤 Paciente: ${state.name}`,
+      `📱 Celular: ${state.phone}`,
+      `🩺 Servicio: ${serviceName}`,
+      value?`💰 Valor referencial: ${value}`:"",
+      "ℹ️ El valor final está sujeto a evaluación médica."
+    ].filter(Boolean);
+    if(isNovareConsult()){
+      lines.push(`💬 Modalidad: ${state.bookingModality==="videollamada"?"Videollamada":"Presencial"}`);
+      lines.push("ℹ️ Si posteriormente realizas un procedimiento NOVARE, el importe de esta consulta se considera dentro del servicio y no se cobra adicionalmente.");
+    }
+    const note=String(state.bookingNote||"").trim();if(isNovareService()&&note)lines.push(`📝 Comentario: ${note}`);
+    lines.push("",`📅 Fecha: ${state.date?fmt(fromIso(state.date)):""}`,`🕐 Hora: ${state.time}`);
+    if(state.manageUrl)lines.push("",`🔗 Gestionar / reprogramar / cancelar: ${state.manageUrl}`);
     lines.push("","Quisiera mantener este chat como canal de contacto para mi cita.");
     return `https://wa.me/${businessPhone}?text=${encodeURIComponent(lines.join("\n"))}`
   }
@@ -148,12 +260,13 @@
   async function sendRealBooking(){
     state.name=$("#clientName").value.trim();state.phone=$("#clientPhone").value.replace(/\s+/g,"");
     if(!state.service||!state.date||!state.time||state.name.length<3||state.phone.length<7)return;
+    if(isNovareConsult()&&!['presencial','videollamada'].includes(state.bookingModality)){alert("Selecciona si deseas la Consulta NOVARE presencial o por videollamada.");go(2);return}
     const note=isNovareService()?String(state.bookingNote||"").trim():"";
     if(note.length>500){alert("El comentario puede tener como máximo 500 caracteres.");go(2);return}
     if(!turnstileToken){renderBookingTurnstile();alert("Completa la verificación de seguridad para reservar.");return}
     const btn=$("#sendBooking"),old=btn.innerHTML;btn.disabled=true;btn.textContent="Reservando…";
     try{
-      const data=await bookingApi({action:"book",service_code:state.service.id,date:state.date,time:state.time,name:state.name,phone:state.phone,note,device_id:getDeviceId(),turnstile_token:turnstileToken});
+      const data=await bookingApi({action:"book",service_code:state.service.id,date:state.date,time:state.time,name:state.name,phone:state.phone,note,modality:isNovareConsult()?state.bookingModality:undefined,device_id:getDeviceId(),turnstile_token:turnstileToken});
       const b=data.booking||{};state.id=b.code||"";state.manageUrl=String(b.manage_url||"");$("#bookingCode").textContent=state.id;
       const done=document.querySelector('#booking .step[data-step="5"]');
       if(done){
@@ -170,7 +283,8 @@
       const code=e?.code||"";
       if(code==="RATE_LIMIT_1H")alert("Ya se registró una cita desde este celular, red o dispositivo. Podrás reservar nuevamente en 1 hora.");
       else if(code==="HOUR_FULL")alert("Esa hora acaba de completar sus 3 cupos. Elige otro horario.");
-      else if(code==="SERVICE_DAY_UNAVAILABLE")alert("Este servicio NOVARE solo está disponible viernes, sábado y domingo.");
+      else if(code==="SERVICE_DAY_UNAVAILABLE")alert(isNovareConsult()?"La Consulta NOVARE solo está disponible lunes y miércoles.":"Los procedimientos NOVARE solo están disponibles viernes, sábado y domingo.");
+      else if(code==="INVALID_MODALITY")alert("Selecciona si deseas la Consulta NOVARE presencial o por videollamada.");
       else if(code==="INVALID_NOTE")alert("El comentario es demasiado largo.");
       else if(code==="TURNSTILE_FAILED"||code==="TURNSTILE_REQUIRED"||code==="TURNSTILE_HOSTNAME_MISMATCH"||code==="TURNSTILE_ACTION_MISMATCH")alert("No se pudo validar la verificación de seguridad. Intenta nuevamente.");
       else alert("No se pudo registrar la cita. Intenta nuevamente.");
@@ -179,10 +293,11 @@
   }
 
   const dataNote=document.querySelector(".data-note");if(dataNote)dataNote.textContent="Tus datos se utilizan para registrar y gestionar tu cita. Al reservar, te enviaremos automáticamente al WhatsApp oficial del centro con el reporte preparado.";
-  ensureNovareNoteUi();loadBookingTurnstile();
-  const toStep2=$("#toStep2");if(toStep2)toStep2.onclick=()=>{if(!state.service)return;state.date="";state.time="";if(!isNovareService())state.bookingNote="";go(2);ensureNovareNoteUi();renderCalendar()};
+  ensureNovareNoteUi();ensureNovareModalityUi();loadBookingTurnstile();
+  const toStep2=$("#toStep2");if(toStep2)toStep2.onclick=()=>{if(!state.service)return;state.date="";state.time="";if(!isNovareService())state.bookingNote="";if(!isNovareConsult())state.bookingModality="";go(2);ensureNovareNoteUi();ensureNovareModalityUi();renderCalendar()};
   const sendButton=$("#sendBooking");if(sendButton){sendButton.innerHTML=`${icon("i-check")}Reservar cita`;sendButton.onclick=e=>{e.preventDefault();sendRealBooking()}};
-  const bookingRoot=$("#booking");if(bookingRoot){const observer=new MutationObserver(()=>{if(document.querySelector('.step[data-step="2"].active'))ensureNovareNoteUi();if(!document.querySelector('.step[data-step="4"].active'))return;let tries=0;const timer=setInterval(()=>{tries++;if(window.turnstile){clearInterval(timer);renderBookingTurnstile()}else if(tries>30)clearInterval(timer)},150)});observer.observe(bookingRoot,{subtree:true,attributes:true,attributeFilter:["class"]})}
+  const toStep3=$("#toStep3");if(toStep3)toStep3.addEventListener("click",e=>{if(isNovareConsult()&&!['presencial','videollamada'].includes(state.bookingModality)){e.preventDefault();e.stopImmediatePropagation();ensureNovareModalityUi();$("#novareConsultModeBox")?.scrollIntoView({behavior:"smooth",block:"center"});alert("Selecciona si deseas la Consulta NOVARE presencial o por videollamada.")}},true);
+  const bookingRoot=$("#booking");if(bookingRoot){const observer=new MutationObserver(()=>{if(document.querySelector('.step[data-step="2"].active')){ensureNovareNoteUi();ensureNovareModalityUi();}if(!document.querySelector('.step[data-step="4"].active'))return;let tries=0;const timer=setInterval(()=>{tries++;if(window.turnstile){clearInterval(timer);renderBookingTurnstile()}else if(tries>30)clearInterval(timer)},150)});observer.observe(bookingRoot,{subtree:true,attributes:true,attributeFilter:["class"]})}
 
   window.OLANO_REAL_BOOKING={endpoint:BOOKING_API,siteKey:TURNSTILE_SITE_KEY,availability:getRealAvailability};
 })();
