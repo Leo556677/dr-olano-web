@@ -2,7 +2,7 @@
 layout: seo-service
 canonical: https://doctorolano.pe/medicina-estetica-carabayllo
 title: "Medicina Estética en Carabayllo | Dr. Olano"
-description: "Medicina estética en Carabayllo con Dr. Olano. Conoce opciones de evaluación facial y solicita una cita médica de forma sencilla."
+description: "Medicina estética en Carabayllo con Dr. Olano. Conoce opciones de evaluación facial y reserva una cita médica desde la web."
 h1: "Medicina estética en Carabayllo"
 eyebrow: "Dr. Olano · Atención médica en Carabayllo"
 lead: "Evaluación médica personalizada para orientar opciones de medicina estética facial de acuerdo con las características y objetivos de cada persona."
@@ -43,11 +43,11 @@ Estas páginas son informativas. No reemplazan la evaluación médica ni garanti
 
 ## ¿Cómo reservar?
 
-Puedes ingresar al flujo de reserva de Dr. Olano, elegir fecha y horario y completar tus datos de contacto. La solicitud se prepara desde la web y la confirmación final se realiza por WhatsApp.
+Puedes ingresar al flujo de reserva de Dr. Olano, elegir servicio, fecha y horario y completar tus datos de contacto. Al completar la reserva, la cita queda registrada en el sistema y se sincroniza automáticamente con la agenda del Dr. Olano; WhatsApp queda como canal de contacto y seguimiento.
 
 ### ¿La reserva confirma automáticamente un procedimiento?
 
-No. La web permite solicitar una cita. Cualquier tratamiento o procedimiento se define después de la evaluación médica correspondiente.
+No. La web permite reservar una cita. Cualquier tratamiento o procedimiento se define después de la evaluación médica correspondiente.
 
 ### ¿Dónde es la atención?
 
