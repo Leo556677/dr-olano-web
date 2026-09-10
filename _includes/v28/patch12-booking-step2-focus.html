@@ -1,0 +1,85 @@
+// ===== V25.3 · STEP 2 FOCUS: STICKY SERVICE + ROBUST DATE→TIME SCROLL =====
+// Mantiene el servicio elegido visible mientras el paciente elige fecha/hora.
+// Refuerza el scroll automático: espera a que la disponibilidad real termine de cargar.
+(() => {
+  const booking=document.querySelector('#booking');
+  const times=document.querySelector('#times');
+  const timesWrap=document.querySelector('#timesWrap');
+  if(!booking||!times||!timesWrap)return;
+
+  let pendingDateScroll=false;
+  let fallbackTimer=null;
+
+  function syncStickyOffset(){
+    const head=booking.querySelector('.booking-head');
+    const h=Math.ceil(head?.getBoundingClientRect().height||62);
+    booking.style.setProperty('--v253-booking-head-h',`${h}px`);
+  }
+
+  function scrollToTimes(){
+    if(!pendingDateScroll)return;
+    pendingDateScroll=false;
+    if(fallbackTimer){clearTimeout(fallbackTimer);fallbackTimer=null}
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      timesWrap.scrollIntoView({behavior:'smooth',block:'start'});
+    }));
+  }
+
+  function availabilityFinished(){
+    if(times.querySelector('.time[data-time]'))return true;
+    const text=String(times.textContent||'').trim().toLowerCase();
+    return text.includes('no quedan horarios')||text.includes('no pudimos consultar');
+  }
+
+  booking.addEventListener('click',e=>{
+    const day=e.target.closest('#calendarDays .day[data-day]');
+    if(!day||day.disabled)return;
+    pendingDateScroll=true;
+    if(fallbackTimer)clearTimeout(fallbackTimer);
+    // Respaldo para conexiones lentas o cambios futuros de markup.
+    fallbackTimer=setTimeout(()=>{
+      if(pendingDateScroll)scrollToTimes();
+    },1800);
+  },true);
+
+  new MutationObserver(()=>{
+    if(pendingDateScroll&&availabilityFinished())scrollToTimes();
+  }).observe(times,{childList:true,subtree:true,characterData:true});
+
+  new MutationObserver(()=>{
+    const step2=booking.querySelector('.step[data-step="2"].active');
+    if(step2){syncStickyOffset();setTimeout(syncStickyOffset,80)}
+  }).observe(booking,{subtree:true,attributes:true,attributeFilter:['class']});
+
+  window.addEventListener('resize',syncStickyOffset,{passive:true});
+  window.visualViewport?.addEventListener('resize',syncStickyOffset,{passive:true});
+  syncStickyOffset();
+
+  const style=document.createElement('style');
+  style.id='v253-step2-focus-styles';
+  style.textContent=`
+    #booking .step[data-step="2"].active #v252SelectedServiceBanner{
+      position:sticky!important;
+      top:calc(var(--promoH,0px) + var(--v253-booking-head-h,62px) + 7px)!important;
+      z-index:8!important;
+      margin-bottom:14px!important;
+      box-shadow:0 18px 38px -22px rgba(2,32,48,.94),0 0 0 1px rgba(26,167,157,.16)!important;
+      -webkit-backdrop-filter:blur(12px)!important;
+      backdrop-filter:blur(12px)!important;
+    }
+    #booking .step[data-step="2"].active #timesWrap{
+      scroll-margin-top:calc(var(--promoH,0px) + var(--v253-booking-head-h,62px) + 108px)!important;
+    }
+    @media(max-width:760px){
+      #booking .step[data-step="2"].active #v252SelectedServiceBanner{
+        top:calc(var(--promoH,0px) + var(--v253-booking-head-h,58px) + 5px)!important;
+        margin-bottom:10px!important;
+      }
+      #booking .step[data-step="2"].active #timesWrap{
+        scroll-margin-top:calc(var(--promoH,0px) + var(--v253-booking-head-h,58px) + 142px)!important;
+      }
+    }
+  `;
+  document.querySelector('#v253-step2-focus-styles')?.remove();
+  document.head.appendChild(style);
+})();
