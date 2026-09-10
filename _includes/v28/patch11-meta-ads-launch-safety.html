@@ -1,0 +1,42 @@
+// V2.8 PATCH11 · META ADS LAUNCH SAFETY + MINIMAL BOOKING SIGNAL
+// Purpose: keep the paid landing free of price/promo pressure and send Meta only
+// a parameter-free standard Schedule event after a REAL booking has succeeded.
+(() => {
+  // 1) Paid/medical landing: suppress the legacy promotional overlay.
+  // The underlying historical markup is preserved, but it cannot be shown publicly.
+  const safetyStyle=document.createElement("style");
+  safetyStyle.id="olano-paid-launch-safety";
+  safetyStyle.textContent="#promoOverlay,.promo-proof-stage{display:none!important;visibility:hidden!important;pointer-events:none!important}";
+  document.head.appendChild(safetyStyle);
+  const promoOverlay=document.querySelector("#promoOverlay");
+  if(promoOverlay){
+    promoOverlay.classList.remove("show");
+    promoOverlay.setAttribute("aria-hidden","true");
+  }
+
+  // 2) Correct WhatsApp wording: the site redirects to a pre-filled WhatsApp handoff;
+  // it does not itself send a patient message from the browser.
+  const dataNote=document.querySelector(".data-note");
+  if(dataNote){
+    dataNote.textContent="Tus datos se utilizan para registrar y gestionar tu cita. Al completar la reserva, te conectaremos con el WhatsApp oficial del centro con el mensaje preparado.";
+  }
+
+  // 3) Meta: custom health/wellness events remain disabled in reserva-s.html.
+  // Send only the standard Schedule event, without parameters, after the success
+  // step is active and a real booking code exists. Dedupe per booking code/session.
+  function sendMetaScheduleAfterRealBooking(){
+    const done=document.querySelector('#booking .step[data-step="5"].active');
+    const code=String(document.querySelector("#bookingCode")?.textContent||"").trim();
+    if(!done||!code||typeof window.fbq!=="function")return;
+    const key=`olanoMetaSchedule:${code}`;
+    try{if(sessionStorage.getItem(key)==="1")return}catch{}
+    window.fbq("track","Schedule");
+    try{sessionStorage.setItem(key,"1")}catch{}
+  }
+
+  const bookingRoot=document.querySelector("#booking");
+  if(bookingRoot){
+    new MutationObserver(sendMetaScheduleAfterRealBooking).observe(bookingRoot,{subtree:true,attributes:true,attributeFilter:["class"]});
+  }
+  sendMetaScheduleAfterRealBooking();
+})();
