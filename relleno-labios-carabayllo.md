@@ -3,7 +3,7 @@ layout: seo-service
 permalink: /relleno-labios-carabayllo
 canonical: https://doctorolano.pe/relleno-labios-carabayllo
 title: "Relleno de Labios en Carabayllo | Dr. Olano"
-description: "Evaluación para relleno de labios en Carabayllo con Dr. Olano. Revisa forma, proporción, antecedentes y solicita una cita médica."
+description: "Evaluación para relleno de labios en Carabayllo con Dr. Olano. Revisa forma, proporción, antecedentes y reserva una cita médica desde la web."
 h1: "Relleno de labios en Carabayllo"
 eyebrow: "Dr. Olano · Medicina estética facial"
 lead: "La evaluación permite conversar sobre forma, proporción y objetivos antes de decidir si un procedimiento de labios es apropiado para tu caso."
@@ -26,11 +26,11 @@ Durante la evaluación se conversa sobre objetivos y límites. El producto, téc
 
 ## Cómo reservar
 
-Puedes ingresar al listado de servicios de Dr. Olano, elegir una fecha y horario y preparar tu solicitud desde la web. La confirmación final se realiza por WhatsApp.
+Puedes ingresar al listado de servicios de Dr. Olano, elegir una fecha y horario y completar tu reserva desde la web. Al finalizar, la cita queda registrada en el sistema y se sincroniza automáticamente con la agenda del Dr. Olano; WhatsApp queda como canal de contacto y seguimiento.
 
 ### ¿Se puede definir el tratamiento solo por internet?
 
-No. La web facilita la solicitud de cita, pero la decisión sobre un procedimiento requiere evaluación médica presencial.
+No. La web facilita la reserva de cita, pero la decisión sobre un procedimiento requiere evaluación médica presencial.
 
 ### ¿Dónde atiende Dr. Olano?
 
