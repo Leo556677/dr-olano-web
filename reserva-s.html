@@ -9,6 +9,13 @@
   | replace: 'Olano Medic', 'Dr. Olano'
   | replace: 'OLANO MEDIC', 'DR. OLANO'
   | replace: '<meta name="robots" content="index,follow,max-image-preview:large">', '<meta name="robots" content="noindex,follow,max-image-preview:large">'
+  | replace: '<meta name="description" content="Agenda tu consulta con Dr. Olano en Carabayllo. Medicina estética, manejo del dolor y metabolismo. Elige servicio, fecha y horario; confirmamos por WhatsApp.">', '<meta name="description" content="Agenda tu cita con Dr. Olano en Carabayllo. Elige servicio, fecha y hora; tu cita queda registrada al completar la reserva.">'
+  | replace: '<meta property="og:title" content="Dr. Olano | Medicina Estética y Atención Médica en Carabayllo">', '<meta property="og:title" content="Dr. Olano | Médico Cirujano y reserva online en Carabayllo">'
+  | replace: '<meta property="og:description" content="Elige servicio, fecha y horario para solicitar tu cita. Confirmación final por WhatsApp.">', '<meta property="og:description" content="Elige servicio, fecha y hora y reserva tu cita directamente desde la web de Dr. Olano en Carabayllo.">'
+  | replace: '<meta property="og:image" content="https://doctorolano.pe/og-image.png">', '<meta property="og:image" content="https://doctorolano.pe/og-image.png?v=20260909"><meta property="og:image:secure_url" content="https://doctorolano.pe/og-image.png?v=20260909"><meta property="og:image:type" content="image/png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Dr. Olano · Médico Cirujano · atención y reserva online en Carabayllo">'
+  | replace: '<meta name="twitter:title" content="Dr. Olano | Dr. Olano">', '<meta name="twitter:title" content="Dr. Olano | Médico Cirujano en Carabayllo">'
+  | replace: '<meta name="twitter:title" content="Dr. Olano | Olano Medic">', '<meta name="twitter:title" content="Dr. Olano | Médico Cirujano en Carabayllo">'
+  | replace: '<meta name="twitter:description" content="Medicina estética, manejo del dolor y metabolismo en Carabayllo. Solicita tu cita online.">', '<meta name="twitter:description" content="Reserva tu cita online con Dr. Olano en Carabayllo.">'
 }}
 {% include v28/part02.html %}
 {% capture v28_part03 %}{% include v28/part03.html %}{% endcapture %}{{ v28_part03
@@ -20,6 +27,11 @@
   | replace: 'assets/unidad-dolor-640.webp?v=16', 'assets/dolor-v21.webp?v=21'
   | replace: '51981214007', '51907108271'
   | replace: 'Olano Medic', 'Dr. Olano'
+  | replace: 'Medicina estética, manejo del dolor y metabolismo en Carabayllo.', 'Medicina estética, NOVARE, manejo del dolor y medicina regenerativa en Carabayllo.'
+  | replace: 'Elige el servicio y horario. El centro confirma tu cita por WhatsApp.', 'Elige el servicio, la fecha y la hora. Al completar la reserva, tu cita queda registrada en la agenda del Dr. Olano.'
+  | replace: '<b>Lun–Sáb</b><span>09:00–21:00</span>', '<b>Lun–Dom</b><span>09:00–12:00 · 14:00–21:00</span>'
+  | replace: '<b>30 min</b><span>intervalos</span>', '<b>20 min</b><span>intervalos</span>'
+  | replace: '<b>WhatsApp</b><span>confirmación</span>', '<b>Reserva web</b><span>registro inmediato</span>'
 }}
 {% capture v28_part04 %}{% include v28/part04.html %}{% endcapture %}{{ v28_part04
   | replace: 'assets/unidad-metabolismo.jpg?v=16', 'assets/metabolismo-v21.webp?v=21'
@@ -31,6 +43,17 @@
   | replace: '+51 981 214 007', '+51 907 108 271'
   | replace: '51981214007', '51907108271'
   | replace: 'Olano Medic', 'Dr. Olano'
+  | replace: '<span class="trust-chip">Confirmación por WhatsApp</span>', '<span class="trust-chip">Reserva web registrada</span>'
+  | replace: '<details><summary>¿La cita queda confirmada al enviarla?</summary><p>No. Primero se envía la solicitud por WhatsApp y el centro confirma el cupo.</p></details>', '<details><summary>¿La cita queda registrada al reservar?</summary><p>Sí. Al completar la reserva, el horario queda registrado en el sistema y se sincroniza automáticamente con la agenda del Dr. Olano.</p></details>'
+  | replace: 'retomarlo desde “Cita pendiente”', 'retomarlo desde “Reserva en curso”'
+  | replace: 'La solicitud enviada desde esta web queda pendiente hasta la confirmación del centro.', 'Al completar la reserva, la cita queda registrada y se sincroniza automáticamente con la agenda del Dr. Olano.'
+  | replace: 'Tus datos se utilizan para preparar y gestionar esta solicitud y se envían al centro mediante WhatsApp cuando tú presionas “Enviar a WhatsApp”.', 'Tus datos se utilizan para registrar y gestionar tu cita. Al completar la reserva, te conectamos con el WhatsApp oficial del centro como canal de contacto.'
+  | replace: '<h2>Revisa tu solicitud</h2>', '<h2>Revisa tu cita</h2>'
+  | replace: '>Enviar a WhatsApp</button>', '>Reservar cita</button>'
+  | replace: '<h2>Solicitud preparada</h2>', '<h2>Cita registrada</h2>'
+  | replace: '<p>El horario queda pendiente hasta que el centro confirme la cita.</p>', '<p>Tu cita quedó registrada en el sistema de reservas.</p>'
+  | replace: '<p>El cupo se bloqueará definitivamente cuando el negocio lo confirme.</p>', '<p>La sincronización con la agenda del Dr. Olano se realiza automáticamente.</p>'
+  | replace: '<span>Cita<br>pendiente</span>', '<span>Reserva<br>en curso</span>'
   | replace: 'metaPixelId:""', 'metaPixelId:"2579515552504402"'
 }}
 {% capture v28_part05 %}{% include v28/part05.html %}{% endcapture %}{{ v28_part05
@@ -51,4 +74,5 @@ initTracking();
 {% include v28/patch09-featured-categories.html %}
 {% include v28/patch10-direct-service-links.html %}
 {% include v28/patch11-meta-ads-launch-safety.html %}
+{% include v28/patch12-booking-step2-focus.html %}
 {% include v28/part07.html %}
