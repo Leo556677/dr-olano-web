@@ -1,2 +1,15 @@
-<link rel="stylesheet" href="/assets/offer10-v28.css?v=20260911-2">
-<script defer src="/assets/offer10-v28.js?v=20260911-2"></script>
+<link rel="stylesheet" href="/assets/offer10-v28.css?v=20260911-3">
+<script src="/assets/offer10-v28.js?v=20260911-3"></script>
+<script>
+(()=>{
+  function triggerPreselectedOffer(){
+    if(typeof state==='undefined'||!state.service?.id)return;
+    const raw=String(state.service.id);
+    const safe=(window.CSS&&typeof CSS.escape==='function')?CSS.escape(raw):raw.replace(/[^a-zA-Z0-9_-]/g,'');
+    const btn=document.querySelector(`[data-svc="${safe}"]`);
+    if(!btn)return;
+    btn.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,view:window}));
+  }
+  setTimeout(triggerPreselectedOffer,250);
+})();
+</script>
