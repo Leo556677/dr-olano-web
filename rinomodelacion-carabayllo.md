@@ -9,8 +9,8 @@ eyebrow: "Dr. Olano · Medicina estética facial"
 lead: "La consulta permite revisar qué cambio buscas en el perfil nasal y determinar si una opción no quirúrgica forma parte de las alternativas razonables para tu caso."
 image: /assets/estetica-v21.webp
 image_alt: "Evaluación para rinomodelación con Dr. Olano en Carabayllo"
-cta_url: /reserva-s
-cta_label: "Ver servicios y reservar"
+cta_url: /reserva-s?servicio=rinomodelacion
+cta_label: "Reservar rinomodelación"
 ---
 ## La evaluación define si la rinomodelación es una opción
 
