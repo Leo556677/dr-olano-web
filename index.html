@@ -19,8 +19,9 @@ permalink: /
   | replace: '<meta name="twitter:image" content="https://doctorolano.pe/og-image.png">', '<meta name="twitter:image" content="https://doctorolano.pe/assets/logo-isotipo.png?v=20260909">'
 }}
 {% include v28/part02.html %}
+{% capture home_identity_styles %}.hero-credentials{display:grid;gap:3px;margin:0 0 14px;padding-left:12px;border-left:3px solid var(--teal2);color:var(--navy);font-size:.82rem;line-height:1.4}.hero-credentials>span{font-size:.78rem;color:var(--muted)}.hero-credentials>a{display:inline-flex;align-items:center;gap:5px;justify-self:start;min-height:32px;color:var(--teal2);font-weight:700;text-decoration:underline;text-underline-offset:3px}.faq-location-link{color:var(--teal2);font-weight:700;text-decoration:underline;text-underline-offset:3px}</style>{% endcapture %}
 {% capture v28_part03 %}{% include v28/part03.html %}{% endcapture %}{{ v28_part03
-  | replace: '</style>', '.hero-credentials{display:grid;gap:3px;margin:0 0 14px;padding-left:12px;border-left:3px solid var(--teal2);color:var(--navy);font-size:.82rem;line-height:1.4}.hero-credentials>span{font-size:.78rem;color:var(--muted)}.hero-credentials>a{display:inline-flex;align-items:center;gap:5px;justify-self:start;min-height:32px;color:var(--teal2);font-weight:700;text-decoration:underline;text-underline-offset:3px}.faq-location-link{color:var(--teal2);font-weight:700;text-decoration:underline;text-underline-offset:3px}</style>'
+  | replace: '</style>', home_identity_styles
   | replace: '<div class="hero-actions" id="heroActions">', '<div class="hero-credentials"><strong>Dr. Kamo Martin Olano Paredes</strong><span>Médico Cirujano · CMP 069685</span><a href="/doctor-olano">Ver perfil y credenciales <span aria-hidden="true">→</span></a></div><div class="hero-actions" id="heroActions">'
   | replace: 'assets/hero-doctor.jpg?v=16', 'assets/dr-olano-hero-v22.webp?v=22'
   | replace: 'assets/hero-doctor-640.webp?v=16', 'assets/dr-olano-hero-v22.webp?v=22'
