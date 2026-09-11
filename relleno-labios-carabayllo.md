@@ -9,8 +9,8 @@ eyebrow: "Dr. Olano · Medicina estética facial"
 lead: "La evaluación permite conversar sobre forma, proporción y objetivos antes de decidir si un procedimiento de labios es apropiado para tu caso."
 image: /assets/estetica-v21.webp
 image_alt: "Evaluación para relleno de labios con Dr. Olano en Carabayllo"
-cta_url: /reserva-s
-cta_label: "Ver servicios y reservar"
+cta_url: /reserva-s?servicio=labios
+cta_label: "Reservar relleno de labios"
 ---
 ## La consulta comienza por tus objetivos
 
