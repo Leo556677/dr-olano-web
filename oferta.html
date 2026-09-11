@@ -1,0 +1,60 @@
+---
+permalink: /oferta/
+---
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Verificar beneficio | Dr. Olano</title>
+<style>
+:root{--navy:#0b2e4f;--teal:#0f827a;--bg:#f4f8f8;--line:#dbe7e8;--muted:#65747d;--ok:#147a64}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:#10283c}.wrap{width:min(680px,92vw);margin:0 auto;padding:28px 0 48px}.brand{display:flex;align-items:center;gap:10px;margin-bottom:20px}.brand img{width:48px;height:48px;object-fit:contain;background:white;border-radius:50%;padding:3px}.brand b{font-size:1.05rem;color:var(--navy)}.card{background:#fff;border:1px solid var(--line);border-radius:24px;padding:22px;box-shadow:0 18px 45px -34px #0a294d99}.badge{display:inline-flex;align-items:center;gap:7px;background:#eaf7f5;color:var(--ok);font-weight:900;font-size:.78rem;border-radius:999px;padding:8px 11px}.card h1{margin:14px 0 4px;font-size:1.75rem;color:var(--navy)}.sub{margin:0 0 18px;color:var(--muted)}.price{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}.price>div{border:1px solid var(--line);border-radius:18px;padding:14px}.price small{display:block;color:var(--muted);font-weight:700;margin-bottom:5px}.regular{font-size:1.05rem;text-decoration:line-through;color:#7a858b}.discount{font-size:1.45rem;font-weight:950;color:var(--teal)}.row{display:flex;justify-content:space-between;gap:14px;padding:11px 0;border-top:1px solid #edf2f3}.row span{color:var(--muted);font-size:.8rem}.row b{text-align:right;font-size:.83rem}.note{margin-top:16px;padding:12px 14px;background:#f7fafb;border-radius:14px;color:#52636d;font-size:.78rem;line-height:1.45}.error{color:#9d2f2f;background:#fff3f3;border:1px solid #f0caca;padding:14px;border-radius:14px}.maps{display:inline-flex;margin-top:14px;padding:11px 15px;border-radius:999px;background:var(--navy);color:#fff;text-decoration:none;font-weight:850;font-size:.8rem}@media(max-width:560px){.price{grid-template-columns:1fr}.card{padding:18px}.card h1{font-size:1.45rem}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="brand"><img src="/assets/logo-isotipo.png" alt="Dr. Olano"><b>Dr. Olano · Carabayllo</b></div>
+  <section class="card" id="card"><p>Verificando beneficio…</p></section>
+</main>
+<script>
+(()=>{
+  const API='https://xnlzsgulskqyecfgzhwa.supabase.co/functions/v1/dr-olano-offer';
+  const MAP='https://maps.app.goo.gl/avA3W5SDPHi3XNqd6';
+  const token=new URLSearchParams(location.search).get('t')||'';
+  const card=document.querySelector('#card');
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  const money=n=>Number.isFinite(Number(n))?`S/ ${Number(n).toFixed(2).replace(/\.00$/,'')}`:'Según evaluación médica';
+  const dt=s=>s?new Intl.DateTimeFormat('es-PE',{dateStyle:'medium',timeStyle:'short',timeZone:'America/Lima'}).format(new Date(s)):'—';
+  async function run(){
+    if(!token){card.innerHTML='<div class="error">El enlace de verificación no es válido.</div>';return}
+    try{
+      const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'verify',token})});
+      const d=await r.json();
+      if(!r.ok||!d?.ok)throw new Error(d?.code||'VERIFY_FAILED');
+      const c=d.claim||{};
+      const status=c.status==='redeemed'?'BENEFICIO APLICADO A RESERVA':c.status==='active'?'BENEFICIO ACTIVO':c.status==='expired'?'BENEFICIO VENCIDO':'ESTADO DEL BENEFICIO';
+      const regular=c.regular_price_pen==null?'Según evaluación médica':money(c.regular_price_pen);
+      const discounted=c.discounted_price_pen==null?'10% menos sobre el valor final evaluado':money(c.discounted_price_pen);
+      card.innerHTML=`
+        <span class="badge">✓ ${esc(status)}</span>
+        <h1>${esc(c.discount_pct)}% de descuento verificado</h1>
+        <p class="sub">Este comprobante se consulta directamente en el sistema de Dr. Olano.</p>
+        <div class="price"><div><small>Precio regular referencial</small><div class="regular">${esc(regular)}</div></div><div><small>Con beneficio</small><div class="discount">${esc(discounted)}</div></div></div>
+        <div class="row"><span>Servicio</span><b>${esc(c.service_name)}</b></div>
+        <div class="row"><span>Tipo de cita</span><b>${esc(c.appointment_type)}</b></div>
+        <div class="row"><span>Beneficio emitido</span><b>${esc(dt(c.issued_at))}</b></div>
+        <div class="row"><span>Vigencia inicial</span><b>${esc(dt(c.expires_at))}</b></div>
+        ${c.redeemed_at?`<div class="row"><span>Aplicado a reserva</span><b>${esc(dt(c.redeemed_at))}</b></div>`:''}
+        ${c.booking_code?`<div class="row"><span>Código de reserva</span><b>${esc(c.booking_code)}</b></div>`:''}
+        ${c.booking_date?`<div class="row"><span>Fecha de cita</span><b>${esc(c.booking_date)}${c.booking_time?' · '+esc(String(c.booking_time).slice(0,5)):''}</b></div>`:''}
+        <div class="note">El precio mostrado es referencial y el valor final depende de la evaluación médica cuando corresponda. El texto de un mensaje de WhatsApp no modifica este comprobante.</div>
+        <a class="maps" href="${MAP}" target="_blank" rel="noopener">Ver ubicación en Google Maps</a>`;
+    }catch(e){card.innerHTML='<div class="error">No pudimos verificar este beneficio. Revisa que el enlace sea completo o comunícate con Dr. Olano.</div>'}
+  }
+  run();
+})();
+</script>
+</body>
+</html>
