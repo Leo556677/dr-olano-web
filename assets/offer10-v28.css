@@ -19,11 +19,9 @@
   color:var(--teal2);font-size:.72rem;font-weight:950;letter-spacing:.04em
 }
 .offer10-coupon-svg{width:18px;height:18px;display:block;flex:0 0 auto}
-
 .offer10-title{margin:12px 0 5px;color:var(--navy);font:800 2rem/1.02 "Fraunces",serif}
 .offer10-title-accent{display:inline-block;color:var(--teal2);font-size:1.30em;line-height:.9;font-weight:950}
 .offer10-service{font-weight:900;color:var(--navy);margin:0 0 14px}
-
 .offer10-prices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
 .offer10-price{border:1px solid var(--line);border-radius:18px;padding:14px;background:#f9fbfb}
 .offer10-price small{display:block;color:var(--muted);font-size:.68rem;font-weight:800;margin-bottom:5px}
@@ -41,7 +39,7 @@
 .offer10-progress-fill{
   position:absolute;inset:0 auto 0 0;width:100%;overflow:hidden;border-radius:inherit;
   background:linear-gradient(90deg,#0f827a 0%,#16a89d 58%,#67d2c8 100%);
-  box-shadow:0 0 20px rgba(15,130,122,.24);transition:width .42s linear
+  box-shadow:0 0 20px rgba(15,130,122,.24);transition:width .42s linear,background .9s ease,box-shadow .9s ease
 }
 .offer10-progress-stars{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-evenly;padding:0 8px;min-width:220px;color:#fff}
 .offer10-progress-stars svg{width:10px;height:10px;fill:currentColor;filter:drop-shadow(0 1px 1px rgba(0,0,0,.12))}
@@ -50,7 +48,6 @@
 
 .offer10-primary-wrap{display:flex;justify-content:center;width:100%;margin-top:2px}
 #offer10Accept{display:inline-flex!important;width:auto!important;min-width:260px;max-width:100%;margin:0 auto!important;justify-content:center!important;text-align:center!important;padding-left:24px!important;padding-right:24px!important}
-
 .offer10-note{font-size:.7rem;line-height:1.4;color:var(--muted);margin:12px 0 0}
 .offer10-close{position:absolute;right:12px;top:12px;width:38px;height:38px;border:0;border-radius:50%;background:#f1f5f5;color:var(--navy);font-weight:950;cursor:pointer}
 .offer10-secondary{border:0;background:none;color:#65747d;font-weight:800;padding:10px 4px;margin-top:7px;text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1.5px;cursor:pointer}
@@ -66,8 +63,20 @@
 #offer10ConfirmReject{border:1px solid var(--line);background:#fff;color:var(--navy)}
 #offer10ConfirmReject:hover{background:#f5f8f8}
 
-#offer10Strip{display:none;margin:0 0 12px;border:1px solid rgba(124,220,209,.55);border-radius:16px;background:linear-gradient(135deg,#082d4d,#0f827a);color:#fff;padding:11px 13px;gap:10px;align-items:center;justify-content:space-between;box-shadow:0 12px 26px -22px #001c32}
-#offer10Strip.show{display:flex}.offer10-strip-copy{min-width:0}.offer10-strip-copy b{display:block;font-size:.82rem}.offer10-strip-copy small{display:block;color:#d9f5f1;font-size:.65rem;margin-top:2px}.offer10-strip-time{white-space:nowrap;font-size:.78rem;font-weight:950;background:rgba(255,255,255,.13);border-radius:999px;padding:7px 9px}
+/* La oferta aplicada ya no usa un bloque separado. Se integra en Servicio elegido. */
+#offer10Strip{display:none!important}
+.v252-selected-copy .offer10-inline-offer{
+  display:flex!important;align-items:center!important;gap:6px!important;flex-wrap:wrap!important;
+  width:max-content!important;max-width:100%!important;margin:7px 0 0!important;padding:5px 8px!important;
+  border:1px solid rgba(255,255,255,.38)!important;border-radius:999px!important;
+  background:linear-gradient(135deg,#0f827a,#35b8aa)!important;color:#fff!important;
+  box-shadow:0 7px 18px -13px rgba(0,0,0,.55)!important;
+  transition:background .9s ease,border-color .9s ease,box-shadow .9s ease!important
+}
+.offer10-inline-badge{font-size:.59rem!important;line-height:1!important;font-weight:950!important;letter-spacing:.045em!important;color:#fff!important;white-space:nowrap!important}
+.offer10-inline-price{font-size:.62rem!important;line-height:1!important;font-weight:800!important;color:rgba(255,255,255,.94)!important;white-space:nowrap!important}
+.offer10-inline-time{font-variant-numeric:tabular-nums;font-size:.64rem!important;line-height:1!important;font-weight:950!important;color:#fff!important;background:rgba(0,0,0,.14)!important;padding:3px 6px!important;border-radius:999px!important;white-space:nowrap!important}
+.offer10-inline-expired{background:linear-gradient(135deg,#861b27,#c7383d)!important}
 
 .olano-location{margin:8px 0 0;padding:30px 0;background:#eef6f6;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .olano-location-card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:var(--shadow)}
@@ -79,6 +88,7 @@
 @media(max-width:560px){
   #offer10Dialog{padding:20px 16px}#offer10ConfirmDialog{padding:24px 18px}
   .offer10-title{font-size:1.65rem}.offer10-title-accent{font-size:1.34em}.offer10-prices{grid-template-columns:1fr}.offer10-new{font-size:1.45rem}
-  #offer10Accept{min-width:min(290px,100%)}#offer10Strip{align-items:flex-start}.olano-location-actions a{width:100%}
+  #offer10Accept{min-width:min(290px,100%)}.olano-location-actions a{width:100%}
   .offer10-countdown-head{font-size:.74rem}.offer10-progress-stars{min-width:180px}
+  .v252-selected-copy .offer10-inline-offer{width:100%!important;justify-content:space-between!important;border-radius:12px!important;padding:6px 8px!important}
 }
