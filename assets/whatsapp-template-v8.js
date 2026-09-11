@@ -41,11 +41,16 @@
     lines.push('',`📍 Dirección: ${ADDRESS}`,`🗺️ Google Maps: ${MAP}`);
     return `https://wa.me/${phone}?text=${encodeURIComponent(lines.join('\n'))}`;
   }
+  function safeBase(){
+    const phone=String(CONFIG?.phone||'').replace(/\D/g,'');
+    return phone?`https://wa.me/${phone}`:'#';
+  }
   function apply(autoRedirect=false){
     const done=document.querySelector('#booking .step[data-step="5"].active');if(!done)return;
     const a=document.querySelector('#openWhatsApp');if(!a)return;
     const url=build();if(!url)return;
-    if(a.href!==url)a.href=url;
+    a.dataset.olanoWaUrl=url;
+    const safe=safeBase();if(a.getAttribute('href')!==safe)a.setAttribute('href',safe);
     state.url=url;
     if(autoRedirect&&state.id&&redirectedCode!==state.id){
       redirectedCode=state.id;
@@ -54,6 +59,11 @@
   }
   const booking=document.querySelector('#booking');
   if(booking)new MutationObserver(()=>queueMicrotask(()=>apply(true))).observe(booking,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
-  document.addEventListener('click',e=>{if(e.target.closest('#openWhatsApp'))apply(false)},true);
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('#openWhatsApp');if(!a)return;
+    apply(false);
+    const url=a.dataset.olanoWaUrl;
+    if(url){e.preventDefault();location.assign(url)}
+  },true);
   setInterval(()=>apply(false),750);
 })();
