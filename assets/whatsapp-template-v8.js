@@ -5,6 +5,7 @@
   const OFFER_STORE='olanoOffer10V2';
   const MONTHS=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','setiembre','octubre','noviembre','diciembre'];
   const DAYS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  let redirectedCode='';
 
   function offer(){try{return JSON.parse(sessionStorage.getItem(OFFER_STORE)||'null')}catch{return null}}
   function left(o){return Math.max(0,new Date(o?.claim?.expires_at||0).getTime()-Date.now())}
@@ -40,14 +41,19 @@
     lines.push('',`📍 Dirección: ${ADDRESS}`,`🗺️ Google Maps: ${MAP}`);
     return `https://wa.me/${phone}?text=${encodeURIComponent(lines.join('\n'))}`;
   }
-  function apply(){
+  function apply(autoRedirect=false){
     const done=document.querySelector('#booking .step[data-step="5"].active');if(!done)return;
     const a=document.querySelector('#openWhatsApp');if(!a)return;
     const url=build();if(!url)return;
-    a.href=url;state.url=url;
+    if(a.href!==url)a.href=url;
+    state.url=url;
+    if(autoRedirect&&state.id&&redirectedCode!==state.id){
+      redirectedCode=state.id;
+      queueMicrotask(()=>location.replace(url));
+    }
   }
   const booking=document.querySelector('#booking');
-  if(booking)new MutationObserver(()=>queueMicrotask(apply)).observe(booking,{subtree:true,childList:true,attributes:true,attributeFilter:['class','href']});
-  document.addEventListener('click',e=>{if(e.target.closest('#openWhatsApp'))apply()},true);
-  setInterval(apply,750);
+  if(booking)new MutationObserver(()=>queueMicrotask(()=>apply(true))).observe(booking,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
+  document.addEventListener('click',e=>{if(e.target.closest('#openWhatsApp'))apply(false)},true);
+  setInterval(()=>apply(false),750);
 })();
