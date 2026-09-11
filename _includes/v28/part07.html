@@ -64,12 +64,12 @@ function startLandingExperience(){
   // si no hubo interacción, activar orientación + secuencia especial.
   setTimeout(activateIdleOfferCards,CONFIG.idleOfferStart);
 
-  // El contador de una oferta ya iniciada en esta sesión se reanuda.
-  const pe=Number(sessionStorage.getItem("olanoPromoEnd"));
-  if(pe>Date.now())startPromo();
-
-  // Oferta a los 30 s desde que termina el intro.
-  setTimeout(triggerPromo,CONFIG.promoDelay);
+  // V28.1: NO se reanuda ni se dispara la promoción antigua por permanencia.
+  // La nueva oferta del 10% se activa únicamente 2 s después de elegir servicio.
+  try{sessionStorage.removeItem("olanoPromoEnd");sessionStorage.removeItem("olanoPromoSeen")}catch{}
+  document.body.classList.remove("promo-on");
+  document.querySelector("#promoCount")?.classList.remove("show");
+  document.querySelector("#promoOverlay")?.classList.remove("show");
 }
 
 (function bootIntro(){
@@ -99,6 +99,7 @@ function startLandingExperience(){
   setTimeout(()=>{if(!finished)showFallback()},8000);
 })();
 </script>
-{% include v28/patch13-offer10-location-funnel.html %}
+<link rel="stylesheet" href="/assets/offer10-v28.css?v=20260911-2">
+<script src="/assets/offer10-v28.js?v=20260911-2"></script>
 </body>
 </html>
