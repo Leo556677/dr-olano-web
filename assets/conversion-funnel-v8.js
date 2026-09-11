@@ -78,7 +78,8 @@
     if(!copy)return;
     let hint=copy.querySelector('.olano-appointment-hint');
     if(!hint){hint=document.createElement('span');hint.className='olano-appointment-hint';copy.appendChild(hint)}
-    hint.textContent=appointmentCopy();
+    const text=appointmentCopy();
+    if(hint.textContent!==text)hint.textContent=text;
   }
   if(!document.getElementById('olano-audit-v8-style')){
     const st=document.createElement('style');st.id='olano-audit-v8-style';
