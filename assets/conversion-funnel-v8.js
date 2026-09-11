@@ -3,6 +3,7 @@
   const SESSION_KEY='olanoFunnelSessionV1';
   const SOURCE_KEY='olanoFunnelSourceV1';
   const VALID_EVENTS=new Set(['landing_view','service_selected','offer_accepted','offer_declined','booking_started','booking_registered','whatsapp_opened']);
+  const currentState=()=>typeof state!=='undefined'?state:null;
 
   function getSession(){
     try{
@@ -66,7 +67,7 @@
   }
 
   function appointmentCopy(){
-    const s=window.state?.service;if(!s)return '';
+    const s=currentState()?.service;if(!s)return '';
     const id=String(s.id||'');
     const isConsult=id==='consulta'||id==='novare-consulta'||String(s.name||'').toLowerCase().startsWith('consulta');
     return isConsult?'Reserva de consulta / evaluación médica.':'Servicio sujeto a evaluación médica.';
@@ -90,7 +91,7 @@
   let serviceTracked=false,bookingTracked=false,waTracked=false;
   function inspect(){
     renderAppointmentHint();
-    if(!serviceTracked&&window.state?.service){serviceTracked=true;track('service_selected')}
+    if(!serviceTracked&&currentState()?.service){serviceTracked=true;track('service_selected')}
     if(!bookingTracked&&booking.querySelector('.step[data-step="2"].active')){bookingTracked=true;track('booking_started')}
     if(!waTracked&&window.__olanoLastBookingId&&booking.querySelector('.step[data-step="5"].active')){waTracked=true;track('whatsapp_opened',{booking_id:window.__olanoLastBookingId})}
   }
