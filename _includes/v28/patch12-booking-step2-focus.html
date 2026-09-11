@@ -1,11 +1,91 @@
-// ===== V25.3 · STEP 2 FOCUS: STICKY SERVICE + ROBUST DATE→TIME SCROLL =====
-// Mantiene el servicio elegido visible mientras el paciente elige fecha/hora.
-// Refuerza el scroll automático: espera a que la disponibilidad real termine de cargar.
+// ===== V27 · DIRECT LINKS SYNC + STEP 2 FOCUS + ROBUST DATE→TIME SCROLL =====
+// 1) Sincroniza el catálogo de reserva con los servicios publicados en doctorolano.pe.
+// 2) Un enlace /reserva-s?servicio=<id> abre PASO 1 con el servicio ya seleccionado
+//    y el botón "Elegir fecha" listo, en vez de saltar automáticamente a PASO 2.
+// 3) Tras elegir fecha, desplaza el panel de reserva hasta "Horarios disponibles"
+//    de forma consistente en celular, tablet y PC, incluso si la disponibilidad tarda.
 (() => {
+  if(typeof SERVICES==='undefined'||typeof state==='undefined'||typeof openBooking!=='function')return;
+
   const booking=document.querySelector('#booking');
   const times=document.querySelector('#times');
   const timesWrap=document.querySelector('#timesWrap');
   if(!booking||!times||!timesWrap)return;
+
+  // doctorolano.pe publica Rinomodelación como servicio de Medicina Estética y
+  // tiene además una página específica del servicio. V26 la había omitido del
+  // catálogo final, aunque una versión anterior sí la contemplaba.
+  if(!SERVICES.some(s=>String(s.id).toLowerCase()==='rinomodelacion')){
+    const service={
+      id:'rinomodelacion',
+      category:'estetica',
+      unit:'Estética',
+      name:'Rinomodelación',
+      price:'Según evaluación'
+    };
+    const anchor=SERVICES.findIndex(s=>String(s.id).toLowerCase()==='armonizacion');
+    SERVICES.splice(anchor>=0?anchor+1:SERVICES.length,0,service);
+  }
+
+  // Slugs públicos que deben resolver a un código interno estable.
+  // Se conserva "rinofast" para backend/compatibilidad, pero "rinoplastia"
+  // también funciona como enlace legible para campañas y redes.
+  const PUBLIC_ALIASES={
+    rinoplastia:'rinofast'
+  };
+
+  const serviceByRequest=value=>{
+    const raw=String(value||'').trim().toLowerCase();
+    const id=PUBLIC_ALIASES[raw]||raw;
+    return SERVICES.find(s=>String(s.id).toLowerCase()===id)||null;
+  };
+
+  // Registro dinámico: el número de links siempre queda sincronizado con SERVICES.
+  // No se mantiene una segunda lista manual que pueda quedar desactualizada.
+  const publicSlugFor=s=>String(s.id)==='rinofast'?'rinoplastia':String(s.id);
+  window.OLANO_SERVICE_LINK_LIST=SERVICES.map(s=>({
+    id:s.id,
+    name:s.name,
+    category:s.category,
+    url:`https://doctorolano.pe/reserva-s?servicio=${encodeURIComponent(publicSlugFor(s))}`
+  }));
+  window.OLANO_SERVICE_LINKS=Object.fromEntries(
+    window.OLANO_SERVICE_LINK_LIST.map(item=>[item.id,item.url])
+  );
+
+  const params=new URLSearchParams(window.location.search);
+  const requestedRaw=params.get('servicio')||params.get('service')||'';
+  const requestedService=serviceByRequest(requestedRaw);
+
+  // patch10 se carga antes y originalmente intentaba llevar el enlace directo a PASO 2.
+  // Este wrapper externo le pasa el ID explícitamente, anulando ese salto y dejando
+  // que el selector V23.8 pinte la tarjeta central "SERVICIO SELECCIONADO" del PASO 1.
+  const openBookingBaseV27=openBooking;
+  openBooking=function(serviceId='',options={}){
+    const useUrlService=!serviceId&&!!requestedService;
+    const chosenId=useUrlService?requestedService.id:serviceId;
+    const result=openBookingBaseV27.call(this,chosenId,options);
+
+    if(useUrlService){
+      state.service=requestedService;
+      state.date='';
+      state.time='';
+      if(typeof v23HideFeatured==='function')v23HideFeatured();
+      if(typeof renderServices==='function')renderServices();
+      if(typeof setPrimary==='function')setPrimary(document.querySelector('#toStep2'),true);
+      if(typeof saveDraft==='function')saveDraft();
+
+      // Reafirmación después de que terminen los renders encadenados de apertura.
+      setTimeout(()=>{
+        state.service=requestedService;
+        if(typeof v23HideFeatured==='function')v23HideFeatured();
+        if(typeof renderServices==='function')renderServices();
+        if(typeof setPrimary==='function')setPrimary(document.querySelector('#toStep2'),true);
+        booking.scrollTo({top:0,behavior:'instant'});
+      },60);
+    }
+    return result;
+  };
 
   let pendingDateScroll=false;
   let fallbackTimer=null;
@@ -16,34 +96,65 @@
     booking.style.setProperty('--v253-booking-head-h',`${h}px`);
   }
 
-  function scrollToTimes(){
+  function timesReady(){
+    if(times.querySelector('.time[data-time]'))return true;
+    const text=String(times.textContent||'').trim().toLowerCase();
+    if(!text)return false;
+    return text.includes('no quedan horarios')
+      || text.includes('no pudimos consultar')
+      || text.includes('sin horarios')
+      || text.includes('no hay horarios');
+  }
+
+  function scrollToTimes(force=false){
     if(!pendingDateScroll)return;
+    if(!force&&!timesReady())return;
+
     pendingDateScroll=false;
     if(fallbackTimer){clearTimeout(fallbackTimer);fallbackTimer=null}
+
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      timesWrap.scrollIntoView({behavior:'smooth',block:'start'});
+      syncStickyOffset();
+      const bookingRect=booking.getBoundingClientRect();
+      const targetRect=timesWrap.getBoundingClientRect();
+      const head=booking.querySelector('.booking-head');
+      const banner=booking.querySelector('.step[data-step="2"].active #v252SelectedServiceBanner');
+      const headH=Math.ceil(head?.getBoundingClientRect().height||62);
+      const bannerVisible=!!(banner&&banner.offsetParent!==null&&!banner.hidden);
+      const bannerH=bannerVisible?Math.ceil(banner.getBoundingClientRect().height)+12:0;
+      const targetTop=booking.scrollTop+(targetRect.top-bookingRect.top)-headH-bannerH-10;
+
+      booking.scrollTo({top:Math.max(0,targetTop),behavior:'smooth'});
+
+      // Respaldo para navegadores móviles con comportamiento especial de overlays.
+      setTimeout(()=>{
+        const now=timesWrap.getBoundingClientRect();
+        const viewport=booking.getBoundingClientRect();
+        if(now.top<viewport.top+headH-4||now.top>viewport.bottom-90){
+          const retryTop=booking.scrollTop+(now.top-viewport.top)-headH-bannerH-10;
+          booking.scrollTo({top:Math.max(0,retryTop),behavior:'smooth'});
+        }
+      },320);
     }));
   }
 
-  function availabilityFinished(){
-    if(times.querySelector('.time[data-time]'))return true;
-    const text=String(times.textContent||'').trim().toLowerCase();
-    return text.includes('no quedan horarios')||text.includes('no pudimos consultar');
-  }
-
   booking.addEventListener('click',e=>{
-    const day=e.target.closest('#calendarDays .day[data-day]');
+    const day=e.target.closest('#calendarDays .day[data-day], #calendarDays [data-day]');
     if(!day||day.disabled)return;
+
     pendingDateScroll=true;
     if(fallbackTimer)clearTimeout(fallbackTimer);
-    // Respaldo para conexiones lentas o cambios futuros de markup.
-    fallbackTimer=setTimeout(()=>{
-      if(pendingDateScroll)scrollToTimes();
-    },1800);
+
+    // Si la respuesta de disponibilidad es inmediata, este intento ya basta.
+    setTimeout(()=>scrollToTimes(false),90);
+
+    // Si la API tarda, el observer de #times hará el scroll al recibir los horarios.
+    // Este fallback evita que una respuesta/markup inesperado deje al usuario arriba.
+    fallbackTimer=setTimeout(()=>scrollToTimes(true),2400);
   },true);
 
   new MutationObserver(()=>{
-    if(pendingDateScroll&&availabilityFinished())scrollToTimes();
+    if(pendingDateScroll)scrollToTimes(false);
   }).observe(times,{childList:true,subtree:true,characterData:true});
 
   new MutationObserver(()=>{
