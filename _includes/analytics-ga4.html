@@ -49,11 +49,12 @@ gtag("js", new Date());
 })();
 </script>
 
-<!-- Metricool: solo páginas públicas no sensibles. Se excluyen reserva, gestión de citas y paneles internos. -->
+<!-- Metricool: solo páginas públicas no sensibles. Se excluyen reserva, gestión, comprobantes y paneles internos. -->
 <script>
 (function(){
-  var path=(window.location.pathname||"/").replace(/\/+$/,"/");
-  var blocked=["/reserva/","/reserva-s/","/gestionar-cita/","/agenda-admin/","/recordatorios-admin/"];
+  var rawPath=(window.location.pathname||"/").replace(/\/+$/,"");
+  var path=(rawPath||"")+"/";
+  var blocked=["/reserva/","/reserva-s/","/gestionar-cita/","/oferta/","/agenda-admin/","/recordatorios-admin/"];
   if(blocked.some(function(prefix){return path===prefix||path.indexOf(prefix)===0;}))return;
 
   function loadScript(a){
