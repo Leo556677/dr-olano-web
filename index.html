@@ -20,6 +20,8 @@ permalink: /
 }}
 {% include v28/part02.html %}
 {% capture v28_part03 %}{% include v28/part03.html %}{% endcapture %}{{ v28_part03
+  | replace: '</style>', '.hero-credentials{display:grid;gap:3px;margin:0 0 14px;padding-left:12px;border-left:3px solid var(--teal2);color:var(--navy);font-size:.82rem;line-height:1.4}.hero-credentials>span{font-size:.78rem;color:var(--muted)}.hero-credentials>a{display:inline-flex;align-items:center;gap:5px;justify-self:start;min-height:32px;color:var(--teal2);font-weight:700;text-decoration:underline;text-underline-offset:3px}.faq-location-link{color:var(--teal2);font-weight:700;text-decoration:underline;text-underline-offset:3px}</style>'
+  | replace: '<div class="hero-actions" id="heroActions">', '<div class="hero-credentials"><strong>Dr. Kamo Martin Olano Paredes</strong><span>Médico Cirujano · CMP 069685</span><a href="/doctor-olano">Ver perfil y credenciales <span aria-hidden="true">→</span></a></div><div class="hero-actions" id="heroActions">'
   | replace: 'assets/hero-doctor.jpg?v=16', 'assets/dr-olano-hero-v22.webp?v=22'
   | replace: 'assets/hero-doctor-640.webp?v=16', 'assets/dr-olano-hero-v22.webp?v=22'
   | replace: 'assets/unidad-estetica.jpg?v=16', 'assets/estetica-v21.webp?v=21'
@@ -35,6 +37,7 @@ permalink: /
   | replace: '<b>WhatsApp</b><span>confirmación</span>', '<b>Reserva web</b><span>registro inmediato</span>'
 }}
 {% capture v28_part04 %}{% include v28/part04.html %}{% endcapture %}{{ v28_part04
+  | replace: 'La atención es en Carabayllo, Lima. Puedes solicitar la ubicación exacta por WhatsApp.', 'Te atendemos en <strong>Av. Pacayal 1243, Carabayllo 15319, Lima</strong>. <a class="faq-location-link" href="https://maps.app.goo.gl/avA3W5SDPHi3XNqd6" target="_blank" rel="noopener">Ver ubicación en Google Maps</a>.'
   | replace: 'assets/unidad-metabolismo.jpg?v=16', 'assets/metabolismo-v21.webp?v=21'
   | replace: 'assets/unidad-metabolismo-640.webp?v=16', 'assets/metabolismo-v21.webp?v=21'
   | replace: 'assets/promo-mes.jpg?v=16', 'assets/dr-olano-hero-v22.webp?v=22'
