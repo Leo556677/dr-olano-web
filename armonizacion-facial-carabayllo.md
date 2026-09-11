@@ -9,8 +9,8 @@ eyebrow: "Dr. Olano · Medicina estética facial"
 lead: "Una evaluación facial permite revisar objetivos, proporciones y antecedentes antes de decidir si conviene tratar una zona o combinar diferentes opciones."
 image: /assets/estetica-v21.webp
 image_alt: "Evaluación de armonización facial con Dr. Olano en Carabayllo"
-cta_url: /reserva
-cta_label: "Reservar evaluación"
+cta_url: /reserva-s?servicio=armonizacion
+cta_label: "Reservar armonización facial"
 ---
 ## ¿Qué se revisa en una evaluación de armonización facial?
 
