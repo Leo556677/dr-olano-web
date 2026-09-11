@@ -18,12 +18,36 @@
   function read(){try{return JSON.parse(sessionStorage.getItem(STORE)||'null')}catch{return null}}
   function save(o){try{sessionStorage.setItem(STORE,JSON.stringify(o))}catch{}}
   function left(o){return Math.max(0,new Date(o?.claim?.expires_at||0).getTime()-Date.now())}
-  function duration(o){
-    const start=new Date(o?.claim?.issued_at||0).getTime();
-    const end=new Date(o?.claim?.expires_at||0).getTime();
-    return Math.max(1,end-start);
+  function duration(o){const a=new Date(o?.claim?.issued_at||0).getTime(),b=new Date(o?.claim?.expires_at||0).getTime();return Math.max(1,b-a)}
+  function prices(o){const c=o?.claim||{};return c.regular_price_pen==null?{old:'Según evaluación médica',now:'10% menos sobre valor evaluado'}:{old:money(c.regular_price_pen),now:money(c.discounted_price_pen)}}
+  function sameService(o){return !!(o?.claim?.service_code&&state.service?.id&&o.claim.service_code===state.service.id)}
+  function usable(o){return !!(sameService(o)&&(o.redeemed||(o.accepted&&left(o)>0)))}
+
+  function mix(a,b,t){return Math.round(a+(b-a)*t)}
+  function hexRgb(h){const x=h.replace('#','');return [parseInt(x.slice(0,2),16),parseInt(x.slice(2,4),16),parseInt(x.slice(4,6),16)]}
+  function rgbHex(a){return '#'+a.map(v=>Math.max(0,Math.min(255,v)).toString(16).padStart(2,'0')).join('')}
+  function mixHex(a,b,t){const x=hexRgb(a),y=hexRgb(b);return rgbHex([mix(x[0],y[0],t),mix(x[1],y[1],t),mix(x[2],y[2],t)])}
+  const COLOR_STOPS=[
+    {p:1.00,a:'#0f827a',b:'#67d2c8'},
+    {p:.60,a:'#9a8510',b:'#ddc447'},
+    {p:.40,a:'#bd6412',b:'#ef9634'},
+    {p:.20,a:'#a92a2d',b:'#e24e42'},
+    {p:0.00,a:'#7e1721',b:'#be2832'}
+  ];
+  function urgency(o){
+    const ratio=o?.redeemed?1:Math.max(0,Math.min(1,left(o)/duration(o)));
+    let hi=COLOR_STOPS[0],lo=COLOR_STOPS[COLOR_STOPS.length-1],t=0;
+    for(let i=0;i<COLOR_STOPS.length-1;i++){
+      if(ratio<=COLOR_STOPS[i].p&&ratio>=COLOR_STOPS[i+1].p){hi=COLOR_STOPS[i];lo=COLOR_STOPS[i+1];t=(hi.p-ratio)/(hi.p-lo.p);break}
+    }
+    const a=mixHex(hi.a,lo.a,t),b=mixHex(hi.b,lo.b,t);
+    return {ratio,gradient:`linear-gradient(135deg,${a} 0%,${b} 100%)`,shadow:`0 8px 20px -13px ${a}`};
   }
-  function prices(o){const c=o?.claim||{};return c.regular_price_pen==null?{old:'Según evaluación médica',now:'10% menos sobre el valor final evaluado'}:{old:money(c.regular_price_pen),now:money(c.discounted_price_pen)}}
+  function timeText(o){
+    if(o?.redeemed)return 'APLICADO';
+    const s=Math.ceil(left(o)/1000);if(s<=0)return 'VENCIDO';
+    return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  }
 
   async function call(body,keepalive=false){
     const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json','apikey':KEY},body:JSON.stringify(body),keepalive});
@@ -69,8 +93,7 @@
         </div>
       </div>`);
 
-    if(!$('#offer10Strip'))$('#booking .booking-inner')?.insertAdjacentHTML('afterbegin','<div id="offer10Strip"><div class="offer10-strip-copy"><b></b><small></small></div><div class="offer10-strip-time"></div></div>');
-
+    document.querySelector('#offer10Strip')?.remove();
     $('#offer10Accept')?.addEventListener('click',()=>accept(true));
     $('#offer10Decline')?.addEventListener('click',showDeclineConfirm);
     $('#offer10Close')?.addEventListener('click',showDeclineConfirm);
@@ -93,37 +116,47 @@
   function showDeclineConfirm(){const el=$('#offer10ConfirmOverlay');if(!el)return;el.classList.add('show');el.setAttribute('aria-hidden','false');setTimeout(()=>$('#offer10ConfirmApply')?.focus(),20)}
 
   function show(o){
-    const p=prices(o);
+    const p=prices(o),u=urgency(o);
     $('#offer10Service').textContent=o.claim.service_name;
     $('#offer10Old').textContent=p.old;
     $('#offer10New').textContent=p.now;
     $('#offer10Accept').disabled=left(o)<=0;
-    $('#offer10Overlay').classList.add('show');
-    $('#offer10Overlay').setAttribute('aria-hidden','false');
-    startTick();
-    setTimeout(()=>$('#offer10Accept')?.focus(),30);
-    try{trackEvent('offer10_view')}catch{}
+    const fill=$('#offer10ProgressFill');if(fill){fill.style.background=u.gradient;fill.style.boxShadow=u.shadow}
+    $('#offer10Overlay').classList.add('show');$('#offer10Overlay').setAttribute('aria-hidden','false');
+    startTick();setTimeout(()=>$('#offer10Accept')?.focus(),30);try{trackEvent('offer10_view')}catch{}
   }
 
-  function renderStrip(){
-    const strip=$('#offer10Strip'),o=read();
-    if(!strip||!o?.accepted||o.claim?.service_code!==state.service?.id){strip?.classList.remove('show');return}
-    const p=prices(o);
-    strip.querySelector('b').textContent=`10% aplicado · ${o.claim.service_name}`;
-    strip.querySelector('small').textContent=o.claim.regular_price_pen==null?p.now:`${p.old} → ${p.now}`;
-    strip.classList.add('show');
+  function renderOfferInBanner(){
+    const banner=$('#v252SelectedServiceBanner');if(!banner)return;
+    const copy=banner.querySelector('.v252-selected-copy');if(!copy)return;
+    copy.querySelector('.offer10-inline-offer')?.remove();
+    const o=read();if(!sameService(o))return;
+    const ms=left(o),showExpired=o.expired===true&&!o.redeemed;
+    if(!o.accepted&&!o.redeemed&&!showExpired)return;
+    const p=prices(o),u=urgency(o),fixed=o.claim.regular_price_pen!=null;
+    const line=document.createElement('div');line.className='offer10-inline-offer'+(showExpired?' offer10-inline-expired':'');
+    line.style.background=showExpired?'linear-gradient(135deg,#861b27,#c7383d)':u.gradient;
+    line.style.boxShadow=showExpired?'0 8px 20px -13px #861b27':u.shadow;
+    line.innerHTML=`<b class="offer10-inline-badge">${o.redeemed?'✓ 10% APLICADO':'10% OFERTA'}</b>${fixed?`<em class="offer10-inline-price">${esc(p.old)} → ${esc(p.now)}</em>`:`<em class="offer10-inline-price">10% sobre valor evaluado</em>`}<time class="offer10-inline-time">${showExpired?'VENCIDO':timeText(o)}</time>`;
+    copy.appendChild(line);
+  }
+
+  function clearExpiredSummary(){
+    const box=$('#summary');if(!box)return;
+    const o=read();if(usable(o))return;
+    box.querySelectorAll('[data-offer10-summary]').forEach(x=>x.remove());
   }
 
   function updateTick(){
     const o=read();if(!o)return;
-    const ms=o.redeemed?0:left(o),s=Math.ceil(ms/1000),mm=String(Math.floor(s/60)).padStart(2,'0'),ss=String(s%60).padStart(2,'0');
-    const txt=o.redeemed?'APLICADO A TU RESERVA':ms>0?`${mm}:${ss}`:'BENEFICIO VENCIDO';
-    if($('#offer10Timer'))$('#offer10Timer').textContent=txt;
+    const ms=o.redeemed?0:left(o),pct=o.redeemed?100:Math.max(0,Math.min(100,(ms/duration(o))*100)),u=urgency(o);
+    if(ms<=0&&!o.redeemed&&o.accepted){o.accepted=false;o.expired=true;save(o)}
+    const timer=$('#offer10Timer');if(timer)timer.textContent=timeText(o);
     const fill=$('#offer10ProgressFill'),progress=$('.offer10-progress');
-    if(fill&&progress){const pct=o.redeemed?100:Math.max(0,Math.min(100,(ms/duration(o))*100));fill.style.width=`${pct}%`;progress.setAttribute('aria-valuenow',String(Math.round(pct)))}
-    const t=$('#offer10Strip .offer10-strip-time');if(t)t.textContent=o.redeemed?'✓ APLICADO':ms>0?`${mm}:${ss}`:'VENCIDO';
+    if(fill){fill.style.width=`${pct}%`;fill.style.background=u.gradient;fill.style.boxShadow=u.shadow}
+    if(progress)progress.setAttribute('aria-valuenow',String(Math.round(pct)));
     if(ms<=0&&!o.redeemed&&$('#offer10Accept'))$('#offer10Accept').disabled=true;
-    renderStrip();
+    renderOfferInBanner();clearExpiredSummary();
   }
   function startTick(){clearInterval(tickTimer);updateTick();tickTimer=setInterval(updateTick,500)}
 
@@ -134,39 +167,41 @@
     try{
       const d=await call({action:'issue',service_code:service.id});
       if(state.service?.id!==service.id||!$('#booking')?.classList.contains('open'))return;
-      const o={token:d.token,proof_url:d.proof_url,claim:d.claim,accepted:false,declined:false,redeemed:false};save(o);show(o);
+      const o={token:d.token,proof_url:d.proof_url,claim:d.claim,accepted:false,declined:false,redeemed:false,expired:false};save(o);show(o);
     }catch(e){console.warn('offer10',e.message)}
   }
   function schedule(service){if(!service?.id)return;clearTimeout(wait);const id=service.id;wait=setTimeout(()=>{if(state.service?.id===id&&$('#booking')?.classList.contains('open'))issue(state.service)},2000)}
-  function goCalendar(){hideConfirm();hideMain();try{go(2)}catch(e){console.warn('offer calendar',e)}}
+  function goCalendar(){hideConfirm();hideMain();try{go(2);setTimeout(renderOfferInBanner,0)}catch(e){console.warn('offer calendar',e)}}
   function accept(goNext=false){
     const o=read();if(!o||left(o)<=0)return;
-    o.accepted=true;o.declined=false;save(o);hideConfirm();hideMain();renderStrip();startTick();try{trackEvent('offer10_accepted')}catch{}
+    o.accepted=true;o.declined=false;o.expired=false;save(o);hideConfirm();hideMain();renderOfferInBanner();startTick();try{trackEvent('offer10_accepted')}catch{}
     if(goNext)goCalendar();
   }
   function decline(goNext=false){
-    const o=read();if(o){o.accepted=false;o.declined=true;save(o)}
-    hideConfirm();hideMain();renderStrip();try{trackEvent('offer10_declined')}catch{}
+    const o=read();if(o){o.accepted=false;o.declined=true;o.expired=false;save(o)}
+    hideConfirm();hideMain();renderOfferInBanner();try{trackEvent('offer10_declined')}catch{}
     if(goNext)goCalendar();
   }
 
   function enhanceSummary(){
-    const o=read(),box=$('#summary');if(!box||!o?.accepted||o.claim?.service_code!==state.service?.id)return;
-    const p=prices(o);if(box.querySelector('[data-offer10-summary]'))return;
-    box.insertAdjacentHTML('beforeend',`<div class="summary-row" data-offer10-summary><span class="summary-key">🎁 Beneficio</span><b>10% aplicado · ${esc(o.claim.regular_price_pen==null?p.now:p.old+' → '+p.now)}</b></div><div class="summary-row" data-offer10-summary><span class="summary-key">Tipo de cita</span><b>${esc(o.claim.appointment_type)}</b></div>`);
+    const box=$('#summary');if(!box)return;
+    box.querySelectorAll('[data-offer10-summary]').forEach(x=>x.remove());
+    const o=read();if(!usable(o))return;
+    const p=prices(o);
+    box.insertAdjacentHTML('beforeend',`<div class="summary-row" data-offer10-summary><span class="summary-key">🎁 Beneficio</span><b>${esc(o.claim.regular_price_pen==null?'10% aplicado':p.old+' → '+p.now)}</b></div><div class="summary-row" data-offer10-summary><span class="summary-key">Tipo de cita</span><b>${esc(o.claim.appointment_type)}</b></div>`);
   }
   function manageToken(){try{if(!state.manageUrl)return'';return new URL(state.manageUrl).searchParams.get('t')||''}catch{return''}}
   function redeem(o){
-    if(!o?.accepted||o.redeemed||left(o)<=0||o.claim?.service_code!==state.service?.id)return;
+    if(!o?.accepted||o.redeemed||left(o)<=0||!sameService(o))return;
     const mt=manageToken();if(!mt)return;
-    call({action:'redeem',token:o.token,manage_token:mt,booking_code:state.id},true).then(d=>{o.redeemed=true;o.claim=d.claim||o.claim;o.proof_url=d.proof_url||o.proof_url;save(o);updateTick()}).catch(e=>console.warn('offer redeem',e.message));
+    call({action:'redeem',token:o.token,manage_token:mt,booking_code:state.id},true).then(d=>{o.redeemed=true;o.accepted=true;o.expired=false;o.claim=d.claim||o.claim;o.proof_url=d.proof_url||o.proof_url;save(o);updateTick()}).catch(e=>console.warn('offer redeem',e.message));
   }
   function enhanceWa(){
     const done=$('#booking .step[data-step="5"].active'),a=$('#openWhatsApp');if(!done||!a?.href||!state.id||lastWa===state.id)return;
-    lastWa=state.id;const o=read();if(o?.accepted)redeem(o);
+    lastWa=state.id;const o=read(),hasBenefit=usable(o);if(hasBenefit&&!o.redeemed)redeem(o);
     try{
       const u=new URL(a.href);let text=u.searchParams.get('text')||'';
-      if(o?.accepted&&o.claim?.service_code===state.service?.id){const p=prices(o);text+=`\n\n🎁 *Beneficio: 10% de descuento*`;text+=o.claim.regular_price_pen==null?`\n💰 10% sobre el valor final determinado tras evaluación.`:`\n💰 Precio referencial: ${p.old} → *${p.now}*`;text+=`\n📌 Tipo de cita: ${o.claim.appointment_type}`;text+=`\n🔎 Verificar beneficio: ${o.proof_url}`}
+      if(hasBenefit){const p=prices(o);text+=`\n\n🎁 *Beneficio: 10% de descuento*`;text+=o.claim.regular_price_pen==null?`\n💰 10% sobre el valor final determinado tras evaluación.`:`\n💰 Precio referencial: ${p.old} → *${p.now}*`;text+=`\n📌 Tipo de cita: ${o.claim.appointment_type}`;text+=`\n🔎 Verificar beneficio: ${o.proof_url}`}
       text+=`\n\n📍 Dirección: ${ADDRESS}\n🗺️ Google Maps: ${MAP}`;u.searchParams.set('text',text);a.href=u.toString();state.url=a.href;queueMicrotask(()=>location.replace(a.href));
     }catch(e){console.warn('wa enhance',e)}
     try{const k=`olanoMetaSchedule:${state.id}`;if(typeof fbq==='function'&&sessionStorage.getItem(k)!=='1'){fbq('track','Schedule');sessionStorage.setItem(k,'1')}}catch{}
@@ -175,8 +210,8 @@
   mount();
   document.addEventListener('click',e=>{if(e.target.closest('[data-v238-service],[data-svc]'))setTimeout(()=>state.service&&schedule(state.service),0)},true);
   const ob=openBooking;openBooking=function(){const r=ob.apply(this,arguments);setTimeout(()=>state.service&&schedule(state.service),120);return r};
-  const gb=go;go=function(){const r=gb.apply(this,arguments);renderStrip();if(Number(arguments[0])===4)setTimeout(enhanceSummary,0);return r};
-  new MutationObserver(enhanceWa).observe($('#booking'),{subtree:true,attributes:true,attributeFilter:['class']});
+  const gb=go;go=function(){const r=gb.apply(this,arguments);setTimeout(renderOfferInBanner,0);if(Number(arguments[0])===4)setTimeout(enhanceSummary,0);return r};
+  new MutationObserver(()=>{enhanceWa();renderOfferInBanner()}).observe($('#booking'),{subtree:true,attributes:true,attributeFilter:['class']});
   startTick();
   if($('#booking')?.classList.contains('open')&&state.service)schedule(state.service);
 })();
