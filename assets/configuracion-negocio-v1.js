@@ -1,11 +1,11 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.2/+esm';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SUPABASE_URL = 'https://xnlzsgulskqyecfgzhwa.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_s9YdJaMe_ll4QehPkADlKQ_KkuvWt32';
 const BUSINESS_SLUG = 'dr-olano';
 const PUBLIC_CONFIG_URL = SUPABASE_URL + '/functions/v1/dr-olano-site-config';
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
 });
 
 const $ = (id) => document.getElementById(id);
