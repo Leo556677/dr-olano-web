@@ -475,8 +475,8 @@ async function deleteAvailabilityBlock(id) {
 }
 
 function categoryIconHtml(c) {
-  const uri = svgDataUri(c.icon_svg);
-  return uri ? `<img src="${attr(uri)}" alt="">` : '<span>SVG</span>';
+  const checked = safeSvg(c.icon_svg);
+  return checked.ok && checked.value ? checked.value : '<span>SVG</span>';
 }
 function renderCategories() {
   const box = $('categoryList');
@@ -668,9 +668,10 @@ function openCategory(id = '') {
   categorySlugTouched=Boolean(c); $('categoryForm').hidden=false; $('categoryFormEmpty').hidden=true; updateCategoryPreview(); $('categoryName').focus();
 }
 function updateCategoryPreview() {
-  const box=$('categoryIconPreview'), uri=svgDataUri($('categorySvg').value);
-  box.innerHTML = uri ? `<img src="${attr(uri)}" alt="Vista previa del icono">` : 'SVG';
-  box.className = 'icon-preview' + (uri ? '' : ' empty');
+  const box=$('categoryIconPreview'), checked=safeSvg($('categorySvg').value);
+  const markup=checked.ok ? checked.value : null;
+  box.innerHTML = markup || 'SVG';
+  box.className = 'icon-preview' + (markup ? '' : ' empty');
 }
 function renderWeekdayChecks(selected) {
   const set = new Set(Array.isArray(selected) ? selected.map(Number) : WEEKDAYS.map((d)=>d.value));
