@@ -15,7 +15,7 @@ permalink: /configuracion-negocio/
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260919-4">
+  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260919-5">
 </head>
 <body>
   <div id="authGate" class="gate">
@@ -63,7 +63,8 @@ permalink: /configuracion-negocio/
       </div>
 
       <nav class="tabs" aria-label="Configuración del negocio">
-        <button class="tab active" data-tab="agenda" type="button">Agenda</button>
+        <button class="tab active" data-tab="agenda" type="button">Agenda general</button>
+        <button class="tab" data-tab="disponibilidad" type="button">Disponibilidad</button>
         <button class="tab" data-tab="categorias" type="button">Categorías</button>
         <button class="tab" data-tab="servicios" type="button">Servicios</button>
         <button class="tab" data-tab="promociones" type="button">Promociones</button>
@@ -156,6 +157,73 @@ permalink: /configuracion-negocio/
           </form>
           <div id="scheduleBoard" class="schedule-board"></div>
         </article>
+      </section>
+
+      <section class="tab-panel" data-panel="disponibilidad">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">HORARIOS POR ÁREA O SERVICIO</div>
+            <h2>Disponibilidad específica</h2>
+            <p>Usa esta sección cuando una categoría o un servicio tenga días, horas o intervalos distintos a la agenda general.</p>
+          </div>
+          <button id="newAvailabilityBtn" class="button primary write-control" type="button">+ Nueva regla</button>
+        </div>
+
+        <div class="grid availability-layout">
+          <article class="panel card sticky-card">
+            <form id="availabilityConfigForm" class="form-grid" hidden>
+              <input id="availabilityConfigId" type="hidden">
+              <label><span>Aplicar a</span><select id="availabilityScope">
+                <option value="category">Categoría</option>
+                <option value="service">Servicio</option>
+              </select></label>
+              <label id="availabilityCategoryWrap"><span>Categoría</span><select id="availabilityCategory"></select></label>
+              <label id="availabilityServiceWrap" hidden><span>Servicio</span><select id="availabilityService"></select></label>
+              <label><span>Intervalo entre horarios</span><div class="input-suffix"><input id="availabilityInterval" type="number" min="5" max="240" step="5" placeholder="Ej. 30"><em>min</em></div><small class="help">Si lo dejas vacío usa el intervalo general.</small></label>
+              <label><span>Válido desde</span><input id="availabilityFrom" type="date"></label>
+              <label><span>Válido hasta</span><input id="availabilityTo" type="date"></label>
+              <label class="toggle-line full"><input id="availabilityReplace" type="checkbox" checked><span>Usar solo estos horarios durante su vigencia</span></label>
+              <label class="toggle-line full"><input id="availabilityActive" type="checkbox" checked><span>Regla activa</span></label>
+              <div class="form-actions full">
+                <button class="button primary write-control" type="submit">Guardar regla</button>
+                <button id="cancelAvailabilityBtn" class="button ghost" type="button">Cancelar</button>
+              </div>
+            </form>
+            <div id="availabilityFormEmpty" class="empty-state">Crea una regla para una categoría o servicio, o selecciona una existente para editarla.</div>
+          </article>
+
+          <div>
+            <div id="availabilityConfigList" class="cards"></div>
+
+            <article id="availabilityBlocksCard" class="panel card section-gap" hidden>
+              <div class="card-head">
+                <div><span class="step">2</span><h3 id="availabilityBlocksTitle">Bloques de horario</h3></div>
+                <button id="newAvailabilityBlockBtn" class="button mini write-control" type="button">+ Agregar bloque</button>
+              </div>
+              <p class="muted">Puedes combinar bloques semanales y fechas exactas. Una fecha exacta tiene prioridad sobre el horario semanal de ese día.</p>
+
+              <form id="availabilityBlockForm" class="form-grid" hidden>
+                <input id="availabilityBlockId" type="hidden">
+                <label><span>Tipo</span><select id="availabilityBlockType">
+                  <option value="weekly">Semanal</option>
+                  <option value="date">Fecha específica</option>
+                </select></label>
+                <label id="availabilityDateWrap" hidden><span>Fecha</span><input id="availabilityDate" type="date"></label>
+                <fieldset id="availabilityWeekdaysWrap" class="full">
+                  <legend>Días</legend>
+                  <div id="availabilityWeekdays" class="weekday-checks"></div>
+                </fieldset>
+                <label><span>Desde</span><input id="availabilityStart" type="time" required></label>
+                <label><span>Hasta</span><input id="availabilityEnd" type="time" required></label>
+                <div class="form-actions full">
+                  <button class="button primary write-control" type="submit">Guardar bloque</button>
+                  <button id="cancelAvailabilityBlockBtn" class="button ghost" type="button">Cancelar</button>
+                </div>
+              </form>
+              <div id="availabilityBlockList" class="stack"></div>
+            </article>
+          </div>
+        </div>
       </section>
 
       <section class="tab-panel" data-panel="categorias">
@@ -388,6 +456,6 @@ permalink: /configuracion-negocio/
     </main>
   </div>
 
-  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260919-4"></script>
+  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260919-5"></script>
 </body>
 </html>
