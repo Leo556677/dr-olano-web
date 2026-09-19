@@ -531,11 +531,11 @@ function renderServices() {
         ? s.dias_semana_disponibles.map(dayName).join(', ') : 'Todos los días del horario';
       return `<article class="item-card service-card ${s.visible_web ? '' : 'hidden-card'}">
         <div class="item-top"><div><h3>${esc(s.nombre)}</h3><p>${esc(c?.nombre || s.descripcion || 'Sin categoría')}</p></div>
-        <span class="pill ${s.activo && s.visible_web ? '' : 'off'}">${s.activo ? (s.visible_web ? 'Visible' : 'Oculto') : 'Inactivo'}</span></div>
+        <span class="pill ${s.activo && s.visible_web ? '' : 'off'}">${!s.activo ? 'Inactivo' : (s.visible_web ? 'Publicado' : 'Borrador')}</span></div>
         <div class="meta-row">
           <span class="meta price">${s.precio_desde && s.precio_pen != null ? 'Desde ' : ''}${esc(money(s.precio_pen))}</span>
-          <span class="meta">${s.duracion_min ? Number(s.duracion_min) + ' min' : 'Duración no publicada'}</span>
-          <span class="meta">${esc(r?.nombre || 'Sin recurso asignado')}</span>
+          <span class="meta">${s.duracion_min ? Number(s.duracion_min) + ' min' : 'Duración por definir'}</span>
+          <span class="meta">${esc(r?.nombre ? 'Agenda: '+r.nombre : 'Agenda pendiente')}</span>
         </div>
         <p>${esc(s.descripcion_web || days)}</p>
         <div class="row-actions"><button class="button mini write-control" type="button" data-service-edit="${attr(s.id)}">Editar</button></div>
@@ -759,16 +759,20 @@ async function saveCategory(e) {
 async function saveService(e) {
   e.preventDefault(); canWriteOrThrow();
   const id=$('serviceId').value, nombre=$('serviceName').value.trim(), categoria_id=$('serviceCategory').value, recurso_id=$('serviceResource').value;
+  const visible=$('serviceVisible').checked;
   const weekdays=[...$('serviceWeekdays').querySelectorAll('input:checked')].map((x)=>Number(x.value));
   if(!nombre||!categoria_id) throw new Error('Nombre y categoría son obligatorios.');
-  if(!recurso_id) throw new Error('Asigna un recurso de agenda para este servicio.');
-  if($('serviceVisible').checked && weekdays.length===0) throw new Error('Elige al menos un día disponible para un servicio visible.');
-  const resource=resourceById(recurso_id); if(!resource?.activo) throw new Error('El recurso seleccionado debe estar activo.');
+  if(visible && !recurso_id) throw new Error('Para publicarlo y permitir reservas, selecciona una agenda. Si todavía no la conoces, desactiva “Publicar en web y reservas” y guárdalo como borrador.');
+  if(visible && weekdays.length===0) throw new Error('Para publicarlo, elige al menos un día disponible.');
+  if(recurso_id){
+    const resource=resourceById(recurso_id);
+    if(!resource?.activo) throw new Error('La agenda seleccionada debe estar activa.');
+  }
   const payload={
     negocio_id:state.business.id,nombre,categoria_id,descripcion_web:$('serviceDescription').value.trim()||null,
     precio_pen:numberOrNull($('servicePricePen').value),precio_desde:$('servicePriceFrom').checked,duracion_min:numberOrNull($('serviceDuration').value),
-    visible_web:$('serviceVisible').checked,activo:$('serviceActive').checked,orden_web:intOr($('serviceOrder').value,0),
-    dias_semana_disponibles:weekdays
+    visible_web:visible,activo:$('serviceActive').checked,orden_web:intOr($('serviceOrder').value,0),
+    dias_semana_disponibles:weekdays.length ? weekdays : null
   };
   let serviceId=id;
   if(id){
@@ -778,14 +782,20 @@ async function saveService(e) {
     const {data,error}=await sb.from('servicios').insert({...payload,codigo_web:code,codigo_externo:code,requiere_consulta_previa:false}).select('id').single();
     if(error) throw error; serviceId=data.id;
   }
-  const {error:linkErr}=await sb.from('servicios_recursos').upsert(
-    {negocio_id:state.business.id,servicio_id:serviceId,recurso_id},
-    {onConflict:'negocio_id,servicio_id,recurso_id'}
-  ); if(linkErr) throw linkErr;
-  const {error:delErr}=await sb.from('servicios_recursos').delete()
-    .eq('negocio_id',state.business.id).eq('servicio_id',serviceId).neq('recurso_id',recurso_id);
-  if(delErr) throw delErr;
-  resetServiceForm(); await afterWrite('Servicio y asignación guardados.');
+  if(recurso_id){
+    const {error:linkErr}=await sb.from('servicios_recursos').upsert(
+      {negocio_id:state.business.id,servicio_id:serviceId,recurso_id},
+      {onConflict:'negocio_id,servicio_id,recurso_id'}
+    ); if(linkErr) throw linkErr;
+    const {error:delErr}=await sb.from('servicios_recursos').delete()
+      .eq('negocio_id',state.business.id).eq('servicio_id',serviceId).neq('recurso_id',recurso_id);
+    if(delErr) throw delErr;
+  } else {
+    const {error:delErr}=await sb.from('servicios_recursos').delete()
+      .eq('negocio_id',state.business.id).eq('servicio_id',serviceId);
+    if(delErr) throw delErr;
+  }
+  resetServiceForm(); await afterWrite(visible ? 'Servicio publicado y guardado.' : 'Servicio guardado como borrador. Puedes completar su agenda después.');
 }
 async function savePromotion(e) {
   e.preventDefault(); canWriteOrThrow();
