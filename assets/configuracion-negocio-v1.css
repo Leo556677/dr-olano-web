@@ -54,3 +54,12 @@ fieldset{border:1px solid var(--line);border-radius:12px;padding:12px}fieldset l
 #availabilityBlocksCard{scroll-margin-top:100px}
 #availabilityBlockForm{padding:14px;border:1px dashed var(--line);border-radius:14px;background:#fafafa;margin-bottom:14px}
 @media(max-width:850px){.availability-layout{grid-template-columns:1fr}}
+
+/* Mobile admin clarity + safe inline category icons */
+.icon-preview svg{width:34px;height:34px;display:block;color:#0b2e4f}
+.category-card .cat-icon svg{width:29px;height:29px;display:block;color:#0b2e4f}
+@media(max-width:560px){
+  .tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;overflow:visible;padding:0}
+  .tab{white-space:normal;min-height:48px;padding:10px 8px;text-align:center}
+  .tabs .tab:last-child:nth-child(odd){grid-column:1/-1}
+}
