@@ -282,10 +282,12 @@ function availabilityReadable(cfg) {
   if (dated.length) {
     const dates=dated.map(x=>x.fecha).filter(Boolean).sort();
     const period=dates.length ? (formatShortDate(dates[0])+(dates.length>1?' – '+formatShortDate(dates[dates.length-1]):'')) : '';
+    const outside=dated.filter(x=>(cfg.vigente_desde&&x.fecha<cfg.vigente_desde)||(cfg.vigente_hasta&&x.fecha>cfg.vigente_hasta));
     return {
       main: dated.length+' fecha'+(dated.length===1?'':'s')+(period?' · '+period:''),
       detail:'Horarios puntuales',
-      count: dated.length
+      count: dated.length,
+      warning: outside.length ? outside.length+' fecha'+(outside.length===1?' está':'s están')+' fuera del periodo configurado' : ''
     };
   }
   if (weekly.length) {
@@ -315,6 +317,7 @@ function renderAvailability() {
         '<div class="item-top"><div><h3>'+esc(target)+'</h3><p>'+esc(info.main)+'</p></div>'+
         '<span class="pill '+(cfg.activo?'':'off')+'">'+(cfg.activo?'En uso':'Pausado')+'</span></div>'+
         '<div class="availability-readable">'+esc(info.detail)+'</div>'+
+        (info.warning?'<div class="notice warning availability-warning">⚠ '+esc(info.warning)+'. Abre la regla para corregirla.</div>':'')+
         '<div class="meta-row"><span class="meta">'+esc(interval)+'</span>'+
         '<span class="meta">'+(cfg.alcance==='service'?'Solo este servicio':'Toda la categoría')+'</span>'+
         (cfg.vigente_desde||cfg.vigente_hasta?'<span class="meta">Periodo limitado</span>':'<span class="meta">Sin fecha límite</span>')+
@@ -487,6 +490,8 @@ async function saveAvailabilityBlock(e) {
   if(tipo==='date'){
     const fecha=$('availabilityDate').value;
     if(!fecha) throw new Error('Selecciona la fecha.');
+    if(cfg.vigente_desde && fecha<cfg.vigente_desde) throw new Error('Esa fecha está antes del periodo de esta regla.');
+    if(cfg.vigente_hasta && fecha>cfg.vigente_hasta) throw new Error('Esa fecha está después del periodo de esta regla.');
     const payload={negocio_id:state.business.id,config_id:configId,tipo:'date',dia_semana:null,fecha,hora_inicio:start,hora_fin:end,activo:true,updated_at:new Date().toISOString()};
     const q=id ? sb.from('agenda_disponibilidad_bloques').update(payload).eq('id',id).eq('negocio_id',state.business.id) : sb.from('agenda_disponibilidad_bloques').insert(payload);
     const {error}=await q; if(error) throw error;
