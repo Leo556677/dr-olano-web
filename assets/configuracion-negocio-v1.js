@@ -31,6 +31,7 @@ const state = {
   services: [],
   links: [],
   promotions: [],
+  branding: null,
   publicConfig: null
 };
 
@@ -143,16 +144,17 @@ async function loadAll({ publicCheck = false } = {}) {
   if (!state.business) return;
   setSync('Sincronizando…', null);
   const bid = state.business.id;
-  const [configQ, resourcesQ, schedulesQ, categoriesQ, servicesQ, linksQ, promotionsQ] = await Promise.all([
+  const [configQ, resourcesQ, schedulesQ, categoriesQ, servicesQ, linksQ, promotionsQ, brandingQ] = await Promise.all([
     sb.from('configuracion_agenda').select('*').eq('negocio_id', bid).maybeSingle(),
     sb.from('recursos_agenda').select('*').eq('negocio_id', bid).order('created_at'),
     sb.from('horarios_agenda').select('*').eq('negocio_id', bid).order('dia_semana').order('hora_inicio'),
     sb.from('servicio_categorias').select('*').eq('negocio_id', bid).order('orden').order('nombre'),
     sb.from('servicios').select('id,negocio_id,nombre,descripcion,descripcion_web,duracion_min,precio_pen,precio_usd,activo,codigo_web,codigo_externo,dias_semana_disponibles,requiere_consulta_previa,modalidades_consulta,precio_consulta_pen,calendar_color_hex,categoria_id,visible_web,orden_web,precio_desde,created_at,updated_at').eq('negocio_id', bid).order('orden_web').order('nombre'),
     sb.from('servicios_recursos').select('*').eq('negocio_id', bid),
-    sb.from('web_promociones').select('*').eq('negocio_id', bid).order('created_at', { ascending:false })
+    sb.from('web_promociones').select('*').eq('negocio_id', bid).order('created_at', { ascending:false }),
+    sb.from('web_branding').select('*').eq('negocio_id', bid).maybeSingle()
   ]);
-  for (const q of [configQ, resourcesQ, schedulesQ, categoriesQ, servicesQ, linksQ, promotionsQ]) {
+  for (const q of [configQ, resourcesQ, schedulesQ, categoriesQ, servicesQ, linksQ, promotionsQ, brandingQ]) {
     if (q.error) throw q.error;
   }
   state.config = configQ.data || null;
@@ -162,6 +164,7 @@ async function loadAll({ publicCheck = false } = {}) {
   state.services = servicesQ.data || [];
   state.links = linksQ.data || [];
   state.promotions = promotionsQ.data || [];
+  state.branding = brandingQ.data || null;
   renderAll();
   setSync('Datos sincronizados', true);
   if (publicCheck) await loadPublicConfig();
@@ -176,6 +179,7 @@ function renderAll() {
   fillResourceSelects();
   renderServices();
   renderPromotions();
+  renderBranding();
   setWriteMode();
 }
 
@@ -316,6 +320,73 @@ function renderPromotions() {
   box.querySelectorAll('[data-promotion-edit]').forEach((b) => b.addEventListener('click', () => openPromotion(b.dataset.promotionEdit)));
 }
 
+
+function renderBranding() {
+  const b = state.branding || {};
+  $('brandPrimary').value = b.color_primary || '#0b2e4f';
+  $('brandSecondary').value = b.color_secondary || '#1aa79d';
+  $('brandAccent').value = b.color_accent || '#d7ab33';
+  $('brandBackground').value = b.color_background || '#f4f7f8';
+  const preview = $('brandLogoPreview');
+  const live = $('brandPreviewLogo');
+  if (b.logo_url) {
+    preview.innerHTML = '<img src="' + attr(b.logo_url) + '" alt="Logo actual">';
+    live.innerHTML = '<img src="' + attr(b.logo_url) + '" alt="">';
+  } else {
+    preview.textContent = 'Sin logo personalizado';
+    live.textContent = 'DO';
+  }
+  updateBrandPreview();
+}
+function updateBrandPreview() {
+  const box = $('brandPreview');
+  if (!box) return;
+  const primary = $('brandPrimary').value || '#0b2e4f';
+  const secondary = $('brandSecondary').value || '#1aa79d';
+  const accent = $('brandAccent').value || '#d7ab33';
+  const background = $('brandBackground').value || '#f4f7f8';
+  box.style.setProperty('--preview-primary', primary);
+  box.style.setProperty('--preview-secondary', secondary);
+  box.style.setProperty('--preview-accent', accent);
+  box.style.setProperty('--preview-bg', background);
+}
+async function saveBranding(e) {
+  e.preventDefault();
+  canWriteOrThrow();
+  let logoUrl = state.branding?.logo_url || null;
+  let logoPath = state.branding?.logo_path || null;
+  const file = $('brandLogoFile').files?.[0] || null;
+  if (file) {
+    if (file.size > 3145728) throw new Error('El logo supera el máximo de 3 MB.');
+    if (!['image/png','image/jpeg','image/webp'].includes(file.type)) throw new Error('Usa un logo PNG, JPG o WebP.');
+    const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
+    const newPath = 'dr-olano/logo-' + Date.now() + '.' + ext;
+    const { error: uploadErr } = await sb.storage.from('business-branding').upload(newPath, file, { cacheControl:'3600', upsert:false });
+    if (uploadErr) throw uploadErr;
+    const { data: publicData } = sb.storage.from('business-branding').getPublicUrl(newPath);
+    logoUrl = publicData?.publicUrl || null;
+    if (!logoUrl) throw new Error('No se pudo obtener la URL pública del logo.');
+    const oldPath = logoPath;
+    logoPath = newPath;
+    if (oldPath && oldPath !== newPath) {
+      sb.storage.from('business-branding').remove([oldPath]).catch(() => {});
+    }
+  }
+  const payload = {
+    negocio_id: state.business.id,
+    logo_url: logoUrl,
+    logo_path: logoPath,
+    color_primary: $('brandPrimary').value,
+    color_secondary: $('brandSecondary').value,
+    color_accent: $('brandAccent').value,
+    color_background: $('brandBackground').value,
+    updated_at: new Date().toISOString()
+  };
+  const { error } = await sb.from('web_branding').upsert(payload, { onConflict:'negocio_id' });
+  if (error) throw error;
+  $('brandLogoFile').value = '';
+  await afterWrite('Marca guardada. La web pública ya puede leer el nuevo logo y colores.');
+}
 function resetResourceForm() {
   $('resourceForm').reset(); $('resourceId').value = ''; $('resourceActive').checked = true; $('resourceForm').hidden = true;
 }
@@ -534,6 +605,20 @@ function bindEvents() {
   $('serviceSearch').addEventListener('input',renderServices); $('serviceCategoryFilter').addEventListener('change',renderServices);
   $('newPromotionBtn').addEventListener('click',()=>openPromotion()); $('cancelPromotionBtn').addEventListener('click',resetPromotionForm);
   $('promotionForm').addEventListener('submit',(e)=>guard(()=>savePromotion(e)));
+  $('brandingForm').addEventListener('submit',(e)=>guard(()=>saveBranding(e)));
+  ['brandPrimary','brandSecondary','brandAccent','brandBackground'].forEach((id)=>$(id).addEventListener('input',updateBrandPreview));
+  $('brandLogoFile').addEventListener('change',()=>{
+    const file=$('brandLogoFile').files?.[0];
+    if(!file)return renderBranding();
+    const url=URL.createObjectURL(file);
+    $('brandLogoPreview').innerHTML='<img src="'+attr(url)+'" alt="Vista previa">';
+    $('brandPreviewLogo').innerHTML='<img src="'+attr(url)+'" alt="">';
+  });
+  $('brandDefaultsBtn').addEventListener('click',()=>{
+    $('brandPrimary').value='#0b2e4f'; $('brandSecondary').value='#1aa79d';
+    $('brandAccent').value='#d7ab33'; $('brandBackground').value='#f4f7f8';
+    updateBrandPreview();
+  });
   $('promotionScope').addEventListener('change',()=>{updatePromotionScope();updatePromotionPreview();});
   ['promotionTitle','promotionMessage','promotionCta','promotionDiscount','promotionCountdown'].forEach((id)=>$(id).addEventListener('input',updatePromotionPreview));
 }
