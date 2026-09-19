@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260919-6">
+  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260919-7">
 </head>
 <body>
   <div id="authGate" class="gate">
@@ -60,13 +60,13 @@
       </div>
 
       <nav class="tabs" aria-label="Configuración del negocio">
-        <button class="tab active" data-tab="agenda" type="button">Agenda general</button>
-        <button class="tab" data-tab="disponibilidad" type="button">Disponibilidad</button>
+        <button class="tab active" data-tab="agenda" type="button">Horarios</button>
+        <button class="tab" data-tab="disponibilidad" type="button">Horarios especiales</button>
         <button class="tab" data-tab="categorias" type="button">Categorías</button>
         <button class="tab" data-tab="servicios" type="button">Servicios</button>
-        <button class="tab" data-tab="promociones" type="button">Promociones</button>
-        <button class="tab" data-tab="marca" type="button">Marca</button>
-        <button class="tab" data-tab="vista-publica" type="button">Vista pública</button>
+        <button class="tab" data-tab="promociones" type="button">Ofertas</button>
+        <button class="tab" data-tab="marca" type="button">Logo y colores</button>
+        <button class="tab" data-tab="vista-publica" type="button">Comprobar web</button>
       </nav>
 
       <div id="globalStatus" class="status" role="status" aria-live="polite"></div>
@@ -160,8 +160,8 @@
         <div class="section-head">
           <div>
             <div class="eyebrow">HORARIOS POR ÁREA O SERVICIO</div>
-            <h2>Disponibilidad específica</h2>
-            <p>Usa esta sección cuando una categoría o un servicio tenga días, horas o intervalos distintos a la agenda general.</p>
+            <h2>Horarios especiales</h2>
+            <p>Aquí defines excepciones fáciles: horarios propios de una categoría, un servicio o fechas concretas.</p>
           </div>
           <button id="newAvailabilityBtn" class="button primary write-control" type="button">+ Nueva regla</button>
         </div>
@@ -227,8 +227,8 @@
         <div class="section-head">
           <div>
             <div class="eyebrow">CATÁLOGO</div>
-            <h2>Categorías e iconos SVG</h2>
-            <p>Ordena los servicios como quieres presentarlos públicamente. El SVG se almacena como dato y se muestra de forma segura como imagen.</p>
+            <h2>Categorías</h2>
+            <p>Crea, ordena y activa las secciones que verá el paciente. Puedes elegir el icono sin escribir código.</p>
           </div>
           <button id="newCategoryBtn" class="button primary write-control" type="button">+ Nueva categoría</button>
         </div>
@@ -277,8 +277,8 @@
         <div class="section-head">
           <div>
             <div class="eyebrow">CATÁLOGO + RESERVAS</div>
-            <h2>Servicios, precios y asignación</h2>
-            <p>Un servicio visible aparece en la configuración pública; para generar horarios reservables debe tener un recurso asignado.</p>
+            <h2>Servicios</h2>
+            <p>Agrega o edita servicios, precio, categoría y agenda. Si todavía falta información, guárdalo como borrador.</p>
           </div>
           <button id="newServiceBtn" class="button primary write-control" type="button">+ Nuevo servicio</button>
         </div>
@@ -294,12 +294,12 @@
               <label class="toggle-line price-toggle"><input id="servicePriceFrom" type="checkbox"><span>Mostrar “desde”</span></label>
               <label><span>Duración</span><div class="input-suffix"><input id="serviceDuration" type="number" min="5" max="1440" step="5" placeholder="Opcional"><em>min</em></div></label>
               <label><span>Orden en web</span><input id="serviceOrder" type="number" min="-9999" max="9999" value="0"></label>
-              <label class="full"><span>Recurso de agenda</span><select id="serviceResource" required></select><small class="help">La reserva pública usará el horario del recurso seleccionado. Esta relación organiza disponibilidad; no define atribución clínica ni profesional ejecutor.</small></label>
+              <label class="full"><span>Agenda para este servicio</span><select id="serviceResource"></select><small class="help">Solo es obligatoria cuando publiques el servicio. Organiza disponibilidad y no define quién ejecuta clínicamente el procedimiento.</small></label>
               <fieldset class="full">
                 <legend>Días disponibles para este servicio</legend>
                 <div id="serviceWeekdays" class="weekday-checks"></div>
               </fieldset>
-              <label class="toggle-line"><input id="serviceVisible" type="checkbox" checked><span>Visible en web/reservas</span></label>
+              <label class="toggle-line"><input id="serviceVisible" type="checkbox" checked><span>Publicar en web y reservas</span></label>
               <label class="toggle-line"><input id="serviceActive" type="checkbox" checked><span>Servicio activo</span></label>
               <div class="form-actions full">
                 <button class="button primary write-control" type="submit">Guardar servicio</button>
@@ -381,8 +381,8 @@
         <div class="section-head">
           <div>
             <div class="eyebrow">IDENTIDAD VISUAL</div>
-            <h2>Logo y colores del negocio</h2>
-            <p>Cambia el logo y la paleta principal sin editar código. La web pública leerá esta configuración automáticamente.</p>
+            <h2>Logo y colores</h2>
+            <p>Sube el logo y elige los colores con controles visuales. Guardas y la web los recibe automáticamente.</p>
           </div>
         </div>
 
@@ -453,6 +453,6 @@
     </main>
   </div>
 
-  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260919-6"></script>
+  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260919-7"></script>
 </body>
 </html>
