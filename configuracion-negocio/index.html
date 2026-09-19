@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260919-7">
+  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260919-8">
 </head>
 <body>
   <div id="authGate" class="gate">
@@ -64,6 +64,7 @@
         <button class="tab" data-tab="disponibilidad" type="button">Horarios especiales</button>
         <button class="tab" data-tab="categorias" type="button">Categorías</button>
         <button class="tab" data-tab="servicios" type="button">Servicios</button>
+        <button class="tab" data-tab="contenido" type="button">Contenido web</button>
         <button class="tab" data-tab="promociones" type="button">Ofertas</button>
         <button class="tab" data-tab="marca" type="button">Logo y colores</button>
         <button class="tab" data-tab="vista-publica" type="button">Comprobar web</button>
@@ -170,19 +171,19 @@
           <article class="panel card sticky-card">
             <form id="availabilityConfigForm" class="form-grid" hidden>
               <input id="availabilityConfigId" type="hidden">
-              <label><span>Aplicar a</span><select id="availabilityScope">
+              <label><span>¿Qué quieres configurar?</span><select id="availabilityScope">
                 <option value="category">Categoría</option>
                 <option value="service">Servicio</option>
               </select></label>
-              <label id="availabilityCategoryWrap"><span>Categoría</span><select id="availabilityCategory"></select></label>
-              <label id="availabilityServiceWrap" hidden><span>Servicio</span><select id="availabilityService"></select></label>
-              <label><span>Intervalo entre horarios</span><div class="input-suffix"><input id="availabilityInterval" type="number" min="5" max="240" step="5" placeholder="Ej. 30"><em>min</em></div><small class="help">Si lo dejas vacío usa el intervalo general.</small></label>
-              <label><span>Válido desde</span><input id="availabilityFrom" type="date"></label>
-              <label><span>Válido hasta</span><input id="availabilityTo" type="date"></label>
-              <label class="toggle-line full"><input id="availabilityReplace" type="checkbox" checked><span>Usar solo estos horarios durante su vigencia</span></label>
-              <label class="toggle-line full"><input id="availabilityActive" type="checkbox" checked><span>Regla activa</span></label>
+              <label id="availabilityCategoryWrap"><span>Elige la categoría</span><select id="availabilityCategory"></select></label>
+              <label id="availabilityServiceWrap" hidden><span>Elige el servicio</span><select id="availabilityService"></select></label>
+              <label><span>Cada cuánto ofrecer una cita</span><div class="input-suffix"><input id="availabilityInterval" type="number" min="5" max="240" step="5" placeholder="Ej. 30"><em>min</em></div><small class="help">Ej.: 30 = 15:00, 15:30, 16:00… Si lo dejas vacío usa el intervalo general.</small></label>
+              <label><span>Desde qué fecha (opcional)</span><input id="availabilityFrom" type="date"></label>
+              <label><span>Hasta qué fecha (opcional)</span><input id="availabilityTo" type="date"></label>
+              <label class="toggle-line full"><input id="availabilityReplace" type="checkbox" checked><span>Mientras esta regla esté activa, usar estos horarios en lugar del horario general</span></label>
+              <label class="toggle-line full"><input id="availabilityActive" type="checkbox" checked><span>Aplicar este horario</span></label>
               <div class="form-actions full">
-                <button class="button primary write-control" type="submit">Guardar regla</button>
+                <button class="button primary write-control" type="submit">Guardar y definir horarios</button>
                 <button id="cancelAvailabilityBtn" class="button ghost" type="button">Cancelar</button>
               </div>
             </form>
@@ -201,19 +202,19 @@
 
               <form id="availabilityBlockForm" class="form-grid" hidden>
                 <input id="availabilityBlockId" type="hidden">
-                <label><span>Tipo</span><select id="availabilityBlockType">
+                <label><span>¿Este horario se repite?</span><select id="availabilityBlockType">
                   <option value="weekly">Semanal</option>
                   <option value="date">Fecha específica</option>
                 </select></label>
                 <label id="availabilityDateWrap" hidden><span>Fecha</span><input id="availabilityDate" type="date"></label>
                 <fieldset id="availabilityWeekdaysWrap" class="full">
-                  <legend>Días</legend>
+                  <legend>Días de atención</legend>
                   <div id="availabilityWeekdays" class="weekday-checks"></div>
                 </fieldset>
-                <label><span>Desde</span><input id="availabilityStart" type="time" required></label>
-                <label><span>Hasta</span><input id="availabilityEnd" type="time" required></label>
+                <label><span>Hora de inicio</span><input id="availabilityStart" type="time" required></label>
+                <label><span>Hora de cierre</span><input id="availabilityEnd" type="time" required></label>
                 <div class="form-actions full">
-                  <button class="button primary write-control" type="submit">Guardar bloque</button>
+                  <button class="button primary write-control" type="submit">Guardar horario</button>
                   <button id="cancelAvailabilityBlockBtn" class="button ghost" type="button">Cancelar</button>
                 </div>
               </form>
@@ -241,6 +242,13 @@
               <label><span>Slug</span><input id="categorySlug" maxlength="80" required placeholder="medicina-estetica"></label>
               <label><span>Orden</span><input id="categoryOrder" type="number" min="-9999" max="9999" value="0"></label>
               <label class="full"><span>Descripción pública</span><textarea id="categoryDescription" maxlength="500" rows="3" placeholder="Descripción breve opcional"></textarea></label>
+              <label class="full"><span>Imagen de la categoría</span>
+                <input id="categoryImageFile" class="write-control" type="file" accept="image/png,image/jpeg,image/webp">
+                <small class="help">Opcional. Se usa en las tarjetas visuales de la web. PNG, JPG o WebP, máximo 5 MB.</small>
+              </label>
+              <div class="full category-image-preview-wrap">
+                <div id="categoryImagePreview" class="category-image-preview">Sin imagen personalizada</div>
+              </div>
               <label class="full"><span>Icono</span><select id="categoryIconPreset">
                 <option value="">Elegir icono…</option>
                 <option value="sparkles">Brillos / estética</option>
@@ -318,6 +326,20 @@
             <div id="serviceList" class="cards service-cards"></div>
           </div>
         </div>
+      </section>
+
+      <section class="tab-panel" data-panel="contenido">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">TEXTOS E IMÁGENES</div>
+            <h2>Contenido de la web</h2>
+            <p>Edita únicamente contenido visual permitido. No modifica reservas, base de datos clínica ni lógica interna del sitio.</p>
+          </div>
+        </div>
+        <div class="notice neutral content-safety-note">
+          <strong>Seguro por diseño:</strong> aquí no se pega HTML ni código. Solo cambias textos e imágenes de zonas controladas; si un campo queda vacío, la web conserva su contenido actual.
+        </div>
+        <div id="contentEditorList" class="content-editor-list"></div>
       </section>
 
       <section class="tab-panel" data-panel="promociones">
@@ -419,17 +441,19 @@
               </div>
             </form>
           </article>
-          <article class="panel card">
-            <div class="card-head"><div><span class="step">✓</span><h3>Qué cambia automáticamente</h3></div></div>
-            <div class="brand-checklist">
-              <div>Logo del encabezado</div>
-              <div>Logo de carga y pie de página</div>
-              <div>Color principal de textos y navegación</div>
-              <div>Color secundario de botones y acciones</div>
-              <div>Color de acento</div>
-              <div>Fondo general de la web</div>
+          <article class="panel card brand-live-card">
+            <div class="card-head">
+              <div><span class="step">👁</span><h3>Vista previa en tiempo real</h3></div>
+              <div class="preview-device-switch" role="group" aria-label="Tamaño de vista previa">
+                <button class="button mini active" type="button" data-preview-device="desktop">PC</button>
+                <button class="button mini" type="button" data-preview-device="tablet">Tablet</button>
+                <button class="button mini" type="button" data-preview-device="mobile">Celular</button>
+              </div>
             </div>
-            <p class="muted">Los cambios se guardan en Supabase y la web los recibe desde la configuración pública. No necesitas volver a editar archivos.</p>
+            <p class="muted">Puedes navegar la web dentro de esta vista, abrir categorías y revisar cómo cambia antes de guardar.</p>
+            <div id="brandSitePreviewShell" class="site-preview-shell desktop">
+              <iframe id="brandSitePreview" title="Vista previa de doctorolano.pe" src="/?admin-preview=1"></iframe>
+            </div>
           </article>
         </div>
       </section>
@@ -453,6 +477,6 @@
     </main>
   </div>
 
-  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260919-7"></script>
+  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260919-8"></script>
 </body>
 </html>
