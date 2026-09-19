@@ -73,10 +73,12 @@
   function applyBranding(data){
     const b=data?.branding||{};
     const root=document.documentElement;
-    if(validHex(b.primary))root.style.setProperty('--navy',b.primary);
-    if(validHex(b.secondary))root.style.setProperty('--teal',b.secondary);
+    if(validHex(b.primary)){root.style.setProperty('--navy',b.primary);root.style.setProperty('--navy2',b.primary);}
+    if(validHex(b.secondary)){root.style.setProperty('--teal',b.secondary);root.style.setProperty('--teal2',b.secondary);}
     if(validHex(b.accent))root.style.setProperty('--gold',b.accent);
     if(validHex(b.background))root.style.setProperty('--bg',b.background);
+    const theme=document.querySelector('meta[name="theme-color"]');
+    if(theme&&validHex(b.primary))theme.setAttribute('content',b.primary);
     if(b.logo_url){
       document.querySelectorAll('img[src*="logo-isotipo"]').forEach(img=>{
         img.removeAttribute('data-optimized');
