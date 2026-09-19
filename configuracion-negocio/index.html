@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260919-8">
+  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260919-9">
 </head>
 <body>
   <div id="authGate" class="gate">
@@ -178,16 +178,25 @@
               <label id="availabilityCategoryWrap"><span>Elige la categoría</span><select id="availabilityCategory"></select></label>
               <label id="availabilityServiceWrap" hidden><span>Elige el servicio</span><select id="availabilityService"></select></label>
               <label><span>Cada cuánto ofrecer una cita</span><div class="input-suffix"><input id="availabilityInterval" type="number" min="5" max="240" step="5" placeholder="Ej. 30"><em>min</em></div><small class="help">Ej.: 30 = 15:00, 15:30, 16:00… Si lo dejas vacío usa el intervalo general.</small></label>
-              <label><span>Desde qué fecha (opcional)</span><input id="availabilityFrom" type="date"></label>
-              <label><span>Hasta qué fecha (opcional)</span><input id="availabilityTo" type="date"></label>
-              <label class="toggle-line full"><input id="availabilityReplace" type="checkbox" checked><span>Mientras esta regla esté activa, usar estos horarios en lugar del horario general</span></label>
+              <label class="full"><span>¿Por cuánto tiempo?</span><select id="availabilityPeriodMode">
+                <option value="always">Sin fecha límite</option>
+                <option value="range">Solo durante un periodo</option>
+              </select></label>
+              <div id="availabilityDateRange" class="full form-grid compact" hidden>
+                <label><span>Desde</span><input id="availabilityFrom" type="date"></label>
+                <label><span>Hasta</span><input id="availabilityTo" type="date"></label>
+              </div>
+              <details class="full advanced-details">
+                <summary>Opción avanzada</summary>
+                <label class="toggle-line"><input id="availabilityReplace" type="checkbox" checked><span>Usar estos horarios en lugar del horario general</span></label>
+              </details>
               <label class="toggle-line full"><input id="availabilityActive" type="checkbox" checked><span>Aplicar este horario</span></label>
               <div class="form-actions full">
                 <button class="button primary write-control" type="submit">Guardar y definir horarios</button>
                 <button id="cancelAvailabilityBtn" class="button ghost" type="button">Cancelar</button>
               </div>
             </form>
-            <div id="availabilityFormEmpty" class="empty-state">Crea una regla para una categoría o servicio, o selecciona una existente para editarla.</div>
+            <div id="availabilityFormEmpty" class="empty-state"><b>1. Elige qué quieres cambiar.</b><br>Categoría o servicio → intervalo → periodo. Después agregas los días y horas.</div>
           </article>
 
           <div>
@@ -198,13 +207,13 @@
                 <div><span class="step">2</span><h3 id="availabilityBlocksTitle">Bloques de horario</h3></div>
                 <button id="newAvailabilityBlockBtn" class="button mini write-control" type="button">+ Agregar bloque</button>
               </div>
-              <p class="muted">Puedes combinar bloques semanales y fechas exactas. Una fecha exacta tiene prioridad sobre el horario semanal de ese día.</p>
+              <p class="muted">Añade los días y horas que verá el paciente. Para fechas puntuales, elige “No, es una fecha puntual”.</p>
 
               <form id="availabilityBlockForm" class="form-grid" hidden>
                 <input id="availabilityBlockId" type="hidden">
                 <label><span>¿Este horario se repite?</span><select id="availabilityBlockType">
-                  <option value="weekly">Semanal</option>
-                  <option value="date">Fecha específica</option>
+                  <option value="weekly">Sí, todas las semanas</option>
+                  <option value="date">No, es una fecha puntual</option>
                 </select></label>
                 <label id="availabilityDateWrap" hidden><span>Fecha</span><input id="availabilityDate" type="date"></label>
                 <fieldset id="availabilityWeekdaysWrap" class="full">
@@ -477,6 +486,6 @@
     </main>
   </div>
 
-  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260919-8"></script>
+  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260919-9"></script>
 </body>
 </html>
