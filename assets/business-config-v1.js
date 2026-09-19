@@ -92,7 +92,7 @@
     const categories=(data.categories||[]).filter(c=>c?.slug&&c?.name&&usedCategoryIds.has(c.id));
     const mappedCategories=categories.map((c,i)=>({
       id:c.slug,label:c.name,tone:TONES[i%TONES.length],
-      description:c.description||'',icon_data_uri:c.icon_data_uri||null,
+      description:c.description||'',icon_svg:c.icon_svg||null,image_url:c.image_url||null,image_alt:c.image_alt||null,
       featured:c.featured===true,order:Number(c.order||0),source_id:c.id
     }));
     const mappedServices=services.map(s=>{
@@ -122,14 +122,14 @@
   }
 
   function categoryIcon(data,slug){
-    return (data.categories||[]).find(c=>c.slug===slug)?.icon_data_uri||'';
+    return (data.categories||[]).find(c=>c.slug===slug)?.icon_svg||'';
   }
   function decorateCatalog(data){
     document.querySelectorAll('[data-v238-category]').forEach(btn=>{
       const slug=btn.getAttribute('data-v238-category');
       const uri=categoryIcon(data,slug);
       const icon=btn.querySelector('.v238-rail-icon');
-      if(icon&&uri)icon.innerHTML='<img src="'+esc(uri)+'" alt="" aria-hidden="true">';
+      if(icon&&uri)icon.innerHTML=uri;
     });
     document.querySelectorAll('.v238-category-title').forEach(title=>{
       const panel=title.closest('.v238-category-panel');
@@ -140,7 +140,7 @@
       if(!slug&&typeof state!=='undefined')slug=state.service?.category||'';
       const uri=categoryIcon(data,slug);
       const icon=title.querySelector('.v238-category-title-icon');
-      if(icon&&uri)icon.innerHTML='<img src="'+esc(uri)+'" alt="" aria-hidden="true">';
+      if(icon&&uri)icon.innerHTML=uri;
     });
   }
   function wrapCatalogRenderer(data){
@@ -165,10 +165,10 @@
     if(head)head.innerHTML='<h2>Atención especializada</h2><p>Elige un área para ver sus servicios y agendar.</p>';
     grid.classList.add('v240-featured-grid');
     grid.innerHTML=featured.map((c,i)=>{
-      const photo=KNOWN_IMAGES[c.slug]||'';
+      const photo=c.image_url||KNOWN_IMAGES[c.slug]||'';
       let visual='';
-      if(photo)visual='<img src="'+esc(photo)+'" width="1280" height="720" loading="'+(i===0?'eager':'lazy')+'" decoding="async" alt="">';
-      else if(c.icon_data_uri)visual='<img class="olano-dynamic-category-icon" src="'+esc(c.icon_data_uri)+'" width="128" height="128" loading="lazy" decoding="async" alt="">';
+      if(photo)visual='<img src="'+esc(photo)+'" width="1280" height="720" loading="'+(i===0?'eager':'lazy')+'" decoding="async" alt="'+esc(c.image_alt||c.name||'')+'">';
+      else if(c.icon_svg)visual='<div class="olano-dynamic-category-icon" aria-hidden="true">'+c.icon_svg+'</div>';
       return '<article class="unit v240-unit" data-v240-category="'+esc(c.slug)+'">'+
         '<button type="button" class="v240-card-hit" aria-label="Ver servicios de '+esc(c.name)+'">'+
         '<div class="unit-media v240-media '+(photo?'':'dynamic-icon')+'">'+visual+'</div>'+
@@ -193,13 +193,61 @@
     });
   }
 
+  function contentSlot(data,key){
+    return (data.content||[]).find(x=>x.slot_key===key)||null;
+  }
+  function setText(el,value){
+    if(el&&value!=null&&String(value).trim()!=='')el.textContent=String(value);
+  }
+  function applyContent(data){
+    const hero=contentSlot(data,'home.hero');
+    if(hero){
+      setText(document.querySelector('.hero-copy .eyebrow'),hero.eyebrow);
+      setText(document.querySelector('.hero-copy h1'),hero.title);
+      setText(document.querySelector('.hero-copy .hero-focus'),hero.subtitle);
+      const heroBody=[...document.querySelectorAll('.hero-copy > p')].find(x=>!x.classList.contains('hero-focus'));
+      setText(heroBody,hero.body);
+      const heroBtn=document.querySelector('#heroBook');
+      if(heroBtn&&hero.cta_label){
+        const svg=heroBtn.querySelector('svg');
+        heroBtn.textContent=hero.cta_label;
+        if(svg)heroBtn.prepend(svg);
+      }
+      const heroImg=document.querySelector('.hero-media img');
+      if(heroImg&&hero.image_url){
+        heroImg.removeAttribute('data-optimized');
+        heroImg.src=hero.image_url;
+        if(hero.image_alt)heroImg.alt=hero.image_alt;
+      }
+    }
+    const featured=contentSlot(data,'home.featured');
+    const featuredHead=document.querySelector('#unidades .section-head');
+    if(featuredHead){
+      setText(featuredHead.querySelector('h2'),featured?.title);
+      setText(featuredHead.querySelector('p'),featured?.body);
+    }
+    const profile=contentSlot(data,'home.profile');
+    const profileHead=document.querySelector('#perfil-medico .section-head');
+    if(profileHead){
+      setText(profileHead.querySelector('h2'),profile?.title);
+      setText(profileHead.querySelector('p'),profile?.body);
+    }
+    const areas=contentSlot(data,'home.areas');
+    const areasHead=document.querySelector('#areas-medicas .section-head');
+    if(areasHead){
+      setText(areasHead.querySelector('h2'),areas?.title);
+      setText(areasHead.querySelector('p'),areas?.body);
+    }
+  }
+
   function addStyles(){
     if(document.getElementById('olano-business-config-styles'))return;
     const st=document.createElement('style');
     st.id='olano-business-config-styles';
-    st.textContent='.v238-rail-icon img,.v238-category-title-icon img{width:100%;height:100%;display:block;object-fit:contain}'+
+    st.textContent='.v238-rail-icon svg,.v238-category-title-icon svg{width:100%;height:100%;display:block;color:var(--navy)}'+
       '#unidades .v240-media.dynamic-icon{display:grid!important;place-items:center!important;background:linear-gradient(145deg,#edf8f6,#f8fbfb)!important}'+
-      '#unidades .v240-media.dynamic-icon img.olano-dynamic-category-icon{width:34%!important;height:34%!important;object-fit:contain!important;animation:none!important}';
+      '#unidades .olano-dynamic-category-icon{width:34%!important;height:34%!important;display:grid!important;place-items:center!important;color:var(--navy)}'+
+      '#unidades .olano-dynamic-category-icon svg{width:100%!important;height:100%!important;display:block!important;animation:none!important}';
     document.head.appendChild(st);
   }
 
@@ -215,6 +263,7 @@
       updateScheduleCopy(data);
       wrapCatalogRenderer(data);
       renderFeaturedCategories(data);
+      applyContent(data);
       document.dispatchEvent(new CustomEvent('olano:business-config',{detail:data}));
       return data;
     }catch(e){
