@@ -18,6 +18,16 @@ const WEEKDAYS = [
   { value: 6, short: 'Sáb', name: 'Sábado' },
   { value: 0, short: 'Dom', name: 'Domingo' }
 ];
+const ICON_PRESETS = {
+  sparkles:'<svg viewBox="0 0 24 24" fill="none" stroke="#0b2e4f" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.2 3.4L17 8l-3.8 1.4L12 13l-1.2-3.6L7 8l3.8-1.6L12 3Z"/><path d="m18.5 13 .8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2Z"/><path d="m5.5 13 .7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7.7-1.8Z"/></svg>',
+  face:'<svg viewBox="0 0 24 24" fill="none" stroke="#0b2e4f" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c4.2 0 7 3.4 7 7.7 0 5-3.2 9-7 10.3-3.8-1.3-7-5.3-7-10.3C5 6.4 7.8 3 12 3Z"/><path d="M9 10h.01M15 10h.01M9.5 15c1.5 1 3.5 1 5 0"/></svg>',
+  target:'<svg viewBox="0 0 24 24" fill="none" stroke="#0b2e4f" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 2v3M22 12h-3M12 22v-3M2 12h3"/></svg>',
+  heart:'<svg viewBox="0 0 24 24" fill="none" stroke="#0b2e4f" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21S4 16.6 4 10.3A4.3 4.3 0 0 1 12 8a4.3 4.3 0 0 1 8 2.3C20 16.6 12 21 12 21Z"/><path d="M7 12h3l1.2-2.4L13 15l1.2-3H18"/></svg>',
+  cells:'<svg viewBox="0 0 24 24" fill="none" stroke="#0b2e4f" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><circle cx="12" cy="16" r="3"/><path d="M10.2 10.1 11 13M13.8 10.1 13 13M10.5 7.7h3"/></svg>',
+  drop:'<svg viewBox="0 0 24 24" fill="none" stroke="#0b2e4f" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.4 6 11a6 6 0 0 1-12 0c0-4.6 6-11 6-11Z"/><path d="M9 15c.7 1.3 1.7 2 3 2"/></svg>',
+  leaf:'<svg viewBox="0 0 24 24" fill="none" stroke="#0b2e4f" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4C12 4 6 8 6 14c0 3 2 5 5 5 6 0 9-7 9-15Z"/><path d="M5 20c2-6 6-9 11-12"/></svg>',
+  stethoscope:'<svg viewBox="0 0 24 24" fill="none" stroke="#0b2e4f" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v5a4 4 0 0 0 8 0V3M6 3h4M14 3h4M12 12v2a5 5 0 0 0 10 0v-1"/><circle cx="20" cy="10" r="2"/></svg>'
+};
 
 const state = {
   user: null,
@@ -407,12 +417,17 @@ function openSchedule(id = '') {
 let categorySlugTouched = false;
 function resetCategoryForm() {
   $('categoryForm').reset(); $('categoryId').value=''; $('categoryActive').checked=true; $('categoryOrder').value=0; categorySlugTouched=false;
+  if($('categoryIconPreset')) $('categoryIconPreset').value='';
   $('categoryForm').hidden=true; $('categoryFormEmpty').hidden=false; updateCategoryPreview();
 }
 function openCategory(id = '') {
   const c = id ? state.categories.find((x) => x.id === id) : null;
   $('categoryId').value=c?.id||''; $('categoryName').value=c?.nombre||''; $('categorySlug').value=c?.slug||''; $('categoryDescription').value=c?.descripcion||'';
   $('categorySvg').value=c?.icon_svg||''; $('categoryOrder').value=c?.orden??0; $('categoryFeatured').checked=c?.destacada_web===true; $('categoryActive').checked=c ? c.activo===true : true;
+  if($('categoryIconPreset')){
+    const match=Object.entries(ICON_PRESETS).find(([,svg])=>svg===$('categorySvg').value);
+    $('categoryIconPreset').value=match?.[0]||'';
+  }
   categorySlugTouched=Boolean(c); $('categoryForm').hidden=false; $('categoryFormEmpty').hidden=true; updateCategoryPreview(); $('categoryName').focus();
 }
 function updateCategoryPreview() {
@@ -599,7 +614,12 @@ function bindEvents() {
   $('categoryForm').addEventListener('submit',(e)=>guard(()=>saveCategory(e)));
   $('categoryName').addEventListener('input',()=>{if(!$('categoryId').value&&!categorySlugTouched)$('categorySlug').value=slugify($('categoryName').value);});
   $('categorySlug').addEventListener('input',()=>{categorySlugTouched=true;});
-  $('categorySvg').addEventListener('input',updateCategoryPreview);
+  $('categorySvg').addEventListener('input',()=>{ if($('categoryIconPreset')) $('categoryIconPreset').value=''; updateCategoryPreview(); });
+  $('categoryIconPreset').addEventListener('change',()=>{
+    const key=$('categoryIconPreset').value;
+    if(key&&ICON_PRESETS[key]) $('categorySvg').value=ICON_PRESETS[key];
+    updateCategoryPreview();
+  });
   $('newServiceBtn').addEventListener('click',()=>openService()); $('cancelServiceBtn').addEventListener('click',resetServiceForm);
   $('serviceForm').addEventListener('submit',(e)=>guard(()=>saveService(e)));
   $('serviceSearch').addEventListener('input',renderServices); $('serviceCategoryFilter').addEventListener('change',renderServices);
