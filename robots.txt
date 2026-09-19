@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /agenda-admin/
+Disallow: /configuracion-negocio/
 
 Sitemap: https://doctorolano.pe/sitemap.xml
