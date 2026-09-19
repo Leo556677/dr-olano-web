@@ -87,8 +87,9 @@
   }
 
   function applyCatalog(data){
-    const categories=(data.categories||[]).filter(c=>c?.slug&&c?.name);
     const services=(data.services||[]).filter(s=>s?.service_code&&s?.name&&categoryById(data,s.category_id));
+    const usedCategoryIds=new Set(services.map(s=>s.category_id));
+    const categories=(data.categories||[]).filter(c=>c?.slug&&c?.name&&usedCategoryIds.has(c.id));
     const mappedCategories=categories.map((c,i)=>({
       id:c.slug,label:c.name,tone:TONES[i%TONES.length],
       description:c.description||'',icon_data_uri:c.icon_data_uri||null,
