@@ -244,6 +244,236 @@ function renderSchedules() {
   board.querySelectorAll('[data-schedule-edit]').forEach((b) => b.addEventListener('click', () => openSchedule(b.dataset.scheduleEdit)));
 }
 
+
+function availabilityConfigById(id) { return state.availabilityConfigs.find((x) => x.id === id); }
+function availabilityBlocksFor(configId) { return state.availabilityBlocks.filter((x) => x.config_id === configId); }
+function availabilityTargetLabel(cfg) {
+  if (!cfg) return 'Regla';
+  if (cfg.alcance === 'service') return serviceById(cfg.servicio_id)?.nombre || 'Servicio';
+  return categoryById(cfg.categoria_id)?.nombre || 'Categoría';
+}
+function fillAvailabilityTargets() {
+  if (!$('availabilityCategory') || !$('availabilityService')) return;
+  $('availabilityCategory').innerHTML = '<option value="">Elige una categoría</option>' +
+    state.categories.filter((x)=>x.activo).map((x)=>'<option value="'+attr(x.id)+'">'+esc(x.nombre)+'</option>').join('');
+  $('availabilityService').innerHTML = '<option value="">Elige un servicio</option>' +
+    state.services.filter((x)=>x.activo).map((x)=>'<option value="'+attr(x.id)+'">'+esc(x.nombre)+'</option>').join('');
+}
+function renderAvailabilityWeekdays(selected = []) {
+  const set = new Set((selected || []).map(Number));
+  $('availabilityWeekdays').innerHTML = WEEKDAYS.map((d)=>
+    '<label class="weekday-check"><input type="checkbox" value="'+d.value+'" '+(set.has(d.value)?'checked':'')+'><span>'+d.short+'</span></label>'
+  ).join('');
+}
+function renderAvailability() {
+  fillAvailabilityTargets();
+  const box = $('availabilityConfigList');
+  if (!box) return;
+  if (!state.availabilityConfigs.length) {
+    box.innerHTML = '<div class="empty-state">Aún no hay horarios específicos. La agenda general sigue aplicándose.</div>';
+  } else {
+    box.innerHTML = state.availabilityConfigs.map((cfg)=>{
+      const blocks = availabilityBlocksFor(cfg.id).filter((x)=>x.activo).length;
+      const period = cfg.vigente_desde || cfg.vigente_hasta
+        ? (cfg.vigente_desde || '…') + ' → ' + (cfg.vigente_hasta || '…')
+        : 'Sin fecha límite';
+      return '<article class="item-card availability-card">'+
+        '<div class="item-top"><div><h3>'+esc(availabilityTargetLabel(cfg))+'</h3><p>'+
+        (cfg.alcance==='service'?'Servicio':'Categoría')+' · '+esc(period)+'</p></div>'+
+        '<span class="pill '+(cfg.activo?'':'off')+'">'+(cfg.activo?'Activa':'Inactiva')+'</span></div>'+
+        '<div class="meta-row"><span class="meta">'+(cfg.intervalo_min?Number(cfg.intervalo_min)+' min':'Intervalo general')+'</span>'+
+        '<span class="meta">'+blocks+' bloque(s)</span>'+
+        '<span class="meta">'+(cfg.reemplaza_general?'Reemplaza general':'Complementa general')+'</span></div>'+
+        '<div class="row-actions"><button class="button mini write-control" type="button" data-availability-edit="'+attr(cfg.id)+'">Editar</button>'+
+        '<button class="button mini danger write-control" type="button" data-availability-delete="'+attr(cfg.id)+'">Eliminar</button></div></article>';
+    }).join('');
+    box.querySelectorAll('[data-availability-edit]').forEach((b)=>b.addEventListener('click',()=>openAvailabilityConfig(b.dataset.availabilityEdit)));
+    box.querySelectorAll('[data-availability-delete]').forEach((b)=>b.addEventListener('click',()=>guard(()=>deleteAvailabilityConfig(b.dataset.availabilityDelete))));
+  }
+  const currentId = $('availabilityConfigId')?.value || '';
+  if (currentId && availabilityConfigById(currentId)) {
+    renderAvailabilityBlocks(currentId);
+  } else if ($('availabilityBlocksCard')) {
+    $('availabilityBlocksCard').hidden = true;
+  }
+}
+function resetAvailabilityConfigForm() {
+  $('availabilityConfigForm').reset();
+  $('availabilityConfigId').value='';
+  $('availabilityScope').value='category';
+  $('availabilityReplace').checked=true;
+  $('availabilityActive').checked=true;
+  $('availabilityConfigForm').hidden=true;
+  $('availabilityFormEmpty').hidden=false;
+  $('availabilityBlocksCard').hidden=true;
+  updateAvailabilityScope();
+}
+function updateAvailabilityScope() {
+  const service = $('availabilityScope').value === 'service';
+  $('availabilityCategoryWrap').hidden = service;
+  $('availabilityServiceWrap').hidden = !service;
+}
+function openAvailabilityConfig(id='') {
+  const cfg = id ? availabilityConfigById(id) : null;
+  $('availabilityConfigId').value = cfg?.id || '';
+  $('availabilityScope').value = cfg?.alcance || 'category';
+  $('availabilityCategory').value = cfg?.categoria_id || '';
+  $('availabilityService').value = cfg?.servicio_id || '';
+  $('availabilityInterval').value = cfg?.intervalo_min ?? '';
+  $('availabilityFrom').value = cfg?.vigente_desde || '';
+  $('availabilityTo').value = cfg?.vigente_hasta || '';
+  $('availabilityReplace').checked = cfg ? cfg.reemplaza_general === true : true;
+  $('availabilityActive').checked = cfg ? cfg.activo === true : true;
+  $('availabilityConfigForm').hidden=false;
+  $('availabilityFormEmpty').hidden=true;
+  updateAvailabilityScope();
+  if (cfg) {
+    $('availabilityBlocksCard').hidden=false;
+    $('availabilityBlocksTitle').textContent='Horarios · '+availabilityTargetLabel(cfg);
+    renderAvailabilityBlocks(cfg.id);
+  } else {
+    $('availabilityBlocksCard').hidden=true;
+  }
+}
+function renderAvailabilityBlocks(configId) {
+  const cfg = availabilityConfigById(configId);
+  if (!cfg) { $('availabilityBlocksCard').hidden=true; return; }
+  $('availabilityBlocksCard').hidden=false;
+  $('availabilityBlocksTitle').textContent='Horarios · '+availabilityTargetLabel(cfg);
+  const rows = availabilityBlocksFor(configId).sort((a,b)=>{
+    const ak=a.tipo==='date' ? '0'+String(a.fecha||'') : '1'+String(a.dia_semana).padStart(2,'0')+String(a.hora_inicio);
+    const bk=b.tipo==='date' ? '0'+String(b.fecha||'') : '1'+String(b.dia_semana).padStart(2,'0')+String(b.hora_inicio);
+    return ak.localeCompare(bk);
+  });
+  const box=$('availabilityBlockList');
+  if (!rows.length) {
+    box.innerHTML='<div class="empty-state">Agrega al menos un bloque. Ejemplo: Lun/Mié/Vie 09:00–12:00.</div>';
+    return;
+  }
+  box.innerHTML=rows.map((b)=>{
+    const when=b.tipo==='date' ? esc(b.fecha) : esc(dayName(b.dia_semana));
+    return '<div class="list-row"><div><strong>'+when+' · '+esc(String(b.hora_inicio).slice(0,5))+'–'+esc(String(b.hora_fin).slice(0,5))+'</strong>'+
+      '<small>'+(b.tipo==='date'?'Fecha específica':'Semanal')+' · '+(b.activo?'Activo':'Inactivo')+'</small></div>'+
+      '<div class="row-actions"><button class="button mini write-control" data-availability-block-edit="'+attr(b.id)+'" type="button">Editar</button>'+
+      '<button class="button mini danger write-control" data-availability-block-delete="'+attr(b.id)+'" type="button">Eliminar</button></div></div>';
+  }).join('');
+  box.querySelectorAll('[data-availability-block-edit]').forEach((b)=>b.addEventListener('click',()=>openAvailabilityBlock(b.dataset.availabilityBlockEdit)));
+  box.querySelectorAll('[data-availability-block-delete]').forEach((b)=>b.addEventListener('click',()=>guard(()=>deleteAvailabilityBlock(b.dataset.availabilityBlockDelete))));
+}
+function resetAvailabilityBlockForm() {
+  $('availabilityBlockForm').reset();
+  $('availabilityBlockId').value='';
+  $('availabilityBlockType').value='weekly';
+  renderAvailabilityWeekdays([]);
+  $('availabilityBlockForm').hidden=true;
+  updateAvailabilityBlockType();
+}
+function updateAvailabilityBlockType() {
+  const isDate=$('availabilityBlockType').value==='date';
+  $('availabilityDateWrap').hidden=!isDate;
+  $('availabilityWeekdaysWrap').hidden=isDate;
+}
+function openAvailabilityBlock(id='') {
+  const row = id ? state.availabilityBlocks.find((x)=>x.id===id) : null;
+  $('availabilityBlockId').value=row?.id||'';
+  $('availabilityBlockType').value=row?.tipo||'weekly';
+  $('availabilityDate').value=row?.fecha||'';
+  $('availabilityStart').value=row ? String(row.hora_inicio).slice(0,5) : '';
+  $('availabilityEnd').value=row ? String(row.hora_fin).slice(0,5) : '';
+  renderAvailabilityWeekdays(row?.tipo==='weekly' ? [row.dia_semana] : []);
+  $('availabilityBlockForm').hidden=false;
+  updateAvailabilityBlockType();
+}
+async function saveAvailabilityConfig(e) {
+  e.preventDefault();
+  canWriteOrThrow();
+  const id=$('availabilityConfigId').value;
+  const alcance=$('availabilityScope').value;
+  const categoria_id=alcance==='category' ? $('availabilityCategory').value : null;
+  const servicio_id=alcance==='service' ? $('availabilityService').value : null;
+  if(alcance==='category'&&!categoria_id) throw new Error('Selecciona una categoría.');
+  if(alcance==='service'&&!servicio_id) throw new Error('Selecciona un servicio.');
+  const desde=$('availabilityFrom').value||null, hasta=$('availabilityTo').value||null;
+  if(desde&&hasta&&hasta<desde) throw new Error('La fecha final debe ser posterior o igual a la inicial.');
+  const payload={
+    negocio_id:state.business.id,alcance,categoria_id,servicio_id,
+    intervalo_min:numberOrNull($('availabilityInterval').value),
+    reemplaza_general:$('availabilityReplace').checked,
+    vigente_desde:desde,vigente_hasta:hasta,activo:$('availabilityActive').checked,
+    updated_at:new Date().toISOString()
+  };
+  let configId=id;
+  if(id){
+    const {error}=await sb.from('agenda_disponibilidad_config').update(payload).eq('id',id).eq('negocio_id',state.business.id);
+    if(error) throw error;
+  } else {
+    const {data,error}=await sb.from('agenda_disponibilidad_config').insert(payload).select('id').single();
+    if(error) throw error;
+    configId=data.id;
+  }
+  setStatus('Regla de disponibilidad guardada.','ok');
+  await loadAll();
+  openAvailabilityConfig(configId);
+}
+async function deleteAvailabilityConfig(id) {
+  canWriteOrThrow();
+  if(!confirm('¿Eliminar esta regla y todos sus bloques de horario?')) return;
+  const {error}=await sb.from('agenda_disponibilidad_config').delete().eq('id',id).eq('negocio_id',state.business.id);
+  if(error) throw error;
+  resetAvailabilityConfigForm();
+  setStatus('Regla eliminada.','ok');
+  await loadAll();
+}
+async function saveAvailabilityBlock(e) {
+  e.preventDefault();
+  canWriteOrThrow();
+  const configId=$('availabilityConfigId').value;
+  const cfg=availabilityConfigById(configId);
+  if(!cfg) throw new Error('Guarda o selecciona primero una regla.');
+  const id=$('availabilityBlockId').value;
+  const tipo=$('availabilityBlockType').value;
+  const start=$('availabilityStart').value, end=$('availabilityEnd').value;
+  if(!start||!end||end<=start) throw new Error('La hora final debe ser posterior a la inicial.');
+  if(tipo==='date'){
+    const fecha=$('availabilityDate').value;
+    if(!fecha) throw new Error('Selecciona la fecha.');
+    const payload={negocio_id:state.business.id,config_id:configId,tipo:'date',dia_semana:null,fecha,hora_inicio:start,hora_fin:end,activo:true,updated_at:new Date().toISOString()};
+    const q=id ? sb.from('agenda_disponibilidad_bloques').update(payload).eq('id',id).eq('negocio_id',state.business.id) : sb.from('agenda_disponibilidad_bloques').insert(payload);
+    const {error}=await q; if(error) throw error;
+  } else {
+    const days=[...$('availabilityWeekdays').querySelectorAll('input:checked')].map((x)=>Number(x.value));
+    if(!days.length) throw new Error('Elige al menos un día.');
+    const base={negocio_id:state.business.id,config_id:configId,tipo:'weekly',fecha:null,hora_inicio:start,hora_fin:end,activo:true,updated_at:new Date().toISOString()};
+    if(id){
+      const first=days.shift();
+      const {error}=await sb.from('agenda_disponibilidad_bloques').update({...base,dia_semana:first}).eq('id',id).eq('negocio_id',state.business.id);
+      if(error) throw error;
+    }
+    if(days.length || !id){
+      const toInsert=(id?days:[...$('availabilityWeekdays').querySelectorAll('input:checked')].map((x)=>Number(x.value))).map((d)=>({...base,dia_semana:d}));
+      if(toInsert.length){
+        const {error}=await sb.from('agenda_disponibilidad_bloques').insert(toInsert);
+        if(error) throw error;
+      }
+    }
+  }
+  setStatus('Bloque de horario guardado.','ok');
+  await loadAll();
+  openAvailabilityConfig(configId);
+  resetAvailabilityBlockForm();
+}
+async function deleteAvailabilityBlock(id) {
+  canWriteOrThrow();
+  if(!confirm('¿Eliminar este bloque de horario?')) return;
+  const row=state.availabilityBlocks.find((x)=>x.id===id);
+  const configId=row?.config_id||$('availabilityConfigId').value;
+  const {error}=await sb.from('agenda_disponibilidad_bloques').delete().eq('id',id).eq('negocio_id',state.business.id);
+  if(error) throw error;
+  setStatus('Bloque eliminado.','ok');
+  await loadAll();
+  if(configId) openAvailabilityConfig(configId);
+}
+
 function categoryIconHtml(c) {
   const uri = svgDataUri(c.icon_svg);
   return uri ? `<img src="${attr(uri)}" alt="">` : '<span>SVG</span>';
