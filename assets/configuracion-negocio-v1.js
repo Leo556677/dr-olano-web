@@ -332,16 +332,26 @@ function renderAvailability() {
     $('availabilityBlocksCard').hidden = true;
   }
 }
+function updateAvailabilityPeriodMode() {
+  const mode=$('availabilityPeriodMode')?.value||'always';
+  if($('availabilityDateRange')) $('availabilityDateRange').hidden=mode!=='range';
+  if(mode==='always'){
+    $('availabilityFrom').value='';
+    $('availabilityTo').value='';
+  }
+}
 function resetAvailabilityConfigForm() {
   $('availabilityConfigForm').reset();
   $('availabilityConfigId').value='';
   $('availabilityScope').value='category';
+  $('availabilityPeriodMode').value='always';
   $('availabilityReplace').checked=true;
   $('availabilityActive').checked=true;
   $('availabilityConfigForm').hidden=true;
   $('availabilityFormEmpty').hidden=false;
   $('availabilityBlocksCard').hidden=true;
   updateAvailabilityScope();
+  updateAvailabilityPeriodMode();
 }
 function updateAvailabilityScope() {
   const service = $('availabilityScope').value === 'service';
@@ -355,6 +365,7 @@ function openAvailabilityConfig(id='') {
   $('availabilityCategory').value = cfg?.categoria_id || '';
   $('availabilityService').value = cfg?.servicio_id || '';
   $('availabilityInterval').value = cfg?.intervalo_min ?? '';
+  $('availabilityPeriodMode').value = (cfg?.vigente_desde || cfg?.vigente_hasta) ? 'range' : 'always';
   $('availabilityFrom').value = cfg?.vigente_desde || '';
   $('availabilityTo').value = cfg?.vigente_hasta || '';
   $('availabilityReplace').checked = cfg ? cfg.reemplaza_general === true : true;
@@ -362,6 +373,7 @@ function openAvailabilityConfig(id='') {
   $('availabilityConfigForm').hidden=false;
   $('availabilityFormEmpty').hidden=true;
   updateAvailabilityScope();
+  updateAvailabilityPeriodMode();
   if (cfg) {
     $('availabilityBlocksCard').hidden=false;
     $('availabilityBlocksTitle').textContent='Horarios · '+availabilityTargetLabel(cfg);
@@ -428,7 +440,10 @@ async function saveAvailabilityConfig(e) {
   const servicio_id=alcance==='service' ? $('availabilityService').value : null;
   if(alcance==='category'&&!categoria_id) throw new Error('Selecciona una categoría.');
   if(alcance==='service'&&!servicio_id) throw new Error('Selecciona un servicio.');
-  const desde=$('availabilityFrom').value||null, hasta=$('availabilityTo').value||null;
+  const periodMode=$('availabilityPeriodMode').value;
+  const desde=periodMode==='range' ? ($('availabilityFrom').value||null) : null;
+  const hasta=periodMode==='range' ? ($('availabilityTo').value||null) : null;
+  if(periodMode==='range' && (!desde || !hasta)) throw new Error('Elige la fecha de inicio y la fecha final.');
   if(desde&&hasta&&hasta<desde) throw new Error('La fecha final debe ser posterior o igual a la inicial.');
   const payload={
     negocio_id:state.business.id,alcance,categoria_id,servicio_id,
@@ -1045,6 +1060,7 @@ function bindEvents() {
   $('cancelAvailabilityBtn').addEventListener('click',resetAvailabilityConfigForm);
   $('availabilityConfigForm').addEventListener('submit',(e)=>guard(()=>saveAvailabilityConfig(e)));
   $('availabilityScope').addEventListener('change',updateAvailabilityScope);
+  $('availabilityPeriodMode').addEventListener('change',updateAvailabilityPeriodMode);
   $('newAvailabilityBlockBtn').addEventListener('click',()=>{
     if(!$('availabilityConfigId').value){setStatus('Guarda primero la regla de disponibilidad.','info');return;}
     openAvailabilityBlock();
@@ -1084,7 +1100,7 @@ function bindEvents() {
     $('brandPreviewLogo').innerHTML='<img src="'+attr(url)+'" alt="">';
     applyBrandPreviewToIframe();
   });
-  $('brandSitePreview').addEventListener('load',()=>setTimeout(applyBrandPreviewToIframe,450));
+  $('brandSitePreview').addEventListener('load',()=>{setTimeout(applyBrandPreviewToIframe,350);setTimeout(applyBrandPreviewToIframe,1300);});
   document.querySelectorAll('[data-preview-device]').forEach((btn)=>btn.addEventListener('click',()=>setPreviewDevice(btn.dataset.previewDevice)));
   $('brandDefaultsBtn').addEventListener('click',()=>{
     $('brandPrimary').value='#0b2e4f'; $('brandSecondary').value='#1aa79d';
