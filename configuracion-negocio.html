@@ -15,7 +15,7 @@ permalink: /configuracion-negocio/
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260919-2">
+  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260919-3">
 </head>
 <body>
   <div id="authGate" class="gate">
@@ -67,6 +67,7 @@ permalink: /configuracion-negocio/
         <button class="tab" data-tab="categorias" type="button">Categorías</button>
         <button class="tab" data-tab="servicios" type="button">Servicios</button>
         <button class="tab" data-tab="promociones" type="button">Promociones</button>
+        <button class="tab" data-tab="marca" type="button">Marca</button>
         <button class="tab" data-tab="vista-publica" type="button">Vista pública</button>
       </nav>
 
@@ -298,6 +299,63 @@ permalink: /configuracion-negocio/
         </div>
       </section>
 
+      <section class="tab-panel" data-panel="marca">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">IDENTIDAD VISUAL</div>
+            <h2>Logo y colores del negocio</h2>
+            <p>Cambia el logo y la paleta principal sin editar código. La web pública leerá esta configuración automáticamente.</p>
+          </div>
+        </div>
+
+        <div class="grid brand-layout">
+          <article class="panel card">
+            <form id="brandingForm" class="form-grid">
+              <label class="full">
+                <span>Logo del negocio</span>
+                <input id="brandLogoFile" class="write-control" type="file" accept="image/png,image/jpeg,image/webp">
+                <small class="help">PNG, JPG o WebP. Máximo 3 MB. Si no subes uno nuevo, se conserva el actual.</small>
+              </label>
+              <div class="full brand-logo-preview-wrap">
+                <div id="brandLogoPreview" class="brand-logo-preview">Sin logo personalizado</div>
+                <div>
+                  <strong>Vista previa</strong>
+                  <small class="help">El logo se usa en encabezado, portada de carga y pie de página.</small>
+                </div>
+              </div>
+              <label><span>Color principal</span><input id="brandPrimary" type="color" value="#0b2e4f"></label>
+              <label><span>Color secundario</span><input id="brandSecondary" type="color" value="#1aa79d"></label>
+              <label><span>Color de acento</span><input id="brandAccent" type="color" value="#d7ab33"></label>
+              <label><span>Color de fondo</span><input id="brandBackground" type="color" value="#f4f7f8"></label>
+              <div class="full brand-preview" id="brandPreview">
+                <div class="brand-preview-logo" id="brandPreviewLogo">DO</div>
+                <div>
+                  <b>Dr. Olano</b>
+                  <span>Así se combinarán los colores principales</span>
+                </div>
+                <button type="button">Botón de ejemplo</button>
+              </div>
+              <div class="form-actions full">
+                <button class="button primary write-control" type="submit">Guardar marca</button>
+                <button id="brandDefaultsBtn" class="button ghost write-control" type="button">Restablecer colores</button>
+              </div>
+            </form>
+          </article>
+          <article class="panel card">
+            <div class="card-head"><div><span class="step">✓</span><h3>Qué cambia automáticamente</h3></div></div>
+            <div class="brand-checklist">
+              <div>Logo del encabezado</div>
+              <div>Logo de carga y pie de página</div>
+              <div>Color principal de textos y navegación</div>
+              <div>Color secundario de botones y acciones</div>
+              <div>Color de acento</div>
+              <div>Fondo general de la web</div>
+            </div>
+            <p class="muted">Los cambios se guardan en Supabase y la web los recibe desde la configuración pública. No necesitas volver a editar archivos.</p>
+          </article>
+        </div>
+      </section>
+
       <section class="tab-panel" data-panel="vista-publica">
         <div class="section-head">
           <div>
@@ -317,6 +375,6 @@ permalink: /configuracion-negocio/
     </main>
   </div>
 
-  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260919-2"></script>
+  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260919-3"></script>
 </body>
 </html>
