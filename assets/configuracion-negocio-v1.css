@@ -42,3 +42,8 @@ fieldset{border:1px solid var(--line);border-radius:12px;padding:12px}fieldset l
 .brand-checklist{display:grid;gap:8px;margin:12px 0 16px}.brand-checklist div{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fafafa;font-size:11px;font-weight:700}.brand-checklist div:before{content:"✓";display:inline-grid;place-items:center;width:22px;height:22px;margin-right:8px;border-radius:7px;background:#ecfdf3;color:#067647;font-weight:900}
 @media(max-width:850px){.brand-layout{grid-template-columns:1fr}}
 @media(max-width:560px){.brand-preview{grid-template-columns:48px 1fr}.brand-preview-logo{width:48px;height:48px}.brand-preview button{grid-column:1/-1;width:100%}}
+
+.advanced-details{border:1px dashed var(--line);border-radius:12px;background:#fafafa;padding:10px 12px}
+.advanced-details summary{cursor:pointer;font-size:10px;font-weight:800;color:#475467}
+.advanced-details[open] summary{margin-bottom:10px}
+.advanced-details label{display:block}
