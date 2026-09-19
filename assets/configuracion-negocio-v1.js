@@ -847,6 +847,17 @@ function bindEvents() {
   $('resourceForm').addEventListener('submit',(e)=>guard(()=>saveResource(e)));
   $('newScheduleBtn').addEventListener('click',()=>openSchedule()); $('cancelScheduleBtn').addEventListener('click',resetScheduleForm);
   $('scheduleForm').addEventListener('submit',(e)=>guard(()=>saveSchedule(e)));
+  $('newAvailabilityBtn').addEventListener('click',()=>openAvailabilityConfig());
+  $('cancelAvailabilityBtn').addEventListener('click',resetAvailabilityConfigForm);
+  $('availabilityConfigForm').addEventListener('submit',(e)=>guard(()=>saveAvailabilityConfig(e)));
+  $('availabilityScope').addEventListener('change',updateAvailabilityScope);
+  $('newAvailabilityBlockBtn').addEventListener('click',()=>{
+    if(!$('availabilityConfigId').value){setStatus('Guarda primero la regla de disponibilidad.','info');return;}
+    openAvailabilityBlock();
+  });
+  $('cancelAvailabilityBlockBtn').addEventListener('click',resetAvailabilityBlockForm);
+  $('availabilityBlockForm').addEventListener('submit',(e)=>guard(()=>saveAvailabilityBlock(e)));
+  $('availabilityBlockType').addEventListener('change',updateAvailabilityBlockType);
   $('newCategoryBtn').addEventListener('click',()=>openCategory()); $('cancelCategoryBtn').addEventListener('click',resetCategoryForm);
   $('categoryForm').addEventListener('submit',(e)=>guard(()=>saveCategory(e)));
   $('categoryName').addEventListener('input',()=>{if(!$('categoryId').value&&!categorySlugTouched)$('categorySlug').value=slugify($('categoryName').value);});
