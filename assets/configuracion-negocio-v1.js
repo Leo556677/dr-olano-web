@@ -44,6 +44,8 @@ const state = {
   branding: null,
   availabilityConfigs: [],
   availabilityBlocks: [],
+  contentSlots: [],
+  previewLogoUrl: null,
   publicConfig: null
 };
 
@@ -156,7 +158,7 @@ async function loadAll({ publicCheck = false } = {}) {
   if (!state.business) return;
   setSync('Sincronizando…', null);
   const bid = state.business.id;
-  const [configQ, resourcesQ, schedulesQ, categoriesQ, servicesQ, linksQ, promotionsQ, brandingQ, availabilityConfigsQ, availabilityBlocksQ] = await Promise.all([
+  const [configQ, resourcesQ, schedulesQ, categoriesQ, servicesQ, linksQ, promotionsQ, brandingQ, availabilityConfigsQ, availabilityBlocksQ, contentQ] = await Promise.all([
     sb.from('configuracion_agenda').select('*').eq('negocio_id', bid).maybeSingle(),
     sb.from('recursos_agenda').select('*').eq('negocio_id', bid).order('created_at'),
     sb.from('horarios_agenda').select('*').eq('negocio_id', bid).order('dia_semana').order('hora_inicio'),
@@ -166,9 +168,10 @@ async function loadAll({ publicCheck = false } = {}) {
     sb.from('web_promociones').select('*').eq('negocio_id', bid).order('created_at', { ascending:false }),
     sb.from('web_branding').select('*').eq('negocio_id', bid).maybeSingle(),
     sb.from('agenda_disponibilidad_config').select('*').eq('negocio_id', bid).order('created_at'),
-    sb.from('agenda_disponibilidad_bloques').select('*').eq('negocio_id', bid).order('created_at')
+    sb.from('agenda_disponibilidad_bloques').select('*').eq('negocio_id', bid).order('created_at'),
+    sb.from('web_content_slots').select('*').eq('negocio_id', bid).order('sort_order').order('slot_key')
   ]);
-  for (const q of [configQ, resourcesQ, schedulesQ, categoriesQ, servicesQ, linksQ, promotionsQ, brandingQ, availabilityConfigsQ, availabilityBlocksQ]) {
+  for (const q of [configQ, resourcesQ, schedulesQ, categoriesQ, servicesQ, linksQ, promotionsQ, brandingQ, availabilityConfigsQ, availabilityBlocksQ, contentQ]) {
     if (q.error) throw q.error;
   }
   state.config = configQ.data || null;
@@ -181,6 +184,7 @@ async function loadAll({ publicCheck = false } = {}) {
   state.branding = brandingQ.data || null;
   state.availabilityConfigs = availabilityConfigsQ.data || [];
   state.availabilityBlocks = availabilityBlocksQ.data || [];
+  state.contentSlots = contentQ.data || [];
   renderAll();
   setSync('Datos sincronizados', true);
   if (publicCheck) await loadPublicConfig();
@@ -197,6 +201,7 @@ function renderAll() {
   renderPromotions();
   renderBranding();
   renderAvailability();
+  renderContentEditor();
   setWriteMode();
 }
 
@@ -265,26 +270,56 @@ function renderAvailabilityWeekdays(selected = []) {
     '<label class="weekday-check"><input type="checkbox" value="'+d.value+'" '+(set.has(d.value)?'checked':'')+'><span>'+d.short+'</span></label>'
   ).join('');
 }
+function formatShortDate(value) {
+  if (!value) return '';
+  const d = new Date(String(value) + 'T12:00:00-05:00');
+  return new Intl.DateTimeFormat('es-PE',{day:'2-digit',month:'short',year:'numeric'}).format(d).replace('.','');
+}
+function availabilityReadable(cfg) {
+  const rows=availabilityBlocksFor(cfg.id).filter((x)=>x.activo);
+  const weekly=rows.filter((x)=>x.tipo==='weekly');
+  const dated=rows.filter((x)=>x.tipo==='date');
+  if (dated.length) {
+    const dates=dated.map(x=>x.fecha).filter(Boolean).sort();
+    const period=dates.length ? (formatShortDate(dates[0])+(dates.length>1?' – '+formatShortDate(dates[dates.length-1]):'')) : '';
+    return {
+      main: dated.length+' fecha'+(dated.length===1?'':'s')+(period?' · '+period:''),
+      detail:'Horarios puntuales',
+      count: dated.length
+    };
+  }
+  if (weekly.length) {
+    const days=[...new Set(weekly.map(x=>Number(x.dia_semana)))].sort((a,b)=>a-b);
+    const dayText=days.map(dayName).join(', ');
+    const byTime=[...new Set(weekly.map(x=>String(x.hora_inicio).slice(0,5)+'–'+String(x.hora_fin).slice(0,5)))];
+    return {
+      main: dayText || 'Horario semanal',
+      detail: byTime.join(' / '),
+      count: weekly.length
+    };
+  }
+  return {main:'Aún sin horarios',detail:'Agrega los días y horas después de guardar',count:0};
+}
 function renderAvailability() {
   fillAvailabilityTargets();
   const box = $('availabilityConfigList');
   if (!box) return;
   if (!state.availabilityConfigs.length) {
-    box.innerHTML = '<div class="empty-state">Aún no hay horarios específicos. La agenda general sigue aplicándose.</div>';
+    box.innerHTML = '<div class="empty-state"><b>No hay horarios especiales.</b><br>La web usa el horario general. Crea uno solo cuando una categoría o servicio necesite días, horas o intervalos distintos.</div>';
   } else {
     box.innerHTML = state.availabilityConfigs.map((cfg)=>{
-      const blocks = availabilityBlocksFor(cfg.id).filter((x)=>x.activo).length;
-      const period = cfg.vigente_desde || cfg.vigente_hasta
-        ? (cfg.vigente_desde || '…') + ' → ' + (cfg.vigente_hasta || '…')
-        : 'Sin fecha límite';
+      const info=availabilityReadable(cfg);
+      const target=availabilityTargetLabel(cfg);
+      const interval=cfg.intervalo_min?('Cada '+Number(cfg.intervalo_min)+' min'):'Usa intervalo general';
       return '<article class="item-card availability-card">'+
-        '<div class="item-top"><div><h3>'+esc(availabilityTargetLabel(cfg))+'</h3><p>'+
-        (cfg.alcance==='service'?'Servicio':'Categoría')+' · '+esc(period)+'</p></div>'+
-        '<span class="pill '+(cfg.activo?'':'off')+'">'+(cfg.activo?'Activa':'Inactiva')+'</span></div>'+
-        '<div class="meta-row"><span class="meta">'+(cfg.intervalo_min?Number(cfg.intervalo_min)+' min':'Intervalo general')+'</span>'+
-        '<span class="meta">'+blocks+' bloque(s)</span>'+
-        '<span class="meta">'+(cfg.reemplaza_general?'Reemplaza general':'Complementa general')+'</span></div>'+
-        '<div class="row-actions"><button class="button mini write-control" type="button" data-availability-edit="'+attr(cfg.id)+'">Editar</button>'+
+        '<div class="item-top"><div><h3>'+esc(target)+'</h3><p>'+esc(info.main)+'</p></div>'+
+        '<span class="pill '+(cfg.activo?'':'off')+'">'+(cfg.activo?'En uso':'Pausado')+'</span></div>'+
+        '<div class="availability-readable">'+esc(info.detail)+'</div>'+
+        '<div class="meta-row"><span class="meta">'+esc(interval)+'</span>'+
+        '<span class="meta">'+(cfg.alcance==='service'?'Solo este servicio':'Toda la categoría')+'</span>'+
+        (cfg.vigente_desde||cfg.vigente_hasta?'<span class="meta">Periodo limitado</span>':'<span class="meta">Sin fecha límite</span>')+
+        '</div>'+
+        '<div class="row-actions"><button class="button mini write-control" type="button" data-availability-edit="'+attr(cfg.id)+'">Abrir y editar</button>'+
         '<button class="button mini danger write-control" type="button" data-availability-delete="'+attr(cfg.id)+'">Eliminar</button></div></article>';
     }).join('');
     box.querySelectorAll('[data-availability-edit]').forEach((b)=>b.addEventListener('click',()=>openAvailabilityConfig(b.dataset.availabilityEdit)));
@@ -339,7 +374,7 @@ function renderAvailabilityBlocks(configId) {
   const cfg = availabilityConfigById(configId);
   if (!cfg) { $('availabilityBlocksCard').hidden=true; return; }
   $('availabilityBlocksCard').hidden=false;
-  $('availabilityBlocksTitle').textContent='Horarios · '+availabilityTargetLabel(cfg);
+  $('availabilityBlocksTitle').textContent='Días y horas · '+availabilityTargetLabel(cfg);
   const rows = availabilityBlocksFor(configId).sort((a,b)=>{
     const ak=a.tipo==='date' ? '0'+String(a.fecha||'') : '1'+String(a.dia_semana).padStart(2,'0')+String(a.hora_inicio);
     const bk=b.tipo==='date' ? '0'+String(b.fecha||'') : '1'+String(b.dia_semana).padStart(2,'0')+String(b.hora_inicio);
@@ -347,13 +382,13 @@ function renderAvailabilityBlocks(configId) {
   });
   const box=$('availabilityBlockList');
   if (!rows.length) {
-    box.innerHTML='<div class="empty-state">Agrega al menos un bloque. Ejemplo: Lun/Mié/Vie 09:00–12:00.</div>';
+    box.innerHTML='<div class="empty-state"><b>Falta definir los días y horas.</b><br>Ejemplo: lunes, miércoles y viernes · 09:00–12:00 y 14:30–19:30.</div>';
     return;
   }
   box.innerHTML=rows.map((b)=>{
-    const when=b.tipo==='date' ? esc(b.fecha) : esc(dayName(b.dia_semana));
-    return '<div class="list-row"><div><strong>'+when+' · '+esc(String(b.hora_inicio).slice(0,5))+'–'+esc(String(b.hora_fin).slice(0,5))+'</strong>'+
-      '<small>'+(b.tipo==='date'?'Fecha específica':'Semanal')+' · '+(b.activo?'Activo':'Inactivo')+'</small></div>'+
+    const when=b.tipo==='date' ? formatShortDate(b.fecha) : dayName(b.dia_semana);
+    return '<div class="list-row availability-time-row"><div><strong>'+esc(when)+'</strong>'+
+      '<small>'+esc(String(b.hora_inicio).slice(0,5))+' – '+esc(String(b.hora_fin).slice(0,5))+(b.tipo==='date'?' · solo ese día':' · se repite cada semana')+'</small></div>'+
       '<div class="row-actions"><button class="button mini write-control" data-availability-block-edit="'+attr(b.id)+'" type="button">Editar</button>'+
       '<button class="button mini danger write-control" data-availability-block-delete="'+attr(b.id)+'" type="button">Eliminar</button></div></div>';
   }).join('');
@@ -568,6 +603,90 @@ function renderPromotions() {
 }
 
 
+async function uploadBusinessContentImage(file, prefix='image') {
+  if (!file) return null;
+  if (file.size > 5242880) throw new Error('La imagen supera el máximo de 5 MB.');
+  if (!['image/png','image/jpeg','image/webp'].includes(file.type)) throw new Error('Usa una imagen PNG, JPG o WebP.');
+  const ext=file.type==='image/png'?'png':file.type==='image/webp'?'webp':'jpg';
+  const safePrefix=slugify(prefix).slice(0,50)||'image';
+  const path='dr-olano/'+safePrefix+'-'+Date.now()+'.'+ext;
+  const {error}=await sb.storage.from('business-content').upload(path,file,{cacheControl:'3600',upsert:false});
+  if(error) throw error;
+  const {data}=sb.storage.from('business-content').getPublicUrl(path);
+  if(!data?.publicUrl) throw new Error('No se pudo obtener la URL de la imagen.');
+  return {path,url:data.publicUrl};
+}
+function contentSlotLabel(slot) {
+  const labels={
+    'home.hero':'Portada principal',
+    'home.featured':'Título de categorías destacadas',
+    'home.profile':'Sección “Conoce al Dr. Olano”',
+    'home.areas':'Sección “Áreas de atención”'
+  };
+  return labels[slot.slot_key]||slot.section_label||slot.slot_key;
+}
+function renderContentEditor() {
+  const box=$('contentEditorList');
+  if(!box)return;
+  if(!state.contentSlots.length){
+    box.innerHTML='<div class="empty-state">No hay zonas de contenido configuradas.</div>';
+    return;
+  }
+  box.innerHTML=state.contentSlots.map((slot)=>{
+    const hero=slot.slot_key==='home.hero';
+    const img=slot.image_url ? '<img src="'+attr(slot.image_url)+'" alt="">' : '<span>Sin imagen</span>';
+    return '<form class="panel card content-slot-card" data-content-form="'+attr(slot.id)+'">'+
+      '<div class="card-head"><div><span class="step">✎</span><h3>'+esc(contentSlotLabel(slot))+'</h3></div><span class="pill neutral">Contenido seguro</span></div>'+
+      (hero?'<label><span>Texto pequeño superior</span><input data-content-field="eyebrow" maxlength="160" value="'+attr(slot.eyebrow||'')+'"></label>':'')+
+      '<label><span>Título</span><input data-content-field="title" maxlength="220" value="'+attr(slot.title||'')+'"></label>'+
+      (hero?'<label><span>Texto destacado</span><textarea data-content-field="subtitle" maxlength="320" rows="2">'+esc(slot.subtitle||'')+'</textarea></label>':'')+
+      '<label><span>Texto de apoyo</span><textarea data-content-field="body" maxlength="1500" rows="3">'+esc(slot.body||'')+'</textarea></label>'+
+      (hero?'<label><span>Texto del botón principal</span><input data-content-field="cta_label" maxlength="120" value="'+attr(slot.cta_label||'')+'"></label>'+
+        '<label><span>Imagen principal</span><input data-content-image type="file" accept="image/png,image/jpeg,image/webp"><small class="help">PNG, JPG o WebP · máximo 5 MB.</small></label>'+
+        '<div class="content-image-preview" data-content-image-preview>'+img+'</div>'+
+        '<label><span>Descripción de la imagen</span><input data-content-field="image_alt" maxlength="240" value="'+attr(slot.image_alt||'')+'"></label>':'')+
+      '<div class="form-actions"><button class="button primary write-control" type="submit">Guardar cambios</button></div>'+
+      '</form>';
+  }).join('');
+  box.querySelectorAll('[data-content-form]').forEach((form)=>{
+    form.addEventListener('submit',(e)=>guard(()=>saveContentSlot(e,form)));
+    const file=form.querySelector('[data-content-image]');
+    if(file)file.addEventListener('change',()=>{
+      const f=file.files?.[0]; if(!f)return;
+      const url=URL.createObjectURL(f);
+      const p=form.querySelector('[data-content-image-preview]');
+      if(p)p.innerHTML='<img src="'+attr(url)+'" alt="Vista previa">';
+    });
+  });
+  setWriteMode();
+}
+async function saveContentSlot(e,form) {
+  e.preventDefault(); canWriteOrThrow();
+  const id=form.dataset.contentForm;
+  const slot=state.contentSlots.find(x=>x.id===id);
+  if(!slot) throw new Error('No se encontró esta sección de contenido.');
+  const value=(name)=>form.querySelector('[data-content-field="'+name+'"]')?.value?.trim()||null;
+  let image_url=slot.image_url||null, image_path=slot.image_path||null;
+  const file=form.querySelector('[data-content-image]')?.files?.[0]||null;
+  let uploaded=null;
+  if(file){
+    uploaded=await uploadBusinessContentImage(file,slot.slot_key);
+    image_url=uploaded.url; image_path=uploaded.path;
+  }
+  const payload={
+    eyebrow:value('eyebrow'),title:value('title'),subtitle:value('subtitle'),body:value('body'),
+    cta_label:value('cta_label'),image_alt:value('image_alt'),
+    image_url,image_path,updated_at:new Date().toISOString()
+  };
+  const {error}=await sb.from('web_content_slots').update(payload).eq('id',id).eq('negocio_id',state.business.id);
+  if(error)throw error;
+  if(uploaded && slot.image_path && slot.image_path!==uploaded.path){
+    sb.storage.from('business-content').remove([slot.image_path]).catch(()=>{});
+  }
+  await afterWrite('Contenido guardado. La estructura y la lógica de la web no se modificaron.');
+  reloadBrandSitePreview();
+}
+
 function renderBranding() {
   const b = state.branding || {};
   $('brandPrimary').value = b.color_primary || '#0b2e4f';
@@ -587,15 +706,58 @@ function renderBranding() {
 }
 function updateBrandPreview() {
   const box = $('brandPreview');
-  if (!box) return;
-  const primary = $('brandPrimary').value || '#0b2e4f';
-  const secondary = $('brandSecondary').value || '#1aa79d';
-  const accent = $('brandAccent').value || '#d7ab33';
-  const background = $('brandBackground').value || '#f4f7f8';
-  box.style.setProperty('--preview-primary', primary);
-  box.style.setProperty('--preview-secondary', secondary);
-  box.style.setProperty('--preview-accent', accent);
-  box.style.setProperty('--preview-bg', background);
+  const primary = $('brandPrimary')?.value || '#0b2e4f';
+  const secondary = $('brandSecondary')?.value || '#1aa79d';
+  const accent = $('brandAccent')?.value || '#d7ab33';
+  const background = $('brandBackground')?.value || '#f4f7f8';
+  if(box){
+    box.style.setProperty('--preview-primary', primary);
+    box.style.setProperty('--preview-secondary', secondary);
+    box.style.setProperty('--preview-accent', accent);
+    box.style.setProperty('--preview-bg', background);
+  }
+  applyBrandPreviewToIframe();
+}
+function applyBrandPreviewToIframe() {
+  const frame=$('brandSitePreview');
+  if(!frame)return;
+  let doc;
+  try{doc=frame.contentDocument;}catch{return;}
+  if(!doc?.documentElement)return;
+  const primary=$('brandPrimary')?.value||'#0b2e4f';
+  const secondary=$('brandSecondary')?.value||'#1aa79d';
+  const accent=$('brandAccent')?.value||'#d7ab33';
+  const background=$('brandBackground')?.value||'#f4f7f8';
+  const root=doc.documentElement;
+  root.style.setProperty('--navy',primary);
+  root.style.setProperty('--navy2',primary);
+  root.style.setProperty('--teal',secondary);
+  root.style.setProperty('--teal2',secondary);
+  root.style.setProperty('--gold',accent);
+  root.style.setProperty('--bg',background);
+  let previewStyle=doc.getElementById('admin-live-preview-style');
+  if(!previewStyle){
+    previewStyle=doc.createElement('style');
+    previewStyle.id='admin-live-preview-style';
+    previewStyle.textContent='#introLoader{display:none!important}body.intro-active{overflow:auto!important}.intro-loader{display:none!important}';
+    doc.head?.appendChild(previewStyle);
+  }
+  const logo=state.previewLogoUrl||state.branding?.logo_url||null;
+  if(logo){
+    doc.querySelectorAll('img.brand-logo,.footer-brand img,#introFallback img,img[src*="logo-isotipo"]').forEach(img=>{
+      img.removeAttribute('data-optimized'); img.src=logo;
+    });
+  }
+}
+function reloadBrandSitePreview() {
+  const frame=$('brandSitePreview');
+  if(frame)frame.src='/?admin-preview=1&t='+Date.now();
+}
+function setPreviewDevice(device) {
+  const shell=$('brandSitePreviewShell');
+  if(!shell)return;
+  shell.className='site-preview-shell '+device;
+  document.querySelectorAll('[data-preview-device]').forEach(b=>b.classList.toggle('active',b.dataset.previewDevice===device));
 }
 async function saveBranding(e) {
   e.preventDefault();
@@ -632,7 +794,9 @@ async function saveBranding(e) {
   const { error } = await sb.from('web_branding').upsert(payload, { onConflict:'negocio_id' });
   if (error) throw error;
   $('brandLogoFile').value = '';
+  state.previewLogoUrl=null;
   await afterWrite('Marca guardada. La web pública ya puede leer el nuevo logo y colores.');
+  reloadBrandSitePreview();
 }
 function resetResourceForm() {
   $('resourceForm').reset(); $('resourceId').value = ''; $('resourceActive').checked = true; $('resourceForm').hidden = true;
@@ -655,12 +819,15 @@ let categorySlugTouched = false;
 function resetCategoryForm() {
   $('categoryForm').reset(); $('categoryId').value=''; $('categoryActive').checked=true; $('categoryOrder').value=0; categorySlugTouched=false;
   if($('categoryIconPreset')) $('categoryIconPreset').value='';
+  if($('categoryImagePreview')) $('categoryImagePreview').innerHTML='Sin imagen personalizada';
   $('categoryForm').hidden=true; $('categoryFormEmpty').hidden=false; updateCategoryPreview();
 }
 function openCategory(id = '') {
   const c = id ? state.categories.find((x) => x.id === id) : null;
   $('categoryId').value=c?.id||''; $('categoryName').value=c?.nombre||''; $('categorySlug').value=c?.slug||''; $('categoryDescription').value=c?.descripcion||'';
   $('categorySvg').value=c?.icon_svg||''; $('categoryOrder').value=c?.orden??0; $('categoryFeatured').checked=c?.destacada_web===true; $('categoryActive').checked=c ? c.activo===true : true;
+  if($('categoryImageFile')) $('categoryImageFile').value='';
+  if($('categoryImagePreview')) $('categoryImagePreview').innerHTML=c?.image_url ? '<img src="'+attr(c.image_url)+'" alt="Imagen actual">' : 'Sin imagen personalizada';
   if($('categoryIconPreset')){
     const match=Object.entries(ICON_PRESETS).find(([,svg])=>svg===$('categorySvg').value);
     $('categoryIconPreset').value=match?.[0]||'';
@@ -751,10 +918,26 @@ async function saveSchedule(e) {
 async function saveCategory(e) {
   e.preventDefault(); canWriteOrThrow();
   const id=$('categoryId').value, checked=safeSvg($('categorySvg').value); if(!checked.ok) throw new Error(checked.error);
-  const payload={negocio_id:state.business.id,nombre:$('categoryName').value.trim(),slug:slugify($('categorySlug').value),descripcion:$('categoryDescription').value.trim()||null,icon_svg:checked.value,orden:intOr($('categoryOrder').value,0),destacada_web:$('categoryFeatured').checked,activo:$('categoryActive').checked};
+  const current=id?state.categories.find(x=>x.id===id):null;
+  let image_url=current?.image_url||null, image_path=current?.image_path||null, uploaded=null;
+  const imageFile=$('categoryImageFile')?.files?.[0]||null;
+  if(imageFile){
+    uploaded=await uploadBusinessContentImage(imageFile,'categoria-'+($('categorySlug').value||$('categoryName').value));
+    image_url=uploaded.url; image_path=uploaded.path;
+  }
+  const payload={
+    negocio_id:state.business.id,nombre:$('categoryName').value.trim(),slug:slugify($('categorySlug').value),
+    descripcion:$('categoryDescription').value.trim()||null,icon_svg:checked.value,
+    image_url,image_path,image_alt:$('categoryName').value.trim()||null,
+    orden:intOr($('categoryOrder').value,0),destacada_web:$('categoryFeatured').checked,activo:$('categoryActive').checked
+  };
   if(!payload.nombre||!payload.slug) throw new Error('Nombre y slug son obligatorios.');
   const q=id?sb.from('servicio_categorias').update(payload).eq('id',id).eq('negocio_id',state.business.id):sb.from('servicio_categorias').insert(payload);
-  const {error}=await q; if(error) throw error; resetCategoryForm(); await afterWrite('Categoría guardada.');
+  const {error}=await q; if(error) throw error;
+  if(uploaded&&current?.image_path&&current.image_path!==uploaded.path){
+    sb.storage.from('business-content').remove([current.image_path]).catch(()=>{});
+  }
+  resetCategoryForm(); await afterWrite('Categoría guardada.'); reloadBrandSitePreview();
 }
 async function saveService(e) {
   e.preventDefault(); canWriteOrThrow();
@@ -879,6 +1062,12 @@ function bindEvents() {
     if(key&&ICON_PRESETS[key]) $('categorySvg').value=ICON_PRESETS[key];
     updateCategoryPreview();
   });
+  $('categoryImageFile').addEventListener('change',()=>{
+    const file=$('categoryImageFile').files?.[0];
+    if(!file)return;
+    const url=URL.createObjectURL(file);
+    $('categoryImagePreview').innerHTML='<img src="'+attr(url)+'" alt="Vista previa">';
+  });
   $('newServiceBtn').addEventListener('click',()=>openService()); $('cancelServiceBtn').addEventListener('click',resetServiceForm);
   $('serviceForm').addEventListener('submit',(e)=>guard(()=>saveService(e)));
   $('serviceSearch').addEventListener('input',renderServices); $('serviceCategoryFilter').addEventListener('change',renderServices);
@@ -888,11 +1077,15 @@ function bindEvents() {
   ['brandPrimary','brandSecondary','brandAccent','brandBackground'].forEach((id)=>$(id).addEventListener('input',updateBrandPreview));
   $('brandLogoFile').addEventListener('change',()=>{
     const file=$('brandLogoFile').files?.[0];
-    if(!file)return renderBranding();
+    if(!file){state.previewLogoUrl=null;renderBranding();return;}
     const url=URL.createObjectURL(file);
+    state.previewLogoUrl=url;
     $('brandLogoPreview').innerHTML='<img src="'+attr(url)+'" alt="Vista previa">';
     $('brandPreviewLogo').innerHTML='<img src="'+attr(url)+'" alt="">';
+    applyBrandPreviewToIframe();
   });
+  $('brandSitePreview').addEventListener('load',()=>setTimeout(applyBrandPreviewToIframe,450));
+  document.querySelectorAll('[data-preview-device]').forEach((btn)=>btn.addEventListener('click',()=>setPreviewDevice(btn.dataset.previewDevice)));
   $('brandDefaultsBtn').addEventListener('click',()=>{
     $('brandPrimary').value='#0b2e4f'; $('brandSecondary').value='#1aa79d';
     $('brandAccent').value='#d7ab33'; $('brandBackground').value='#f4f7f8';
