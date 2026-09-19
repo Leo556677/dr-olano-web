@@ -13,6 +13,11 @@
   const promoActive=()=>!promoLoaded()||!!livePromo();
   const discountPct=()=>Math.max(0,Math.min(100,Number(livePromo()?.discount_pct??10)));
   const discountText=()=>String(discountPct()).replace(/\.0+$/,'')+'%';
+  const promoTitle=()=>String(livePromo()?.title||'Oferta especial');
+  const promoMessage=()=>String(livePromo()?.message||'Beneficio especial disponible para este servicio.');
+  const promoCta=()=>String(livePromo()?.cta_text||('Aplicar '+discountText()));
+  const promoLegal=()=>String(livePromo()?.legal_note||'El valor mostrado es referencial. El importe final depende de la evaluación médica cuando corresponda. El beneficio queda asociado al servicio elegido y puede verificarse mediante un comprobante del sistema.');
+
 
 
   const $=s=>document.querySelector(s);
@@ -80,9 +85,9 @@
               <div class="offer10-progress-fill" id="offer10ProgressFill"><div class="offer10-progress-stars">${starSvg()}${starSvg()}${starSvg()}${starSvg()}${starSvg()}</div><div class="offer10-progress-shine"></div></div>
             </div>
           </div>
-          <div class="offer10-primary-wrap"><button class="btn btn-primary pulse" id="offer10Accept" type="button">APLICAR MI ${discountText()}</button></div>
+          <div class="offer10-primary-wrap"><button class="btn btn-primary pulse" id="offer10Accept" type="button">${esc(promoCta())}</button></div>
           <button class="offer10-secondary" id="offer10Decline" type="button">Continuar sin el beneficio</button>
-          <p class="offer10-note">El valor mostrado es referencial. El importe final depende de la evaluación médica cuando corresponda. El beneficio queda asociado al servicio elegido y puede verificarse mediante un comprobante del sistema.</p>
+          <p class="offer10-note" id="offer10Legal">${esc(promoLegal())}</p>
         </div>
       </div>`);
 
@@ -90,10 +95,10 @@
       <div id="offer10ConfirmOverlay" aria-hidden="true">
         <div id="offer10ConfirmDialog" role="dialog" aria-modal="true" aria-labelledby="offer10ConfirmTitle" tabindex="-1">
           <div class="offer10-confirm-icon">${couponSvg()}</div>
-          <h3 class="offer10-confirm-title" id="offer10ConfirmTitle">¿Estás seguro de perder tu ${discountText()} de descuento?</h3>
-          <p class="offer10-confirm-copy">Puedes mantener el beneficio y continuar directamente al calendario, o seguir sin la oferta.</p>
+          <h3 class="offer10-confirm-title" id="offer10ConfirmTitle">¿Continuar sin este beneficio?</h3>
+          <p class="offer10-confirm-copy">${esc(promoMessage())}</p>
           <div class="offer10-confirm-actions">
-            <button id="offer10ConfirmApply" type="button">APLICAR OFERTA ${discountText()}</button>
+            <button id="offer10ConfirmApply" type="button">${esc(promoCta())}</button>
             <button id="offer10ConfirmReject" type="button">NO QUIERO OFERTA</button>
           </div>
         </div>
@@ -124,6 +129,13 @@
   function show(o){
     const p=prices(o),u=urgency(o);
     $('#offer10Service').textContent=o.claim.service_name;
+    if($('#offer10Title'))$('#offer10Title').textContent=promoTitle();
+    if($('#offer10Message'))$('#offer10Message').textContent=promoMessage();
+    if($('#offer10Accept'))$('#offer10Accept').textContent=promoCta();
+    if($('#offer10Legal'))$('#offer10Legal').textContent=promoLegal();
+    if($('#offer10ConfirmCopy'))$('#offer10ConfirmCopy').textContent=promoMessage();
+    if($('#offer10ConfirmApply'))$('#offer10ConfirmApply').textContent=promoCta();
+
     $('#offer10Old').textContent=p.old;
     $('#offer10New').textContent=p.now;
     $('#offer10Accept').disabled=left(o)<=0;
