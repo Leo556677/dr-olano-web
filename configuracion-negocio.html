@@ -15,7 +15,7 @@ permalink: /configuracion-negocio/
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260919-3">
+  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260919-4">
 </head>
 <body>
   <div id="authGate" class="gate">
@@ -176,7 +176,20 @@ permalink: /configuracion-negocio/
               <label><span>Slug</span><input id="categorySlug" maxlength="80" required placeholder="medicina-estetica"></label>
               <label><span>Orden</span><input id="categoryOrder" type="number" min="-9999" max="9999" value="0"></label>
               <label class="full"><span>Descripción pública</span><textarea id="categoryDescription" maxlength="500" rows="3" placeholder="Descripción breve opcional"></textarea></label>
-              <label class="full"><span>Icono SVG</span><textarea id="categorySvg" maxlength="20000" rows="8" spellcheck="false" placeholder="<svg viewBox=&quot;0 0 24 24&quot; ...>...</svg>"></textarea><small class="help">No se aceptan scripts, eventos HTML, iframes, estilos externos ni enlaces remotos.</small></label>
+              <label class="full"><span>Icono</span><select id="categoryIconPreset">
+                <option value="">Elegir icono…</option>
+                <option value="sparkles">Brillos / estética</option>
+                <option value="face">Rostro</option>
+                <option value="target">Dolor / intervención</option>
+                <option value="heart">Salud / metabolismo</option>
+                <option value="cells">Regenerativa</option>
+                <option value="drop">Suero / vitaminas</option>
+                <option value="leaf">Bienestar</option>
+                <option value="stethoscope">Consulta</option>
+              </select><small class="help">Elige un icono visual. No necesitas escribir código.</small></label>
+              <details class="full advanced-details"><summary>Icono SVG personalizado · avanzado</summary>
+                <label><span>Código SVG</span><textarea id="categorySvg" maxlength="20000" rows="6" spellcheck="false" placeholder="<svg viewBox=&quot;0 0 24 24&quot; ...>...</svg>"></textarea><small class="help">Solo si necesitas un icono propio. No se aceptan scripts, eventos HTML, iframes, estilos externos ni enlaces remotos.</small></label>
+              </details>
               <div class="svg-preview full">
                 <div id="categoryIconPreview" class="icon-preview empty">SVG</div>
                 <span>Vista previa segura</span>
@@ -375,6 +388,6 @@ permalink: /configuracion-negocio/
     </main>
   </div>
 
-  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260919-3"></script>
+  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260919-4"></script>
 </body>
 </html>
