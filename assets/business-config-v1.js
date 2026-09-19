@@ -65,6 +65,23 @@
     });
   }
 
+  function validHex(v){ return /^#[0-9a-f]{6}$/i.test(String(v||'')); }
+  function applyBranding(data){
+    const b=data?.branding||{};
+    const root=document.documentElement;
+    if(validHex(b.primary))root.style.setProperty('--navy',b.primary);
+    if(validHex(b.secondary))root.style.setProperty('--teal',b.secondary);
+    if(validHex(b.accent))root.style.setProperty('--gold',b.accent);
+    if(validHex(b.background))root.style.setProperty('--bg',b.background);
+    if(b.logo_url){
+      document.querySelectorAll('img[src*="logo-isotipo"]').forEach(img=>{
+        img.removeAttribute('data-optimized');
+        img.src=b.logo_url;
+      });
+      document.querySelectorAll('link[rel="icon"],link[rel="apple-touch-icon"]').forEach(link=>{ link.href=b.logo_url; });
+    }
+  }
+
   function applyCatalog(data){
     const categories=(data.categories||[]).filter(c=>c?.slug&&c?.name);
     const services=(data.services||[]).filter(s=>s?.service_code&&s?.name&&categoryById(data,s.category_id));
@@ -188,6 +205,7 @@
       if(!r.ok||data?.ok!==true)throw new Error(data?.code||'SITE_CONFIG_FAILED');
       window.OLANO_BUSINESS_CONFIG=data;
       addStyles();
+      applyBranding(data);
       applyCatalog(data);
       updateScheduleCopy(data);
       wrapCatalogRenderer(data);
