@@ -34,6 +34,7 @@
     return map;
   }
   function scheduleSummary(booking){
+    if(booking?.has_scoped_availability)return 'Horarios según servicio · revisa disponibilidad';
     const map=scheduleByDay(booking);
     const values=Array.from({length:7},(_,d)=>formatIntervals(map.get(d)));
     const nonEmpty=values.filter(Boolean);
@@ -54,7 +55,10 @@
     const pieces=summary.split(' · ');
     const trust=document.querySelectorAll('.hero-copy .trust > div');
     if(trust[0])trust[0].innerHTML='<b>'+esc(pieces[0]||'Horario')+'</b><span>'+esc(pieces.slice(1).join(' · ')||'según disponibilidad')+'</span>';
-    if(trust[1]&&Number(data.booking?.start_interval_min)>0)trust[1].innerHTML='<b>'+Number(data.booking.start_interval_min)+' min</b><span>intervalos</span>';
+    if(trust[1]){
+      if(data.booking?.has_scoped_availability)trust[1].innerHTML='<b>Variable</b><span>según servicio</span>';
+      else if(Number(data.booking?.start_interval_min)>0)trust[1].innerHTML='<b>'+Number(data.booking.start_interval_min)+' min</b><span>intervalos</span>';
+    }
     document.querySelectorAll('.trust-chip').forEach(el=>{
       const t=el.textContent||'';
       if(/Lun|Mar|Mié|Jue|Vie|Sáb|Dom|09:00|21:00|horario/i.test(t))el.textContent=summary;
