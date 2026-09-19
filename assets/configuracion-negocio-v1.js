@@ -42,6 +42,8 @@ const state = {
   links: [],
   promotions: [],
   branding: null,
+  availabilityConfigs: [],
+  availabilityBlocks: [],
   publicConfig: null
 };
 
@@ -154,7 +156,7 @@ async function loadAll({ publicCheck = false } = {}) {
   if (!state.business) return;
   setSync('Sincronizando…', null);
   const bid = state.business.id;
-  const [configQ, resourcesQ, schedulesQ, categoriesQ, servicesQ, linksQ, promotionsQ, brandingQ] = await Promise.all([
+  const [configQ, resourcesQ, schedulesQ, categoriesQ, servicesQ, linksQ, promotionsQ, brandingQ, availabilityConfigsQ, availabilityBlocksQ] = await Promise.all([
     sb.from('configuracion_agenda').select('*').eq('negocio_id', bid).maybeSingle(),
     sb.from('recursos_agenda').select('*').eq('negocio_id', bid).order('created_at'),
     sb.from('horarios_agenda').select('*').eq('negocio_id', bid).order('dia_semana').order('hora_inicio'),
@@ -162,9 +164,11 @@ async function loadAll({ publicCheck = false } = {}) {
     sb.from('servicios').select('id,negocio_id,nombre,descripcion,descripcion_web,duracion_min,precio_pen,precio_usd,activo,codigo_web,codigo_externo,dias_semana_disponibles,requiere_consulta_previa,modalidades_consulta,precio_consulta_pen,calendar_color_hex,categoria_id,visible_web,orden_web,precio_desde,created_at,updated_at').eq('negocio_id', bid).order('orden_web').order('nombre'),
     sb.from('servicios_recursos').select('*').eq('negocio_id', bid),
     sb.from('web_promociones').select('*').eq('negocio_id', bid).order('created_at', { ascending:false }),
-    sb.from('web_branding').select('*').eq('negocio_id', bid).maybeSingle()
+    sb.from('web_branding').select('*').eq('negocio_id', bid).maybeSingle(),
+    sb.from('agenda_disponibilidad_config').select('*').eq('negocio_id', bid).order('created_at'),
+    sb.from('agenda_disponibilidad_bloques').select('*').eq('negocio_id', bid).order('created_at')
   ]);
-  for (const q of [configQ, resourcesQ, schedulesQ, categoriesQ, servicesQ, linksQ, promotionsQ, brandingQ]) {
+  for (const q of [configQ, resourcesQ, schedulesQ, categoriesQ, servicesQ, linksQ, promotionsQ, brandingQ, availabilityConfigsQ, availabilityBlocksQ]) {
     if (q.error) throw q.error;
   }
   state.config = configQ.data || null;
@@ -175,6 +179,8 @@ async function loadAll({ publicCheck = false } = {}) {
   state.links = linksQ.data || [];
   state.promotions = promotionsQ.data || [];
   state.branding = brandingQ.data || null;
+  state.availabilityConfigs = availabilityConfigsQ.data || [];
+  state.availabilityBlocks = availabilityBlocksQ.data || [];
   renderAll();
   setSync('Datos sincronizados', true);
   if (publicCheck) await loadPublicConfig();
@@ -190,6 +196,7 @@ function renderAll() {
   renderServices();
   renderPromotions();
   renderBranding();
+  renderAvailability();
   setWriteMode();
 }
 
