@@ -47,3 +47,10 @@ fieldset{border:1px solid var(--line);border-radius:12px;padding:12px}fieldset l
 .advanced-details summary{cursor:pointer;font-size:10px;font-weight:800;color:#475467}
 .advanced-details[open] summary{margin-bottom:10px}
 .advanced-details label{display:block}
+
+.availability-layout{grid-template-columns:minmax(340px,.86fr) minmax(0,1.14fr)}
+.availability-card{background:linear-gradient(145deg,#fff,#fbfcfd)}
+.availability-card .row-actions{justify-content:flex-start}
+#availabilityBlocksCard{scroll-margin-top:100px}
+#availabilityBlockForm{padding:14px;border:1px dashed var(--line);border-radius:14px;background:#fafafa;margin-bottom:14px}
+@media(max-width:850px){.availability-layout{grid-template-columns:1fr}}
