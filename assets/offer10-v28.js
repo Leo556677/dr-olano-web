@@ -96,7 +96,7 @@
         <div id="offer10ConfirmDialog" role="dialog" aria-modal="true" aria-labelledby="offer10ConfirmTitle" tabindex="-1">
           <div class="offer10-confirm-icon">${couponSvg()}</div>
           <h3 class="offer10-confirm-title" id="offer10ConfirmTitle">¿Continuar sin este beneficio?</h3>
-          <p class="offer10-confirm-copy">${esc(promoMessage())}</p>
+          <p class="offer10-confirm-copy" id="offer10ConfirmCopy">${esc(promoMessage())}</p>
           <div class="offer10-confirm-actions">
             <button id="offer10ConfirmApply" type="button">${esc(promoCta())}</button>
             <button id="offer10ConfirmReject" type="button">NO QUIERO OFERTA</button>
