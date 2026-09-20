@@ -941,6 +941,7 @@ async function saveContentSlot(e,card) {
     sb.storage.from('business-content').remove([slot.image_path]).catch(()=>{});
   }
   builderSetState('Guardado','');
+  editorTrace('CONTENT_SAVE','OK',{slot:slot.slot_key});
   await loadAll();
   reloadVisualSitePreview();
 }
@@ -952,6 +953,7 @@ function openAdminTab(name){
 function setVisualPreviewDevice(device){
   if(!['desktop','tablet','mobile'].includes(device))device='desktop';
   state.builderDevice=device;
+  editorTrace('DEVICE_CHANGE','OK',{device});
   const shell=$('visualSitePreviewShell'); if(!shell)return;
   shell.className='site-preview-shell visual-editor-preview '+device;
   document.querySelectorAll('[data-visual-device]').forEach(b=>b.classList.toggle('active',b.dataset.visualDevice===device));
@@ -968,6 +970,7 @@ function setVisualPreviewDevice(device){
 }
 function setBuilderMode(mode){
   state.builderMode=mode==='navigate'?'navigate':'edit';
+  editorTrace('MODE_CHANGE','OK',{mode:state.builderMode});
   $('builderEditMode')?.classList.toggle('active',state.builderMode==='edit');
   $('builderNavigateMode')?.classList.toggle('active',state.builderMode==='navigate');
   const help=$('builderModeHelp');
@@ -1667,6 +1670,7 @@ async function saveBranding(e) {
   $('brandLogoFile').value = '';
   state.previewLogoUrl=null;
   await afterWrite('Marca guardada. La web pública ya puede leer el nuevo logo y colores.');
+  editorTrace('BRAND_SAVE','OK',{colors:currentEditorPalette(),logo:Boolean(logoUrl)});
   reloadVisualSitePreview();
 }
 function resetResourceForm() {
@@ -1961,6 +1965,7 @@ function bindEvents() {
   if($('brandSitePreview')) $('brandSitePreview').addEventListener('load',()=>{setTimeout(applyBrandPreviewToIframe,350);setTimeout(applyBrandPreviewToIframe,1300);});
   document.querySelectorAll('[data-preview-device]').forEach((btn)=>btn.addEventListener('click',()=>setPreviewDevice(btn.dataset.previewDevice)));
   $('visualSitePreview').addEventListener('load',()=>{
+    editorTrace('PREVIEW_LOAD','OK',{url:$('visualSitePreview').src});
     setupVisualPreview();
     try{$('visualSitePreview').contentDocument?.addEventListener('olano:business-config',setupVisualPreview,{once:true});}catch{}
     setTimeout(setupVisualPreview,450);setTimeout(setupVisualPreview,1500);
@@ -1970,9 +1975,22 @@ function bindEvents() {
   $('builderNavigateMode').addEventListener('click',()=>setBuilderMode('navigate'));
   setupInspectorPalette();
   $('inspectBgMode').addEventListener('change',()=>{updateInspectorVisibility();applySelectedInspectorConfig();});
-  ['inspectWidth','inspectHeight','inspectFontSize','inspectRadius','inspectBgFrom','inspectBgTo','inspectGradientAngle','inspectColor','inspectBorder','inspectOpacity','inspectPadding']
+  ['inspectWidth','inspectHeight','inspectFontSize','inspectRadius','inspectBgFrom','inspectBgTo','inspectGradientAngle','inspectBorder','inspectOpacity','inspectPadding']
     .forEach(id=>$(id).addEventListener('input',()=>applySelectedInspectorConfig()));
+  $('inspectTypographyScope').addEventListener('change',()=>{populateTypographyControls();editorTrace('TYPOGRAPHY_SCOPE','OK',{scope:$('inspectTypographyScope').value});});
+  ['inspectFontFamily','inspectFontWeight','inspectFontScale','inspectColor'].forEach(id=>$(id).addEventListener('input',()=>applyTypographyFromInspector()));
+  $('inspectText').addEventListener('input',()=>applySelectedInspectorConfig());
+  $('inspectImageFile').addEventListener('change',()=>{
+    const file=$('inspectImageFile').files?.[0];
+    if(file)guard(()=>setSelectedElementImage(file));
+  });
   $('inspectorResetBtn').addEventListener('click',()=>resetSelectedElementStyle());
+  document.querySelector('.visual-builder-sidebar')?.addEventListener('focusin',(e)=>{
+    const control=e.target.closest('input,textarea,select');
+    if(control)syncFocusFromEditorControl(control);
+  });
+  $('copyTraceBtn').addEventListener('click',()=>copyEditorTrace());
+  $('clearTraceBtn').addEventListener('click',()=>clearEditorTrace());
   $('brandDefaultsBtn').addEventListener('click',()=>{
     $('brandPrimary').value='#0b2e4f'; $('brandSecondary').value='#1aa79d';
     $('brandAccent').value='#d7ab33'; $('brandBackground').value='#f4f7f8';
@@ -1983,7 +2001,14 @@ function bindEvents() {
   ['promotionTitle','promotionMessage','promotionCta','promotionDiscount','promotionCountdown'].forEach((id)=>$(id).addEventListener('input',updatePromotionPreview));
 }
 async function guard(fn) {
-  try{setStatus('Guardando…','info');await fn();}catch(err){console.error(err);setStatus(err?.message||String(err),'error');}
+  try{setStatus('Guardando…','info');await fn();}
+  catch(err){
+    console.error(err);
+    const message=err?.message||String(err);
+    editorTrace('ERROR','ERROR',{message,stack:String(err?.stack||'').slice(0,1200)});
+    setStatus(message,'error');
+    throw err;
+  }
 }
 
 async function bootstrap() {
