@@ -1737,7 +1737,9 @@ function groupSelectedElements(){
   editorTrace('GROUP_CREATE','OK',{slot:slotKey,group:id,count:sel.length});
 }
 function ungroupSelectedElements(){
-  const sel=state.builderMultiSelection;if(!sel.length)return;
+  let sel=[...state.builderMultiSelection];
+  if(!sel.length&&state.builderSelection)sel=[{...state.builderSelection}];
+  if(!sel.length)return;
   const bySlot=new Map();
   sel.forEach(x=>{if(!bySlot.has(x.slotKey))bySlot.set(x.slotKey,[]);bySlot.get(x.slotKey).push(x.elementKey);});
   pushUndoSnapshot('Desagrupar elementos');
@@ -1799,6 +1801,8 @@ function openBuilderContextMenu(e){
   const menu=doc.createElement('div');menu.id='adminBuilderContextMenu';menu.dataset.adminBuilderControl='1';
   const selectedCustom=state.builderSelection?.elementKey?.startsWith('custom.');
   const groupCount=selectedMultiKeys(slotKey).length;
+  const slot=builderSlotByKey(slotKey),groups=slot&&groupMap(slot,false);
+  const selectedInGroup=Boolean(state.builderSelection?.elementKey&&groups?.[state.builderSelection.elementKey]);
   menu.innerHTML=
     '<button data-act="box">＋ Cajón / subcontenedor</button>'+
     '<button data-act="line">─ Línea</button>'+
@@ -1808,7 +1812,7 @@ function openBuilderContextMenu(e){
     '<button data-act="image">▧ Imagen</button>'+
     '<hr>'+
     '<button data-act="group" '+(groupCount<2?'disabled':'')+'>Agrupar seleccionados</button>'+
-    '<button data-act="ungroup" '+(!groupCount?'disabled':'')+'>Desagrupar grupo</button>'+
+    '<button data-act="ungroup" '+(!(groupCount||selectedInGroup)?'disabled':'')+'>Desagrupar grupo</button>'+
     (selectedCustom?'<button data-act="delete" class="danger">Eliminar elemento</button>':'');
   menu.style.left=Math.min(e.clientX,doc.defaultView.innerWidth-230)+'px';
   menu.style.top=Math.min(e.clientY,doc.defaultView.innerHeight-330)+doc.defaultView.scrollY+'px';
