@@ -1346,6 +1346,7 @@ function applyTypographyFromInspector(){
   const slot=typographyTargetSlot(scope);
   if(slot)scheduleBuilderStyleSave(slot.slot_key);
   builderSetState('Cambios tipográficos','warn');
+  updateEditorDirty();
   editorTrace('TYPOGRAPHY_CHANGE','OK',{scope,font:font,weight,color,scale,slot:slot?.slot_key||null});
 }
 function selectedElementSupportsImage(el){return el?.tagName==='IMG';}
@@ -1462,6 +1463,7 @@ function applySelectedInspectorConfig(scheduleSave=true){
   api.applyVisualElementStyles(live);
   updateElementOverlay();
   builderSetState('Cambios de diseño','warn');
+  updateEditorDirty();
   editorTrace('ELEMENT_STYLE_CHANGE','OK',{slot:sel.slotKey,element:sel.elementKey,config:cfg});
   if(scheduleSave)scheduleBuilderStyleSave(sel.slotKey);
 }
@@ -1515,6 +1517,7 @@ function setSelectedElementTextOverride(value){
   if(!api){editorTrace('BUILDER_API_MISSING','ERROR',{slot:sel.slotKey,element:sel.elementKey,action:'text'});return;}
   api.applyBuilderElementStyle(el,{...cfg,...styleCfg},currentEditorPalette());
   builderSetState('Contenido del elemento','warn');
+  updateEditorDirty();
   editorTrace('ELEMENT_TEXT_CHANGE','OK',{slot:sel.slotKey,element:sel.elementKey,text:String(value).slice(0,180)});
   scheduleBuilderStyleSave(sel.slotKey);
 }
@@ -1596,6 +1599,7 @@ function beginElementMove(e){
   };
   const up=()=>{
     doc.removeEventListener('pointermove',move);doc.removeEventListener('pointerup',up);
+    updateEditorDirty();
     scheduleBuilderStyleSave(sel.slotKey);
     editorTrace('ELEMENT_MOVE_END','OK',{slot:sel.slotKey,element:sel.elementKey,groupSize:members.length,x:builderElementConfig(sel.slotKey,sel.elementKey,false)?.x||0,y:builderElementConfig(sel.slotKey,sel.elementKey,false)?.y||0});
     selectVisualElement(el);
@@ -1624,6 +1628,7 @@ function beginElementResize(e){
   };
   const up=()=>{
     doc.removeEventListener('pointermove',move);doc.removeEventListener('pointerup',up);
+    updateEditorDirty();
     scheduleBuilderStyleSave(sel.slotKey);
     editorTrace('ELEMENT_RESIZE_END','OK',{slot:sel.slotKey,element:sel.elementKey,width:cfg.w||Math.round(el.getBoundingClientRect().width),height:cfg.h||Math.round(el.getBoundingClientRect().height)});
     selectVisualElement(el);
