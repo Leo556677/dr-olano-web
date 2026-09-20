@@ -1065,6 +1065,7 @@ function wireContentEditor(){
 let builderDraggedId=null;
 function builderDragStart(e){
   builderDraggedId=e.currentTarget.dataset.contentForm;
+  pushUndoSnapshot('Mover sección');
   e.currentTarget.classList.add('dragging');
   e.dataTransfer.effectAllowed='move';
   e.dataTransfer.setData('text/plain',builderDraggedId);
@@ -1343,6 +1344,15 @@ function applyTypographyFromInspector(){
   editorTrace('TYPOGRAPHY_CHANGE','OK',{scope,font:font,weight,color,scale,slot:slot?.slot_key||null});
 }
 function selectedElementSupportsImage(el){return el?.tagName==='IMG';}
+function scrollLeftEditorToSelection(slotKey){
+  const sidebar=document.querySelector('.visual-builder-sidebar');if(!sidebar)return;
+  const inspector=$('elementInspector'),card=$('contentEditorList')?.querySelector('[data-builder-slot="'+CSS.escape(slotKey)+'"]');
+  const target=inspector&&!inspector.hidden?inspector:card;if(!target)return;
+  const top=Math.max(0,target.offsetTop-12);
+  sidebar.scrollTo({top,behavior:'smooth'});
+  target.classList.remove('admin-left-flash');void target.offsetWidth;target.classList.add('admin-left-flash');
+  setTimeout(()=>target.classList.remove('admin-left-flash'),1400);
+}
 function selectVisualElement(el){
   if(state.builderMode!=='edit'||!el)return;
   const frame=visualFrame(),api=frame?.contentWindow?.OLANO_BUILDER_API;
@@ -1380,6 +1390,7 @@ function selectVisualElement(el){
   if($('inspectImageFile'))$('inspectImageFile').value='';
   updateInspectorVisibility();
   showElementOverlay(el);
+  scrollLeftEditorToSelection(slotKey);
   editorTrace('ELEMENT_SELECT','OK',{slot:slotKey,element:elementKey,label:el.dataset.cmsElementLabel||elementKey,tag:el.tagName});
 }
 function restoreBuilderSelection(){
@@ -1450,17 +1461,12 @@ function scheduleBuilderStyleSave(slotKey){
 async function saveBuilderSlotSettings(slotKey){
   canWriteOrThrow();
   const slot=builderSlotByKey(slotKey);if(!slot)return;
-  builderSetState('Guardando diseño…','neutral');
-  const {error}=await sb.from('web_content_slots').update({settings:slot.settings,updated_at:new Date().toISOString()})
-    .eq('negocio_id',state.business.id).eq('slot_key',slotKey);
-  if(error)throw error;
   try{
     const frame=visualFrame(),live=frame?.contentWindow?.OLANO_BUSINESS_CONFIG;
     const liveSlot=(live?.content||[]).find(x=>x.slot_key===slotKey);
     if(liveSlot)liveSlot.settings=structuredClone(slot.settings);
   }catch{}
-  builderSetState('Diseño guardado','');
-  editorTrace('STYLE_SAVE','OK',{slot:slotKey});
+  markEditorDirty('DRAFT_STYLE_STAGE',{slot:slotKey});
 }
 function resetSelectedElementStyle(){
   const sel=state.builderSelection;if(!sel)return;
@@ -1499,7 +1505,6 @@ async function setSelectedElementImage(file){
   api.applyBuilderElementStyle(el,{...cfg,...styleCfg},currentEditorPalette());
   updateElementOverlay(el);
   await saveBuilderSlotSettings(sel.slotKey);
-  if(oldPath&&oldPath!==uploaded.path)sb.storage.from('business-content').remove([oldPath]).catch(()=>{});
   editorTrace('IMAGE_REPLACE','OK',{slot:sel.slotKey,element:sel.elementKey,url:uploaded.url});
 }
 function ensureElementOverlay(){
@@ -1540,6 +1545,7 @@ function beginElementMove(e){
   const sel=state.builderSelection,el=sel&&visualElement(sel.slotKey,sel.elementKey);if(!sel||!el)return;
   if(sel.elementKey==='section'){editorTrace('ELEMENT_MOVE_BLOCKED','ERROR',{slot:sel.slotKey,element:sel.elementKey,message:'Las secciones completas se reordenan con Mover sección'});return;}
   const doc=visualDoc(),section=el.closest('[data-cms-slot]');if(!doc||!section)return;
+  pushUndoSnapshot('Mover '+(el.dataset.cmsElementLabel||sel.elementKey));
   editorTrace('ELEMENT_MOVE_START','OK',{slot:sel.slotKey,element:sel.elementKey});
   const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;
   if(!api){editorTrace('BUILDER_API_MISSING','ERROR',{slot:sel.slotKey,element:sel.elementKey,action:'move'});return;}
@@ -1568,6 +1574,7 @@ function beginElementResize(e){
   const sel=state.builderSelection,el=sel&&visualElement(sel.slotKey,sel.elementKey);if(!sel||!el)return;
   if(sel.elementKey==='section'){editorTrace('ELEMENT_RESIZE_BLOCKED','ERROR',{slot:sel.slotKey,element:sel.elementKey,message:'No se redimensiona la sección completa con el tirador'});return;}
   const doc=visualDoc(),section=el.closest('[data-cms-slot]');if(!doc||!section)return;
+  pushUndoSnapshot('Redimensionar '+(el.dataset.cmsElementLabel||sel.elementKey));
   editorTrace('ELEMENT_RESIZE_START','OK',{slot:sel.slotKey,element:sel.elementKey});
   const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;
   if(!api){editorTrace('BUILDER_API_MISSING','ERROR',{slot:sel.slotKey,element:sel.elementKey,action:'resize'});return;}
@@ -1700,6 +1707,7 @@ function setupVisualPreview(){
       handle.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();selectEditorCard(key);});
       handle.addEventListener('dragstart',e=>{
         e.stopPropagation();state.builderPreviewDragKey=key;
+        pushUndoSnapshot('Mover sección '+contentSlotLabel(builderSlotByKey(key)||{slot_key:key}));
         e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/x-olano-slot',key);
         editorTrace('SECTION_DRAG_START','OK',{slot:key,source:'preview'});
       });
