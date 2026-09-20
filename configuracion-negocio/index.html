@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260920-11">
+  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260920-12">
 </head>
 <body>
   <div id="authGate" class="gate">
@@ -345,7 +345,7 @@
           </div>
         </div>
         <div class="notice neutral content-safety-note">
-          <strong>Cómo funciona:</strong> arrastra las secciones de la izquierda para cambiar su orden. También puedes tocar una sección dentro de la vista previa para abrir su edición. Los bloques de sistema, como reserva y horarios, siguen conectados a sus datos reales.
+          <strong>Cómo funciona:</strong> trabaja sobre un borrador. Nada cambia en la web pública hasta pulsar <b>Publicar cambios</b>. Haz clic para seleccionar; clic derecho abre herramientas para agregar, agrupar o eliminar; Ctrl+Z deshace. Los bloques de sistema siguen protegidos.
         </div>
         <div class="visual-builder-layout">
           <div class="visual-builder-sidebar">
@@ -379,7 +379,7 @@
                   <button type="button">Ejemplo</button>
                 </div>
                 <div class="form-actions full">
-                  <button class="button primary write-control" type="submit">Guardar logo y colores</button>
+                  <button class="button primary write-control" type="submit">Aplicar al borrador</button>
                   <button id="brandDefaultsBtn" class="button ghost write-control" type="button">Restablecer</button>
                 </div>
               </form>
@@ -417,7 +417,7 @@
                 <label id="inspectFontScaleWrap" class="full"><span>Escala de texto del alcance</span><div class="input-suffix"><input id="inspectFontScale" type="number" min="60" max="180" step="5" placeholder="100"><em>%</em></div></label>
                 <label id="inspectTextWrap" class="full" hidden><span>Contenido del texto / botón</span><input id="inspectText" maxlength="500"></label>
                 <label id="inspectImageWrap" class="full" hidden><span>Reemplazar imagen</span><input id="inspectImageFile" type="file" accept="image/png,image/jpeg,image/webp"><small class="help">PNG, JPG o WebP · máximo 5 MB. Se guarda solo para este elemento.</small></label>
-                <label id="inspectLinkWrap" class="full"><span>Enlace al hacer clic</span><input id="inspectLinkHref" type="url" placeholder="https://... o /ruta"><small id="inspectLinkHelp" class="help">Déjalo vacío para no agregar un enlace.</small></label>
+                <label id="inspectLinkWrap" class="full"><span>Enlace al hacer clic</span><input id="inspectLinkHref" type="text" placeholder="https://... o /ruta"><small id="inspectLinkHelp" class="help">Déjalo vacío para no agregar un enlace.</small></label>
                 <label id="inspectLinkTargetWrap"><span>Abrir enlace</span><select id="inspectLinkTarget"><option value="_self">En esta pestaña</option><option value="_blank">En nueva pestaña</option></select></label>
                 <label><span>Ancho</span><div class="input-suffix"><input id="inspectWidth" type="number" min="20" max="1600" step="1"><em>px</em></div></label>
                 <label><span>Alto</span><div class="input-suffix"><input id="inspectHeight" type="number" min="20" max="1600" step="1"><em>px</em></div></label>
@@ -577,6 +577,6 @@
     </div>
   </div>
 
-  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260920-11"></script>
+  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260920-12"></script>
 </body>
 </html>
