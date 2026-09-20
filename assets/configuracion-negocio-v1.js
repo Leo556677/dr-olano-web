@@ -1870,45 +1870,45 @@ function applyBrandPreviewToIframe() {
 }
 function reloadBrandSitePreview() { reloadVisualSitePreview(); }
 function setPreviewDevice(device) { setVisualPreviewDevice(device); }
+function stageBrandingControls(){
+  state.branding=state.branding&&typeof state.branding==='object'?state.branding:{negocio_id:state.business?.id};
+  state.branding.color_primary=$('brandPrimary').value;
+  state.branding.color_secondary=$('brandSecondary').value;
+  state.branding.color_accent=$('brandAccent').value;
+  state.branding.color_background=$('brandBackground').value;
+  updateBrandPreview();
+  markEditorDirty('DRAFT_BRAND_CHANGE',{colors:currentEditorPalette()});
+}
+async function stageBrandLogo(file){
+  if(!file)return;
+  canWriteOrThrow();
+  if(file.size>3145728)throw new Error('El logo supera el máximo de 3 MB.');
+  if(!['image/png','image/jpeg','image/webp'].includes(file.type))throw new Error('Usa un logo PNG, JPG o WebP.');
+  pushUndoSnapshot('Cambiar logo');
+  const ext=file.type==='image/png'?'png':file.type==='image/webp'?'webp':'jpg';
+  const path='dr-olano/logo-draft-'+Date.now()+'.'+ext;
+  const {error:uploadErr}=await sb.storage.from('business-branding').upload(path,file,{cacheControl:'3600',upsert:false});
+  if(uploadErr)throw uploadErr;
+  const {data:publicData}=sb.storage.from('business-branding').getPublicUrl(path);
+  if(!publicData?.publicUrl)throw new Error('No se pudo obtener la URL pública del logo.');
+  state.branding=state.branding&&typeof state.branding==='object'?state.branding:{negocio_id:state.business?.id};
+  state.branding.logo_url=publicData.publicUrl;
+  state.branding.logo_path=path;
+  state.previewLogoUrl=publicData.publicUrl;
+  $('brandLogoPreview').innerHTML='<img src="'+attr(publicData.publicUrl)+'" alt="Vista previa del logo">';
+  $('brandPreviewLogo').innerHTML='<img src="'+attr(publicData.publicUrl)+'" alt="">';
+  applyBrandPreviewToIframe();
+  markEditorDirty('DRAFT_LOGO_CHANGE',{url:publicData.publicUrl});
+}
 async function saveBranding(e) {
   e.preventDefault();
   canWriteOrThrow();
-  let logoUrl = state.branding?.logo_url || null;
-  let logoPath = state.branding?.logo_path || null;
-  const file = $('brandLogoFile').files?.[0] || null;
-  if (file) {
-    if (file.size > 3145728) throw new Error('El logo supera el máximo de 3 MB.');
-    if (!['image/png','image/jpeg','image/webp'].includes(file.type)) throw new Error('Usa un logo PNG, JPG o WebP.');
-    const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
-    const newPath = 'dr-olano/logo-' + Date.now() + '.' + ext;
-    const { error: uploadErr } = await sb.storage.from('business-branding').upload(newPath, file, { cacheControl:'3600', upsert:false });
-    if (uploadErr) throw uploadErr;
-    const { data: publicData } = sb.storage.from('business-branding').getPublicUrl(newPath);
-    logoUrl = publicData?.publicUrl || null;
-    if (!logoUrl) throw new Error('No se pudo obtener la URL pública del logo.');
-    const oldPath = logoPath;
-    logoPath = newPath;
-    if (oldPath && oldPath !== newPath) {
-      sb.storage.from('business-branding').remove([oldPath]).catch(() => {});
-    }
-  }
-  const payload = {
-    negocio_id: state.business.id,
-    logo_url: logoUrl,
-    logo_path: logoPath,
-    color_primary: $('brandPrimary').value,
-    color_secondary: $('brandSecondary').value,
-    color_accent: $('brandAccent').value,
-    color_background: $('brandBackground').value,
-    updated_at: new Date().toISOString()
-  };
-  const { error } = await sb.from('web_branding').upsert(payload, { onConflict:'negocio_id' });
-  if (error) throw error;
-  $('brandLogoFile').value = '';
-  state.previewLogoUrl=null;
-  await afterWrite('Marca guardada. La web pública ya puede leer el nuevo logo y colores.');
-  editorTrace('BRAND_SAVE','OK',{colors:currentEditorPalette(),logo:Boolean(logoUrl)});
-  reloadVisualSitePreview();
+  stageBrandingControls();
+  const file=$('brandLogoFile').files?.[0]||null;
+  if(file&&state.branding?.logo_url!==state.previewLogoUrl)await stageBrandLogo(file);
+  $('brandLogoFile').value='';
+  builderSetState('Marca aplicada al borrador','warn');
+  editorTrace('DRAFT_BRAND_APPLY','OK',{colors:currentEditorPalette(),logo:Boolean(state.branding?.logo_url)});
 }
 function resetResourceForm() {
   $('resourceForm').reset(); $('resourceId').value = ''; $('resourceActive').checked = true; $('resourceForm').hidden = true;
@@ -2188,16 +2188,13 @@ function bindEvents() {
   $('newPromotionBtn').addEventListener('click',()=>openPromotion()); $('cancelPromotionBtn').addEventListener('click',resetPromotionForm);
   $('promotionForm').addEventListener('submit',(e)=>guard(()=>savePromotion(e)));
   $('brandingForm').addEventListener('submit',(e)=>guard(()=>saveBranding(e)));
-  ['brandPrimary','brandSecondary','brandAccent','brandBackground'].forEach((id)=>$(id).addEventListener('input',()=>{updateBrandPreview();builderSetState('Cambios de marca sin guardar','warn');}));
+  ['brandPrimary','brandSecondary','brandAccent','brandBackground'].forEach((id)=>$(id).addEventListener('input',(e)=>{
+    consumeUndoArm(e.currentTarget);
+    stageBrandingControls();
+  }));
   $('brandLogoFile').addEventListener('change',()=>{
     const file=$('brandLogoFile').files?.[0];
-    if(!file){state.previewLogoUrl=null;renderBranding();return;}
-    const url=URL.createObjectURL(file);
-    state.previewLogoUrl=url;
-    $('brandLogoPreview').innerHTML='<img src="'+attr(url)+'" alt="Vista previa">';
-    $('brandPreviewLogo').innerHTML='<img src="'+attr(url)+'" alt="">';
-    applyBrandPreviewToIframe();
-    builderSetState('Cambios de marca sin guardar','warn');
+    if(file)guard(()=>stageBrandLogo(file));
   });
   if($('brandSitePreview')) $('brandSitePreview').addEventListener('load',()=>{setTimeout(applyBrandPreviewToIframe,350);setTimeout(applyBrandPreviewToIframe,1300);});
   document.querySelectorAll('[data-preview-device]').forEach((btn)=>btn.addEventListener('click',()=>setPreviewDevice(btn.dataset.previewDevice)));
@@ -2229,10 +2226,10 @@ function bindEvents() {
   $('copyTraceBtn').addEventListener('click',()=>copyEditorTrace());
   $('clearTraceBtn').addEventListener('click',()=>clearEditorTrace());
   $('brandDefaultsBtn').addEventListener('click',()=>{
-    $('brandPrimary').value='#0b2e4f'; $('brandSecondary').value='#1aa79d';
-    $('brandAccent').value='#d7ab33'; $('brandBackground').value='#f4f7f8';
-    updateBrandPreview();
-    builderSetState('Cambios de marca sin guardar','warn');
+    pushUndoSnapshot('Restablecer paleta');
+    $('brandPrimary').value='#0b2e4f';$('brandSecondary').value='#1aa79d';
+    $('brandAccent').value='#d7ab33';$('brandBackground').value='#f4f7f8';
+    stageBrandingControls();
   });
   $('promotionScope').addEventListener('change',()=>{updatePromotionScope();updatePromotionPreview();});
   ['promotionTitle','promotionMessage','promotionCta','promotionDiscount','promotionCountdown'].forEach((id)=>$(id).addEventListener('input',updatePromotionPreview));
