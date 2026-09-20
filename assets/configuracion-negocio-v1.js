@@ -1053,6 +1053,14 @@ function builderElementConfig(slotKey,elementKey,create=true){
   slot.settings.builder[state.builderDevice][elementKey]=slot.settings.builder[state.builderDevice][elementKey]&&typeof slot.settings.builder[state.builderDevice][elementKey]==='object'?slot.settings.builder[state.builderDevice][elementKey]:{};
   return slot.settings.builder[state.builderDevice][elementKey];
 }
+function builderElementContentConfig(slotKey,elementKey,create=true){
+  const slot=builderSlotByKey(slotKey);if(!slot)return null;
+  slot.settings=slot.settings&&typeof slot.settings==='object'?slot.settings:{};
+  if(!create)return slot.settings?.builderContent?.[elementKey]||{};
+  slot.settings.builderContent=slot.settings.builderContent&&typeof slot.settings.builderContent==='object'?slot.settings.builderContent:{};
+  slot.settings.builderContent[elementKey]=slot.settings.builderContent[elementKey]&&typeof slot.settings.builderContent[elementKey]==='object'?slot.settings.builderContent[elementKey]:{};
+  return slot.settings.builderContent[elementKey];
+}
 function visualElement(slotKey,elementKey){
   const doc=visualDoc(),slot=visualSlot(doc,slotKey);
   if(!slot)return null;
@@ -1151,6 +1159,7 @@ function selectVisualElement(el){
   state.builderSelection={slotKey,elementKey};
   selectEditorCard(slotKey);
   const cfg=builderElementConfig(slotKey,elementKey,false)||{};
+  const contentCfg=builderElementContentConfig(slotKey,elementKey,false)||{};
   const rect=el.getBoundingClientRect();
   const cs=el.ownerDocument.defaultView.getComputedStyle(el);
   $('elementInspector').hidden=false;
@@ -1172,7 +1181,7 @@ function selectVisualElement(el){
   populateTypographyControls();
   const textTarget=selectedTextTarget(el);
   $('inspectTextWrap').hidden=!textTarget;
-  if(textTarget)$('inspectText').value=cfg.textOverride??String(textTarget.textContent||'').trim();
+  if(textTarget)$('inspectText').value=contentCfg.textOverride??String(textTarget.textContent||'').trim();
   const imageSupported=selectedElementSupportsImage(el);
   $('inspectImageWrap').hidden=!imageSupported;
   if($('inspectImageFile'))$('inspectImageFile').value='';
@@ -1212,10 +1221,6 @@ function readInspectorConfig(){
     fontFamily:scope==='element'&&font!=='inherit'?font:null,
     fontWeight:scope==='element'&&weight!=='inherit'?weight:null
   };
-  if(!$('inspectTextWrap')?.hidden){
-    const value=$('inspectText').value;
-    out.textOverride=value;
-  }
   return out;
 }
 function mergeInspectorConfig(){
@@ -1260,20 +1265,34 @@ function resetSelectedElementStyle(){
   const slot=builderSlotByKey(sel.slotKey);if(!slot)return;
   const map=slot.settings?.builder?.[state.builderDevice];
   if(map)delete map[sel.elementKey];
+  if(slot.settings?.builderContent)delete slot.settings.builderContent[sel.elementKey];
   editorTrace('ELEMENT_RESET','OK',{slot:sel.slotKey,element:sel.elementKey});
   scheduleBuilderStyleSave(sel.slotKey);
   setTimeout(()=>reloadVisualSitePreview(),650);
+}
+function setSelectedElementTextOverride(value){
+  const sel=state.builderSelection;if(!sel)return;
+  const el=visualElement(sel.slotKey,sel.elementKey);if(!el||!isSafeTextElement(el))return;
+  const cfg=builderElementContentConfig(sel.slotKey,sel.elementKey,true);
+  cfg.textOverride=String(value);
+  const styleCfg=builderElementConfig(sel.slotKey,sel.elementKey,false)||{};
+  const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;
+  if(api)api.applyBuilderElementStyle(el,{...cfg,...styleCfg},currentEditorPalette());
+  builderSetState('Contenido del elemento','warn');
+  editorTrace('ELEMENT_TEXT_CHANGE','OK',{slot:sel.slotKey,element:sel.elementKey,text:String(value).slice(0,180)});
+  scheduleBuilderStyleSave(sel.slotKey);
 }
 async function setSelectedElementImage(file){
   const sel=state.builderSelection;if(!sel||!file)return;
   const el=visualElement(sel.slotKey,sel.elementKey);
   if(!selectedElementSupportsImage(el))throw new Error('El elemento seleccionado no es una imagen.');
   const uploaded=await uploadBusinessContentImage(file,'builder-'+sel.slotKey+'-'+sel.elementKey);
-  const cfg=builderElementConfig(sel.slotKey,sel.elementKey,true);
+  const cfg=builderElementContentConfig(sel.slotKey,sel.elementKey,true);
+  const styleCfg=builderElementConfig(sel.slotKey,sel.elementKey,false)||{};
   const oldPath=cfg.srcPath||null;
   cfg.srcOverride=uploaded.url;cfg.srcPath=uploaded.path;
   const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;
-  if(api)api.applyBuilderElementStyle(el,cfg,currentEditorPalette());
+  if(api)api.applyBuilderElementStyle(el,{...cfg,...styleCfg},currentEditorPalette());
   updateElementOverlay(el);
   await saveBuilderSlotSettings(sel.slotKey);
   if(oldPath&&oldPath!==uploaded.path)sb.storage.from('business-content').remove([oldPath]).catch(()=>{});
@@ -1979,7 +1998,7 @@ function bindEvents() {
     .forEach(id=>$(id).addEventListener('input',()=>applySelectedInspectorConfig()));
   $('inspectTypographyScope').addEventListener('change',()=>{populateTypographyControls();editorTrace('TYPOGRAPHY_SCOPE','OK',{scope:$('inspectTypographyScope').value});});
   ['inspectFontFamily','inspectFontWeight','inspectFontScale','inspectColor'].forEach(id=>$(id).addEventListener('input',()=>applyTypographyFromInspector()));
-  $('inspectText').addEventListener('input',()=>applySelectedInspectorConfig());
+  $('inspectText').addEventListener('input',()=>setSelectedElementTextOverride($('inspectText').value));
   $('inspectImageFile').addEventListener('change',()=>{
     const file=$('inspectImageFile').files?.[0];
     if(file)guard(()=>setSelectedElementImage(file));
