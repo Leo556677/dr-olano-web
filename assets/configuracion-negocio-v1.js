@@ -846,20 +846,37 @@ function builderDragStart(e){
   e.currentTarget.classList.add('dragging');
   e.dataTransfer.effectAllowed='move';
   e.dataTransfer.setData('text/plain',builderDraggedId);
+  const slot=state.contentSlots.find(x=>x.id===builderDraggedId);
+  editorTrace('SECTION_DRAG_START','OK',{slot:slot?.slot_key||null,source:'sidebar'});
+}
+function syncPreviewOrderFromSidebar(){
+  const doc=visualDoc(),main=doc?.querySelector('main'),box=$('contentEditorList');
+  if(!main||!box)return;
+  [...box.querySelectorAll('.builder-section-card')].forEach(card=>{
+    const slot=state.contentSlots.find(x=>x.id===card.dataset.contentForm);
+    if(!builderSlotCanMove(slot))return;
+    const el=visualSlot(doc,slot.slot_key);
+    if(el)main.appendChild(el);
+  });
 }
 function builderDragOver(e){
   if(!builderDraggedId)return;
   e.preventDefault(); e.dataTransfer.dropEffect='move';
-}
-async function builderDrop(e){
-  e.preventDefault();
   const target=e.currentTarget;
   const dragged=$('contentEditorList').querySelector('[data-content-form="'+builderDraggedId+'"]');
   if(!dragged||dragged===target)return;
   const rect=target.getBoundingClientRect();
   const after=e.clientY>rect.top+rect.height/2;
-  target.parentNode.insertBefore(dragged,after?target.nextSibling:target);
-  await guard(()=>persistBuilderOrderFromSidebar());
+  const wanted=after?target.nextSibling:target;
+  if(wanted!==dragged)target.parentNode.insertBefore(dragged,wanted);
+  syncPreviewOrderFromSidebar();
+}
+async function builderDrop(e){
+  e.preventDefault();
+  const slot=state.contentSlots.find(x=>x.id===builderDraggedId);
+  builderDraggedId=null;
+  await persistBuilderOrderFromSidebar();
+  editorTrace('SECTION_DRAG_END','OK',{slot:slot?.slot_key||null,source:'sidebar',order:'persisted'});
 }
 async function persistBuilderOrderFromSidebar(){
   canWriteOrThrow();
@@ -880,6 +897,7 @@ async function persistBuilderOrderFromSidebar(){
   const err=results.find(x=>x.error)?.error; if(err)throw err;
   applyPreviewOrderFromState();
   builderSetState('Orden guardado','');
+  editorTrace('SECTION_ORDER_SAVE','OK',{order:movable.map(card=>state.contentSlots.find(x=>x.id===card.dataset.contentForm)?.slot_key).filter(Boolean)});
 }
 function collectSlotSettings(card,slot){
   const st=slotSettings(slot);
