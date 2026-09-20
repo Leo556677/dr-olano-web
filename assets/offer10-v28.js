@@ -114,12 +114,32 @@
     injectLocation();
   }
 
+  function locationConfig(){
+    const slot=(window.OLANO_BUSINESS_CONFIG?.content||[]).find(x=>x.slot_key==='home.location')||null;
+    const st=slot?.settings||{};
+    return {
+      slot,
+      title:String(slot?.title||'¿Dónde te atendemos?'),
+      body:String(slot?.body||'Google Maps puede calcular la ruta y el tiempo estimado desde la ubicación disponible en tu dispositivo.'),
+      address:String(st.address||ADDRESS),
+      routeLabel:String(st.route_label||'Cómo llegar desde mi ubicación'),
+      routeUrl:String(st.route_url||DIR),
+      mapLabel:String(st.map_label||'Ver en Google Maps'),
+      mapUrl:String(st.map_url||MAP)
+    };
+  }
   function injectLocation(){
     if($('#olanoLocation'))return;
     const footer=$('footer.site-footer');if(!footer)return;
-    const el=document.createElement('section');el.id='olanoLocation';el.className='olano-location';
-    el.innerHTML=`<div class="wrap"><div class="olano-location-card"><h2>¿Dónde te atendemos?</h2><p><strong>${esc(ADDRESS)}</strong><br>Google Maps puede calcular la ruta y el tiempo estimado desde la ubicación disponible en tu dispositivo.</p><div class="olano-location-actions"><a class="olano-route" href="${DIR}" target="_blank" rel="noopener">Cómo llegar desde mi ubicación</a><a class="olano-map" href="${MAP}" target="_blank" rel="noopener">Ver en Google Maps</a></div></div></div>`;
+    const loc=locationConfig();
+    if(loc.slot?.enabled===false)return;
+    const el=document.createElement('section');el.id='olanoLocation';el.className='olano-location';el.dataset.cmsSlot='home.location';
+    el.innerHTML=`<div class="wrap"><div class="olano-location-card"><h2 data-cms-field="title">${esc(loc.title)}</h2><p><strong data-cms-setting="address">${esc(loc.address)}</strong><br><span data-cms-field="body">${esc(loc.body)}</span></p><div class="olano-location-actions"><a class="olano-route" href="${esc(loc.routeUrl)}" target="_blank" rel="noopener"><span data-cms-setting="route_label">${esc(loc.routeLabel)}</span></a><a class="olano-map" href="${esc(loc.mapUrl)}" target="_blank" rel="noopener"><span data-cms-setting="map_label">${esc(loc.mapLabel)}</span></a></div></div></div>`;
     footer.parentNode.insertBefore(el,footer);
+    try{
+      const api=window.OLANO_BUILDER_API,cfg=window.OLANO_BUSINESS_CONFIG;
+      if(api&&cfg){api.registerVisualElements(cfg);api.applyVisualElementStyles(cfg);}
+    }catch{}
   }
 
   function hideMain(){const el=$('#offer10Overlay');if(el){el.classList.remove('show');el.setAttribute('aria-hidden','true')}}
