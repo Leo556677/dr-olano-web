@@ -445,7 +445,9 @@
         if(fill!==null&&fill!=='none'&&fill!=='transparent')n.style.fill='currentColor';
       });
     }
-    if(cfg.borderToken&&cfg.borderToken!=='none'){
+    if(cfg.borderToken==='none'){
+      el.style.borderWidth='0px';
+    } else if(cfg.borderToken){
       el.style.borderColor=tokenColor(palette,cfg.borderToken);
       el.style.borderStyle='solid';
       if(!el.style.borderWidth)el.style.borderWidth='1px';
