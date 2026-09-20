@@ -2007,7 +2007,6 @@ async function guard(fn) {
     const message=err?.message||String(err);
     editorTrace('ERROR','ERROR',{message,stack:String(err?.stack||'').slice(0,1200)});
     setStatus(message,'error');
-    throw err;
   }
 }
 
