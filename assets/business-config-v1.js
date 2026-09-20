@@ -539,9 +539,11 @@
     featured?.querySelectorAll('[data-v240-category]').forEach(card=>{
       const slug=card.getAttribute('data-v240-category')||'item';
       markBuilderElement('home.featured','card.'+slug,card,'Tarjeta · '+slug);
-      markBuilderElement('home.featured','media.'+slug,card.querySelector('.v240-media'),'Imagen · '+slug);
+      markBuilderElement('home.featured','button.'+slug,card.querySelector('.v240-card-hit'),'Botón / tarjeta · '+slug);
+      markBuilderElement('home.featured','media.'+slug,card.querySelector('.v240-media'),'Contenedor de imagen · '+slug);
+      markBuilderElement('home.featured','image.'+slug,card.querySelector('.v240-media img'),'Imagen · '+slug);
       markBuilderElement('home.featured','title.'+slug,card.querySelector('.v240-copy b'),'Título · '+slug);
-      markBuilderElement('home.featured','cta.'+slug,card.querySelector('.v240-cta'),'Botón · '+slug);
+      markBuilderElement('home.featured','cta.'+slug,card.querySelector('.v240-cta'),'Texto del botón · '+slug);
     });
 
     const trust=slots['home.trust'];
