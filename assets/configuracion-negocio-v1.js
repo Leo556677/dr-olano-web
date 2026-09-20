@@ -1240,7 +1240,8 @@ function applySelectedInspectorConfig(scheduleSave=true){
   const el=visualElement(sel.slotKey,sel.elementKey);if(!el)return;
   const cfg=mergeInspectorConfig();
   const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;
-  if(api)api.applyBuilderElementStyle(el,combinedBuilderElementConfig(sel.slotKey,sel.elementKey,cfg),currentEditorPalette());
+  if(!api){editorTrace('BUILDER_API_MISSING','ERROR',{slot:sel.slotKey,element:sel.elementKey,action:'style'});return;}
+  api.applyBuilderElementStyle(el,combinedBuilderElementConfig(sel.slotKey,sel.elementKey,cfg),currentEditorPalette());
   updateElementOverlay();
   builderSetState('Cambios de diseño','warn');
   editorTrace('ELEMENT_STYLE_CHANGE','OK',{slot:sel.slotKey,element:sel.elementKey,config:cfg});
@@ -1282,7 +1283,8 @@ function setSelectedElementTextOverride(value){
   cfg.textOverride=String(value);
   const styleCfg=builderElementConfig(sel.slotKey,sel.elementKey,false)||{};
   const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;
-  if(api)api.applyBuilderElementStyle(el,{...cfg,...styleCfg},currentEditorPalette());
+  if(!api){editorTrace('BUILDER_API_MISSING','ERROR',{slot:sel.slotKey,element:sel.elementKey,action:'text'});return;}
+  api.applyBuilderElementStyle(el,{...cfg,...styleCfg},currentEditorPalette());
   builderSetState('Contenido del elemento','warn');
   editorTrace('ELEMENT_TEXT_CHANGE','OK',{slot:sel.slotKey,element:sel.elementKey,text:String(value).slice(0,180)});
   scheduleBuilderStyleSave(sel.slotKey);
@@ -1297,7 +1299,8 @@ async function setSelectedElementImage(file){
   const oldPath=cfg.srcPath||null;
   cfg.srcOverride=uploaded.url;cfg.srcPath=uploaded.path;
   const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;
-  if(api)api.applyBuilderElementStyle(el,{...cfg,...styleCfg},currentEditorPalette());
+  if(!api){editorTrace('BUILDER_API_MISSING','ERROR',{slot:sel.slotKey,element:sel.elementKey,action:'image'});throw new Error('La vista previa aún no terminó de cargar.');}
+  api.applyBuilderElementStyle(el,{...cfg,...styleCfg},currentEditorPalette());
   updateElementOverlay(el);
   await saveBuilderSlotSettings(sel.slotKey);
   if(oldPath&&oldPath!==uploaded.path)sb.storage.from('business-content').remove([oldPath]).catch(()=>{});
@@ -1342,6 +1345,8 @@ function beginElementMove(e){
   if(sel.elementKey==='section'){editorTrace('ELEMENT_MOVE_BLOCKED','ERROR',{slot:sel.slotKey,element:sel.elementKey,message:'Las secciones completas se reordenan con Mover sección'});return;}
   const doc=visualDoc(),section=el.closest('[data-cms-slot]');if(!doc||!section)return;
   editorTrace('ELEMENT_MOVE_START','OK',{slot:sel.slotKey,element:sel.elementKey});
+  const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;
+  if(!api){editorTrace('BUILDER_API_MISSING','ERROR',{slot:sel.slotKey,element:sel.elementKey,action:'move'});return;}
   const cfg=builderElementConfig(sel.slotKey,sel.elementKey,true);
   const startX=e.clientX,startY=e.clientY,startCfgX=Number(cfg.x)||0,startCfgY=Number(cfg.y)||0;
   const er=el.getBoundingClientRect(),sr=section.getBoundingClientRect();
@@ -1350,7 +1355,7 @@ function beginElementMove(e){
     dx=Math.max(sr.left-er.left,Math.min(sr.right-er.right,dx));
     dy=Math.max(sr.top-er.top,Math.min(sr.bottom-er.bottom,dy));
     cfg.x=Math.round(startCfgX+dx);cfg.y=Math.round(startCfgY+dy);
-    const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;if(api)api.applyBuilderElementStyle(el,combinedBuilderElementConfig(sel.slotKey,sel.elementKey,cfg),currentEditorPalette());
+    api.applyBuilderElementStyle(el,combinedBuilderElementConfig(sel.slotKey,sel.elementKey,cfg),currentEditorPalette());
     updateElementOverlay(el);builderSetState('Moviendo…','warn');
   };
   const up=()=>{
@@ -1368,6 +1373,8 @@ function beginElementResize(e){
   if(sel.elementKey==='section'){editorTrace('ELEMENT_RESIZE_BLOCKED','ERROR',{slot:sel.slotKey,element:sel.elementKey,message:'No se redimensiona la sección completa con el tirador'});return;}
   const doc=visualDoc(),section=el.closest('[data-cms-slot]');if(!doc||!section)return;
   editorTrace('ELEMENT_RESIZE_START','OK',{slot:sel.slotKey,element:sel.elementKey});
+  const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;
+  if(!api){editorTrace('BUILDER_API_MISSING','ERROR',{slot:sel.slotKey,element:sel.elementKey,action:'resize'});return;}
   const cfg=builderElementConfig(sel.slotKey,sel.elementKey,true);
   const er=el.getBoundingClientRect(),sr=section.getBoundingClientRect();
   const startX=e.clientX,startY=e.clientY,startW=er.width,startH=er.height;
@@ -1375,7 +1382,7 @@ function beginElementResize(e){
     const maxW=Math.max(20,sr.right-er.left),maxH=Math.max(20,sr.bottom-er.top);
     cfg.w=Math.round(Math.max(20,Math.min(maxW,startW+(ev.clientX-startX))));
     cfg.h=Math.round(Math.max(20,Math.min(maxH,startH+(ev.clientY-startY))));
-    const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;if(api)api.applyBuilderElementStyle(el,combinedBuilderElementConfig(sel.slotKey,sel.elementKey,cfg),currentEditorPalette());
+    api.applyBuilderElementStyle(el,combinedBuilderElementConfig(sel.slotKey,sel.elementKey,cfg),currentEditorPalette());
     updateElementOverlay(el);builderSetState('Redimensionando…','warn');
   };
   const up=()=>{
