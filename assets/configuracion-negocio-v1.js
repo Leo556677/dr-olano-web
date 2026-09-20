@@ -1212,6 +1212,7 @@ function applySelectedInspectorConfig(scheduleSave=true){
   if(api)api.applyBuilderElementStyle(el,cfg,currentEditorPalette());
   updateElementOverlay();
   builderSetState('Cambios de diseño','warn');
+  editorTrace('ELEMENT_STYLE_CHANGE','OK',{slot:sel.slotKey,element:sel.elementKey,config:cfg});
   if(scheduleSave)scheduleBuilderStyleSave(sel.slotKey);
 }
 function scheduleBuilderStyleSave(slotKey){
@@ -1225,18 +1226,37 @@ async function saveBuilderSlotSettings(slotKey){
   const {error}=await sb.from('web_content_slots').update({settings:slot.settings,updated_at:new Date().toISOString()})
     .eq('negocio_id',state.business.id).eq('slot_key',slotKey);
   if(error)throw error;
+  try{
+    const frame=visualFrame(),live=frame?.contentWindow?.OLANO_BUSINESS_CONFIG;
+    const liveSlot=(live?.content||[]).find(x=>x.slot_key===slotKey);
+    if(liveSlot)liveSlot.settings=structuredClone(slot.settings);
+  }catch{}
   builderSetState('Diseño guardado','');
+  editorTrace('STYLE_SAVE','OK',{slot:slotKey});
 }
 function resetSelectedElementStyle(){
   const sel=state.builderSelection;if(!sel)return;
   const slot=builderSlotByKey(sel.slotKey);if(!slot)return;
   const map=slot.settings?.builder?.[state.builderDevice];
   if(map)delete map[sel.elementKey];
-  const el=visualElement(sel.slotKey,sel.elementKey);
-  const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;
-  if(api&&el)api.applyBuilderElementStyle(el,{},currentEditorPalette());
-  if(el)selectVisualElement(el);
+  editorTrace('ELEMENT_RESET','OK',{slot:sel.slotKey,element:sel.elementKey});
   scheduleBuilderStyleSave(sel.slotKey);
+  setTimeout(()=>reloadVisualSitePreview(),650);
+}
+async function setSelectedElementImage(file){
+  const sel=state.builderSelection;if(!sel||!file)return;
+  const el=visualElement(sel.slotKey,sel.elementKey);
+  if(!selectedElementSupportsImage(el))throw new Error('El elemento seleccionado no es una imagen.');
+  const uploaded=await uploadBusinessContentImage(file,'builder-'+sel.slotKey+'-'+sel.elementKey);
+  const cfg=builderElementConfig(sel.slotKey,sel.elementKey,true);
+  const oldPath=cfg.srcPath||null;
+  cfg.srcOverride=uploaded.url;cfg.srcPath=uploaded.path;
+  const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;
+  if(api)api.applyBuilderElementStyle(el,cfg,currentEditorPalette());
+  updateElementOverlay(el);
+  await saveBuilderSlotSettings(sel.slotKey);
+  if(oldPath&&oldPath!==uploaded.path)sb.storage.from('business-content').remove([oldPath]).catch(()=>{});
+  editorTrace('IMAGE_REPLACE','OK',{slot:sel.slotKey,element:sel.elementKey,url:uploaded.url});
 }
 function ensureElementOverlay(){
   const doc=visualDoc();if(!doc?.body)return null;
