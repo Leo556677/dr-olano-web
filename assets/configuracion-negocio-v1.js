@@ -1760,13 +1760,25 @@ function deleteSelectedCustomElement(){
   const sel=state.builderSelection;if(!sel||!sel.elementKey.startsWith('custom.'))return;
   const slot=builderSlotByKey(sel.slotKey);if(!slot)return;
   pushUndoSnapshot('Eliminar elemento');
-  const id=sel.elementKey.slice(7),items=slotCustomElements(slot);
-  slot.settings.customElements=items.filter(x=>x.id!==id);
-  const deviceMap=slot.settings?.builder?.[state.builderDevice];if(deviceMap)delete deviceMap[sel.elementKey];
-  if(slot.settings?.builderContent)delete slot.settings.builderContent[sel.elementKey];
-  const groups=groupMap(slot,false);if(groups)delete groups[sel.elementKey];
+  const items=slotCustomElements(slot);
+  const doomed=new Set([sel.elementKey]);
+  let changed=true;
+  while(changed){
+    changed=false;
+    for(const item of items){
+      const key='custom.'+item.id;
+      if(item.parentKey&&doomed.has(item.parentKey)&&!doomed.has(key)){doomed.add(key);changed=true;}
+    }
+  }
+  slot.settings.customElements=items.filter(x=>!doomed.has('custom.'+x.id));
+  for(const device of ['desktop','tablet','mobile']){
+    const deviceMap=slot.settings?.builder?.[device];
+    if(deviceMap)doomed.forEach(key=>delete deviceMap[key]);
+  }
+  if(slot.settings?.builderContent)doomed.forEach(key=>delete slot.settings.builderContent[key]);
+  const groups=groupMap(slot,false);if(groups)doomed.forEach(key=>delete groups[key]);
   state.builderSelection=null;
-  markEditorDirty('CUSTOM_DELETE',{slot:sel.slotKey,element:sel.elementKey});
+  markEditorDirty('CUSTOM_DELETE',{slot:sel.slotKey,elements:[...doomed]});
   syncDraftToPreview();
 }
 function builderContextContainer(target){
