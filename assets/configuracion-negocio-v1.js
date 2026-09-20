@@ -1155,6 +1155,133 @@ function openAdminTab(name){
   if(tab)tab.click();
 }
 
+
+function loadBuilderGridPrefs(){
+  try{
+    const raw=localStorage.getItem('olanoBuilderGridV1');
+    if(!raw)return;
+    const parsed=JSON.parse(raw);
+    for(const d of ['desktop','tablet','mobile']){
+      const p=parsed?.[d];if(!p)continue;
+      state.builderGrid[d]={
+        show:p.show!==false,
+        x:Math.max(4,Math.min(120,Number(p.x)||state.builderGrid[d].x)),
+        y:Math.max(4,Math.min(120,Number(p.y)||state.builderGrid[d].y))
+      };
+    }
+  }catch{}
+}
+function saveBuilderGridPrefs(){
+  try{localStorage.setItem('olanoBuilderGridV1',JSON.stringify(state.builderGrid));}catch{}
+}
+function currentGridPrefs(){
+  return state.builderGrid[state.builderDevice]||state.builderGrid.desktop;
+}
+function syncGridControls(){
+  const g=currentGridPrefs();
+  if($('builderGridToggle'))$('builderGridToggle').checked=g.show!==false;
+  if($('builderGridX'))$('builderGridX').value=String(g.x);
+  if($('builderGridY'))$('builderGridY').value=String(g.y);
+}
+function setInspectorDock(open,reason='manual'){
+  const dock=$('builderInspectorDock'),layout=document.querySelector('.visual-builder-layout');
+  if(!dock||!layout)return;
+  state.inspectorDockOpen=Boolean(open);
+  dock.hidden=!state.inspectorDockOpen;
+  layout.classList.toggle('inspector-open',state.inspectorDockOpen);
+  $('showInspectorDockBtn')?.classList.toggle('active',state.inspectorDockOpen);
+  editorTrace('INSPECTOR_DOCK','OK',{open:state.inspectorDockOpen,reason});
+}
+function snapGrid(value,step){
+  const n=Number(value)||0,s=Math.max(1,Number(step)||1);
+  return Math.round(n/s)*s;
+}
+function floorGrid(value,step){
+  const n=Math.max(0,Number(value)||0),s=Math.max(1,Number(step)||1);
+  return Math.floor(n/s)*s;
+}
+function ensureSectionGridLayer(section,g){
+  let layer=section.querySelector(':scope > .admin-grid-layer');
+  if(!layer){
+    layer=section.ownerDocument.createElement('div');
+    layer.className='admin-grid-layer';
+    layer.dataset.adminBuilderControl='1';
+    section.appendChild(layer);
+  }
+  layer.style.display=g.show&&state.builderMode==='edit'?'block':'none';
+  layer.style.backgroundSize=g.x+'px '+g.y+'px';
+  layer.style.setProperty('--grid-x',g.x+'px');
+  layer.style.setProperty('--grid-y',g.y+'px');
+}
+function applyGridToPreview(){
+  const doc=visualDoc();if(!doc)return;
+  const g=currentGridPrefs();
+  doc.querySelectorAll('[data-cms-slot]').forEach(section=>ensureSectionGridLayer(section,g));
+  doc.body.classList.toggle('admin-grid-visible',g.show&&state.builderMode==='edit');
+  editorTrace('GRID_APPLY','OK',{show:g.show,x:g.x,y:g.y,device:state.builderDevice});
+}
+function updateGridPrefsFromControls(){
+  const g=currentGridPrefs();
+  g.show=$('builderGridToggle')?.checked!==false;
+  g.x=Math.max(4,Math.min(120,Number($('builderGridX')?.value)||g.x));
+  g.y=Math.max(4,Math.min(120,Number($('builderGridY')?.value)||g.y));
+  saveBuilderGridPrefs();
+  applyGridToPreview();
+  editorTrace('GRID_CHANGE','OK',{show:g.show,x:g.x,y:g.y,device:state.builderDevice});
+}
+function gridOverflowInfo(el,section){
+  if(!el||!section)return {invalid:false,cols:0,rows:0,left:0,right:0,top:0,bottom:0};
+  const r=el.getBoundingClientRect(),s=section.getBoundingClientRect(),g=currentGridPrefs();
+  const left=Math.max(0,s.left-r.left),right=Math.max(0,r.right-s.right),top=Math.max(0,s.top-r.top),bottom=Math.max(0,r.bottom-s.bottom);
+  return {
+    invalid:left>0.5||right>0.5||top>0.5||bottom>0.5,
+    left,right,top,bottom,
+    cols:Math.ceil((left+right)/Math.max(1,g.x)),
+    rows:Math.ceil((top+bottom)/Math.max(1,g.y))
+  };
+}
+function updateGridOverflowFeedback(el,section){
+  const info=gridOverflowInfo(el,section);
+  const overlay=visualDoc()?.getElementById('adminElementOverlay');
+  if(overlay){
+    overlay.classList.toggle('admin-grid-invalid',info.invalid);
+    const badge=overlay.querySelector('.admin-grid-overflow');
+    if(badge){
+      badge.hidden=!info.invalid;
+      badge.textContent=info.invalid?'Fuera: '+info.cols+' col · '+info.rows+' fila'+(info.rows===1?'':'s'):'';
+    }
+  }
+  if(info.invalid)editorTrace('GRID_OVERFLOW','WARN',{cols:info.cols,rows:info.rows,device:state.builderDevice});
+  return info;
+}
+function correctMoveToGrid(el,section,cfg,startCfg){
+  const g=currentGridPrefs();
+  let info=gridOverflowInfo(el,section);
+  if(!info.invalid)return info;
+  const r=el.getBoundingClientRect(),sr=section.getBoundingClientRect();
+  if(r.width>sr.width+1||r.height>sr.height+1){
+    cfg.x=startCfg.x;cfg.y=startCfg.y;
+    editorTrace('GRID_OVERFLOW_REVERT','WARN',{reason:'element_too_large',cols:info.cols,rows:info.rows});
+    return info;
+  }
+  cfg.x=snapGrid((Number(cfg.x)||0)+info.left-info.right,g.x);
+  cfg.y=snapGrid((Number(cfg.y)||0)+info.top-info.bottom,g.y);
+  return info;
+}
+function correctResizeToGrid(el,section,cfg){
+  const g=currentGridPrefs(),info=gridOverflowInfo(el,section);
+  if(!info.invalid)return info;
+  const r=el.getBoundingClientRect(),sr=section.getBoundingClientRect();
+  const availableW=Math.max(g.x,sr.right-r.left),availableH=Math.max(g.y,sr.bottom-r.top);
+  if(info.right>0||r.width>sr.width)cfg.w=Math.max(g.x,floorGrid(availableW,g.x));
+  if(info.bottom>0||r.height>sr.height)cfg.h=Math.max(g.y,floorGrid(availableH,g.y));
+  if(info.left>0||info.top>0){
+    cfg.x=snapGrid((Number(cfg.x)||0)+info.left,g.x);
+    cfg.y=snapGrid((Number(cfg.y)||0)+info.top,g.y);
+  }
+  return info;
+}
+
 function setVisualPreviewDevice(device){
   if(!['desktop','tablet','mobile'].includes(device))device='desktop';
   state.builderDevice=device;
