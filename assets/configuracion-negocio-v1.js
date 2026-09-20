@@ -1661,7 +1661,7 @@ function bindEvents() {
   $('newPromotionBtn').addEventListener('click',()=>openPromotion()); $('cancelPromotionBtn').addEventListener('click',resetPromotionForm);
   $('promotionForm').addEventListener('submit',(e)=>guard(()=>savePromotion(e)));
   $('brandingForm').addEventListener('submit',(e)=>guard(()=>saveBranding(e)));
-  ['brandPrimary','brandSecondary','brandAccent','brandBackground'].forEach((id)=>$(id).addEventListener('input',updateBrandPreview));
+  ['brandPrimary','brandSecondary','brandAccent','brandBackground'].forEach((id)=>$(id).addEventListener('input',()=>{updateBrandPreview();builderSetState('Cambios de marca sin guardar','warn');}));
   $('brandLogoFile').addEventListener('change',()=>{
     const file=$('brandLogoFile').files?.[0];
     if(!file){state.previewLogoUrl=null;renderBranding();return;}
@@ -1670,8 +1670,9 @@ function bindEvents() {
     $('brandLogoPreview').innerHTML='<img src="'+attr(url)+'" alt="Vista previa">';
     $('brandPreviewLogo').innerHTML='<img src="'+attr(url)+'" alt="">';
     applyBrandPreviewToIframe();
+    builderSetState('Cambios de marca sin guardar','warn');
   });
-  $('brandSitePreview').addEventListener('load',()=>{setTimeout(applyBrandPreviewToIframe,350);setTimeout(applyBrandPreviewToIframe,1300);});
+  if($('brandSitePreview')) $('brandSitePreview').addEventListener('load',()=>{setTimeout(applyBrandPreviewToIframe,350);setTimeout(applyBrandPreviewToIframe,1300);});
   document.querySelectorAll('[data-preview-device]').forEach((btn)=>btn.addEventListener('click',()=>setPreviewDevice(btn.dataset.previewDevice)));
   $('visualSitePreview').addEventListener('load',()=>{
     setupVisualPreview();
@@ -1679,10 +1680,18 @@ function bindEvents() {
     setTimeout(setupVisualPreview,450);setTimeout(setupVisualPreview,1500);
   });
   document.querySelectorAll('[data-visual-device]').forEach((btn)=>btn.addEventListener('click',()=>setVisualPreviewDevice(btn.dataset.visualDevice)));
+  $('builderEditMode').addEventListener('click',()=>setBuilderMode('edit'));
+  $('builderNavigateMode').addEventListener('click',()=>setBuilderMode('navigate'));
+  setupInspectorPalette();
+  $('inspectBgMode').addEventListener('change',()=>{updateInspectorVisibility();applySelectedInspectorConfig();});
+  ['inspectWidth','inspectHeight','inspectFontSize','inspectRadius','inspectBgFrom','inspectBgTo','inspectGradientAngle','inspectColor','inspectBorder','inspectOpacity','inspectPadding']
+    .forEach(id=>$(id).addEventListener('input',()=>applySelectedInspectorConfig()));
+  $('inspectorResetBtn').addEventListener('click',()=>resetSelectedElementStyle());
   $('brandDefaultsBtn').addEventListener('click',()=>{
     $('brandPrimary').value='#0b2e4f'; $('brandSecondary').value='#1aa79d';
     $('brandAccent').value='#d7ab33'; $('brandBackground').value='#f4f7f8';
     updateBrandPreview();
+    builderSetState('Cambios de marca sin guardar','warn');
   });
   $('promotionScope').addEventListener('change',()=>{updatePromotionScope();updatePromotionPreview();});
   ['promotionTitle','promotionMessage','promotionCta','promotionDiscount','promotionCountdown'].forEach((id)=>$(id).addEventListener('input',updatePromotionPreview));
