@@ -1293,7 +1293,11 @@ function hideElementOverlay(){
 function showElementOverlay(el){
   if(state.builderMode!=='edit')return hideElementOverlay();
   const overlay=ensureElementOverlay();if(!overlay)return;
-  overlay.style.display='block';updateElementOverlay(el);
+  overlay.style.display='block';
+  const isSection=state.builderSelection?.elementKey==='section';
+  overlay.querySelector('.admin-element-move').hidden=isSection;
+  overlay.querySelector('.admin-element-resize').hidden=isSection;
+  updateElementOverlay(el);
 }
 function updateElementOverlay(explicitEl=null){
   const sel=state.builderSelection,doc=visualDoc();if(!sel||!doc)return;
@@ -1308,7 +1312,9 @@ function beginElementMove(e){
   if(state.builderMode!=='edit')return;
   e.preventDefault();e.stopPropagation();
   const sel=state.builderSelection,el=sel&&visualElement(sel.slotKey,sel.elementKey);if(!sel||!el)return;
+  if(sel.elementKey==='section'){editorTrace('ELEMENT_MOVE_BLOCKED','ERROR',{slot:sel.slotKey,element:sel.elementKey,message:'Las secciones completas se reordenan con Mover sección'});return;}
   const doc=visualDoc(),section=el.closest('[data-cms-slot]');if(!doc||!section)return;
+  editorTrace('ELEMENT_MOVE_START','OK',{slot:sel.slotKey,element:sel.elementKey});
   const cfg=builderElementConfig(sel.slotKey,sel.elementKey,true);
   const startX=e.clientX,startY=e.clientY,startCfgX=Number(cfg.x)||0,startCfgY=Number(cfg.y)||0;
   const er=el.getBoundingClientRect(),sr=section.getBoundingClientRect();
@@ -1320,14 +1326,21 @@ function beginElementMove(e){
     const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;if(api)api.applyBuilderElementStyle(el,cfg,currentEditorPalette());
     updateElementOverlay(el);builderSetState('Moviendo…','warn');
   };
-  const up=()=>{doc.removeEventListener('pointermove',move);doc.removeEventListener('pointerup',up);scheduleBuilderStyleSave(sel.slotKey);selectVisualElement(el);};
+  const up=()=>{
+    doc.removeEventListener('pointermove',move);doc.removeEventListener('pointerup',up);
+    scheduleBuilderStyleSave(sel.slotKey);
+    editorTrace('ELEMENT_MOVE_END','OK',{slot:sel.slotKey,element:sel.elementKey,x:cfg.x||0,y:cfg.y||0});
+    selectVisualElement(el);
+  };
   doc.addEventListener('pointermove',move);doc.addEventListener('pointerup',up,{once:true});
 }
 function beginElementResize(e){
   if(state.builderMode!=='edit')return;
   e.preventDefault();e.stopPropagation();
   const sel=state.builderSelection,el=sel&&visualElement(sel.slotKey,sel.elementKey);if(!sel||!el)return;
+  if(sel.elementKey==='section'){editorTrace('ELEMENT_RESIZE_BLOCKED','ERROR',{slot:sel.slotKey,element:sel.elementKey,message:'No se redimensiona la sección completa con el tirador'});return;}
   const doc=visualDoc(),section=el.closest('[data-cms-slot]');if(!doc||!section)return;
+  editorTrace('ELEMENT_RESIZE_START','OK',{slot:sel.slotKey,element:sel.elementKey});
   const cfg=builderElementConfig(sel.slotKey,sel.elementKey,true);
   const er=el.getBoundingClientRect(),sr=section.getBoundingClientRect();
   const startX=e.clientX,startY=e.clientY,startW=er.width,startH=er.height;
@@ -1338,7 +1351,12 @@ function beginElementResize(e){
     const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;if(api)api.applyBuilderElementStyle(el,cfg,currentEditorPalette());
     updateElementOverlay(el);builderSetState('Redimensionando…','warn');
   };
-  const up=()=>{doc.removeEventListener('pointermove',move);doc.removeEventListener('pointerup',up);scheduleBuilderStyleSave(sel.slotKey);selectVisualElement(el);};
+  const up=()=>{
+    doc.removeEventListener('pointermove',move);doc.removeEventListener('pointerup',up);
+    scheduleBuilderStyleSave(sel.slotKey);
+    editorTrace('ELEMENT_RESIZE_END','OK',{slot:sel.slotKey,element:sel.elementKey,width:cfg.w||Math.round(el.getBoundingClientRect().width),height:cfg.h||Math.round(el.getBoundingClientRect().height)});
+    selectVisualElement(el);
+  };
   doc.addEventListener('pointermove',move);doc.addEventListener('pointerup',up,{once:true});
 }
 function installPreviewInteractionGuard(doc){
