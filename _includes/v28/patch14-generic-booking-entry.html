@@ -1,0 +1,132 @@
+// ===== V28.3 · GENERIC BOOKING ENTRY FOR PAID/GENERAL TRAFFIC =====
+// /reserva = generic conversion entry with two clear intents.
+// /reserva-s?servicio=<id> remains the direct service campaign route.
+(() => {
+  const path=window.location.pathname.replace(/\/+$/,'')||'/';
+  if(path!=='/reserva')return;
+  if(typeof state==='undefined'||typeof go!=='function'||typeof renderServices!=='function')return;
+
+  const INTENT_KEY='olanoBookingEntryIntent';
+  const OFFER_STORE='olanoOffer10V2';
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+
+  function setStoredIntent(value){
+    try{sessionStorage.setItem(INTENT_KEY,value)}catch{}
+    window.__OLANO_BOOKING_INTENT__=value;
+  }
+  function clearStoredOffer(){try{sessionStorage.removeItem(OFFER_STORE)}catch{}}
+  function currentIntent(){try{return sessionStorage.getItem(INTENT_KEY)||''}catch{return window.__OLANO_BOOKING_INTENT__||''}}
+
+  function mount(){
+    const booking=document.querySelector('#booking');
+    if(!booking||document.querySelector('#v283EntryLayer'))return;
+    booking.insertAdjacentHTML('beforeend',`
+      <div class="v283-entry-layer" id="v283EntryLayer" aria-hidden="true">
+        <div class="v283-entry-panel" role="dialog" aria-modal="true" aria-labelledby="v283EntryTitle">
+          <button class="v283-entry-close" id="v283EntryClose" type="button" aria-label="Cerrar">×</button>
+          <div class="v283-entry-kicker">RESERVA ONLINE</div>
+          <h2 id="v283EntryTitle">¿Cómo quieres continuar?</h2>
+          <p class="v283-entry-intro">Puedes activar el beneficio y luego elegir el servicio, o revisar primero todas las opciones.</p>
+          <div class="v283-entry-actions">
+            <button type="button" class="v283-entry-card v283-discount" id="v283ChooseDiscount">
+              <span class="v283-entry-icon" aria-hidden="true">%</span>
+              <span><small>BENEFICIO DISPONIBLE</small><strong>Quiero mi 10% de descuento</strong><em>Primero eliges el servicio y el 10% se aplica automáticamente.</em></span>
+              <b aria-hidden="true">→</b>
+            </button>
+            <button type="button" class="v283-entry-card v283-service" id="v283ChooseService">
+              <span class="v283-entry-icon" aria-hidden="true">⌕</span>
+              <span><small>QUIERO REVISAR OPCIONES</small><strong>Quiero elegir un servicio</strong><em>Explora las categorías y elige el servicio que prefieras.</em></span>
+              <b aria-hidden="true">→</b>
+            </button>
+          </div>
+          <p class="v283-entry-note">El beneficio se vincula únicamente al servicio que tú elijas.</p>
+        </div>
+      </div>`);
+
+    const style=document.createElement('style');
+    style.id='v283-entry-styles';
+    style.textContent=`
+      .v283-entry-layer{display:none;position:fixed;z-index:40;inset:0;padding:76px 14px 18px;align-items:flex-start;justify-content:center;background:rgba(3,18,31,.48);-webkit-backdrop-filter:blur(24px) saturate(.78);backdrop-filter:blur(24px) saturate(.78);overflow:auto}
+      .v283-entry-layer.show{display:flex}.v283-entry-panel{position:relative;width:min(100%,610px);padding:24px;border:1px solid rgba(210,229,230,.95);border-radius:26px;background:linear-gradient(145deg,#fff,#f0f9f8);box-shadow:0 30px 75px -28px rgba(0,25,44,.68)}
+      .v283-entry-close{position:absolute;right:14px;top:13px;width:38px;height:38px;border:1px solid #d9e7e8;border-radius:50%;background:#fff;color:var(--navy);font-size:1.35rem;line-height:1}
+      .v283-entry-kicker{display:inline-flex;padding:7px 10px;border-radius:999px;background:linear-gradient(90deg,var(--navy),var(--teal));color:#fff;font-size:.62rem;font-weight:950;letter-spacing:.08em}
+      .v283-entry-panel h2{margin:12px 46px 6px 0;color:var(--navy);font:800 clamp(1.55rem,4.5vw,2.15rem)/1.04 "Fraunces",serif}.v283-entry-intro{margin:0 0 17px;color:var(--muted);font-size:.82rem;line-height:1.45}
+      .v283-entry-actions{display:grid;gap:11px}.v283-entry-card{width:100%;min-height:112px;border:1px solid #d6e5e7;border-radius:19px;padding:15px;display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:13px;align-items:center;text-align:left;background:#fff;color:var(--navy);box-shadow:0 14px 34px -28px rgba(3,32,52,.7)}
+      .v283-entry-card:hover{transform:translateY(-2px);border-color:#90cfc8}.v283-entry-card span:nth-child(2){min-width:0}.v283-entry-icon{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-size:1.45rem;font-weight:950}
+      .v283-discount .v283-entry-icon{background:linear-gradient(145deg,#0f827a,#25aca2);color:#fff}.v283-service .v283-entry-icon{background:#e9f1f5;color:var(--navy)}
+      .v283-entry-card small{display:block;color:var(--teal2);font-size:.58rem;font-weight:950;letter-spacing:.065em}.v283-entry-card strong{display:block;margin-top:3px;font-size:.98rem;line-height:1.18}.v283-entry-card em{display:block;margin-top:5px;color:var(--muted);font-size:.7rem;line-height:1.35;font-style:normal;font-weight:600}.v283-entry-card>b{font-size:1.3rem;color:var(--teal2)}
+      .v283-entry-note{margin:13px 0 0;text-align:center;color:#667983;font-size:.68rem}
+      .v283-intent-banner{margin:0 0 12px;padding:11px 13px;border:1px solid #cfe6e3;border-radius:14px;background:#eef9f7;color:var(--navy);font-size:.72rem;line-height:1.4}.v283-intent-banner b{display:block;color:var(--teal2);font-size:.74rem;margin-bottom:2px}
+      @media(max-width:560px){.v283-entry-layer{padding:58px 10px 12px}.v283-entry-panel{padding:18px 14px;border-radius:22px}.v283-entry-card{grid-template-columns:44px minmax(0,1fr) auto;min-height:104px;padding:12px;gap:10px}.v283-entry-icon{width:44px;height:44px;border-radius:13px;font-size:1.25rem}.v283-entry-card strong{font-size:.9rem}}
+    `;
+    document.head.appendChild(style);
+
+    document.querySelector('#v283ChooseDiscount').onclick=()=>choose('discount');
+    document.querySelector('#v283ChooseService').onclick=()=>choose('service');
+    document.querySelector('#v283EntryClose').onclick=()=>{hide();if(typeof closeBooking==='function')closeBooking()};
+    document.querySelector('#v283EntryLayer').onclick=e=>{if(e.target===e.currentTarget){hide();if(typeof closeBooking==='function')closeBooking()}};
+  }
+
+  function banner(intent){
+    const step=document.querySelector('.step[data-step="1"]');
+    if(!step)return;
+    let box=document.querySelector('#v283IntentBanner');
+    if(!box){
+      box=document.createElement('div');
+      box.id='v283IntentBanner';
+      box.className='v283-intent-banner';
+      step.querySelector('.step-title')?.insertAdjacentElement('afterend',box);
+    }
+    if(intent==='discount'){
+      box.innerHTML='<b>10% elegido</b>Ahora selecciona el servicio. El beneficio se aplicará automáticamente antes de mostrarte fecha y hora.';
+    }else{
+      box.innerHTML='<b>Elige tu servicio</b>Selecciona una categoría o usa el buscador. Luego podrás decidir si aplicas el beneficio disponible.';
+    }
+  }
+
+  function choose(intent){
+    clearStoredOffer();
+    setStoredIntent(intent);
+    state.service=null;state.date='';state.time='';
+    hide();
+    go(1);
+    renderServices();
+    banner(intent);
+    try{if(typeof trackEvent==='function')trackEvent(intent==='discount'?'booking_entry_discount':'booking_entry_service')}catch{}
+    setTimeout(()=>document.querySelector('#serviceSearch')?.focus({preventScroll:true}),80);
+  }
+
+  function show(){
+    mount();
+    const layer=document.querySelector('#v283EntryLayer');if(!layer)return;
+    document.querySelector('#v283IntentBanner')?.remove();
+    state.service=null;state.date='';state.time='';
+    layer.classList.add('show');layer.setAttribute('aria-hidden','false');
+    setTimeout(()=>document.querySelector('#v283ChooseDiscount')?.focus(),40);
+  }
+  function hide(){
+    const layer=document.querySelector('#v283EntryLayer');if(!layer)return;
+    layer.classList.remove('show');layer.setAttribute('aria-hidden','true');
+  }
+
+  mount();
+  if(typeof v23ShowFeatured==='function')v23ShowFeatured=show;
+  if(typeof v23HideFeatured==='function')v23HideFeatured=hide;
+
+  if(typeof closeBooking==='function'){
+    const closeBase=closeBooking;
+    closeBooking=function(){
+      hide();
+      try{sessionStorage.removeItem(INTENT_KEY)}catch{}
+      window.__OLANO_BOOKING_INTENT__='';
+      return closeBase.apply(this,arguments);
+    };
+  }
+
+  window.OLANO_BOOKING_ENTRY={
+    getIntent:currentIntent,
+    show,
+    hide,
+    choose
+  };
+})();
