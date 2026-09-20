@@ -149,3 +149,21 @@ fieldset{border:1px solid var(--line);border-radius:12px;padding:12px}fieldset l
   .visual-device-switch{justify-content:stretch}
   .visual-device-switch .button{flex:1}
 }
+
+
+/* Visual editor traces + typography/image inspector */
+.editor-trace-panel{margin-top:18px;border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden}
+.editor-trace-panel>summary{list-style:none;display:grid;grid-template-columns:30px 1fr auto;gap:9px;align-items:center;padding:13px 15px;cursor:pointer}
+.editor-trace-panel>summary::-webkit-details-marker{display:none}
+.editor-trace-panel>summary>span:first-child{width:30px;height:30px;border-radius:9px;background:#fff7d6;display:grid;place-items:center}
+.editor-trace-panel>summary strong{display:block;font-size:11px}.editor-trace-panel>summary small{display:block;color:var(--muted);font-size:8px;margin-top:2px}
+.trace-actions{display:flex;gap:8px;padding:0 15px 10px;border-top:1px solid var(--line);padding-top:10px}
+.editor-trace-output{margin:0 15px 15px;padding:12px;border-radius:12px;max-height:300px;overflow:auto;background:#0f172a;color:#d1fae5;font:9px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre-wrap;word-break:break-word}
+#inspectTextWrap input,#inspectImageWrap input{width:100%}
+.builder-inspector .notice{font-size:9px;line-height:1.5}
+.builder-section-card.dragging{outline:2px dashed #d7ab33;outline-offset:3px}
+@media(max-width:560px){
+  .editor-trace-panel>summary{grid-template-columns:28px 1fr}
+  .editor-trace-panel>summary #traceHealth{grid-column:1/-1;justify-self:start}
+  .trace-actions{flex-wrap:wrap}
+}
