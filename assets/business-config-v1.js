@@ -409,9 +409,15 @@
   }
   function clearBuilderStyle(el){
     if(!el)return;
-    ['translate','width','height','fontSize','fontFamily','fontWeight','borderRadius','padding','opacity','background','backgroundColor','color','borderColor','borderStyle','borderWidth'].forEach(p=>el.style[p]='');
-    el.removeAttribute('data-builder-colored');
-    (el.tagName==='svg'?[...el.querySelectorAll('*')]:[...el.querySelectorAll('svg *')]).forEach(n=>{n.style.stroke='';n.style.fill='';});
+    ['translate','width','height','borderRadius','padding','opacity','background','backgroundColor','borderColor','borderStyle','borderWidth'].forEach(p=>el.style[p]='');
+  }
+  function resetBuilderElementTextStyles(){
+    document.querySelectorAll('[data-builder-element-text-style="1"]').forEach(el=>{
+      el.style.fontSize='';el.style.fontFamily='';el.style.fontWeight='';el.style.color='';
+      el.removeAttribute('data-builder-element-text-style');
+      el.removeAttribute('data-builder-colored');
+      (el.tagName==='svg'?[...el.querySelectorAll('*')]:[...el.querySelectorAll('svg *')]).forEach(n=>{n.style.stroke='';n.style.fill='';});
+    });
   }
   function applyBuilderElementStyle(el,cfg={},palette={}){
     if(!el)return;
@@ -421,9 +427,9 @@
     if(x!==null||y!==null)el.style.translate=(x||0)+'px '+(y||0)+'px';
     if(w!==null&&w>0)el.style.width=w+'px';
     if(h!==null&&h>0)el.style.height=h+'px';
-    if(fs!==null&&fs>0)el.style.fontSize=fs+'px';
-    if(cfg.fontFamily)el.style.fontFamily=String(cfg.fontFamily);
-    if(cfg.fontWeight)el.style.fontWeight=String(cfg.fontWeight);
+    if(fs!==null&&fs>0){el.style.fontSize=fs+'px';el.dataset.builderElementTextStyle='1';}
+    if(cfg.fontFamily){el.style.fontFamily=String(cfg.fontFamily);el.dataset.builderElementTextStyle='1';}
+    if(cfg.fontWeight){el.style.fontWeight=String(cfg.fontWeight);el.dataset.builderElementTextStyle='1';}
     if(radius!==null&&radius>=0)el.style.borderRadius=radius+'px';
     if(padding!==null&&padding>=0)el.style.padding=padding+'px';
     if(opacity!==null)el.style.opacity=String(Math.max(.1,Math.min(1,opacity/100)));
@@ -440,6 +446,7 @@
       const color=tokenColor(palette,cfg.colorToken);
       el.style.color=color;
       el.dataset.builderColored='true';
+      el.dataset.builderElementTextStyle='1';
       (el.tagName==='svg'?[...el.querySelectorAll('*')]:[...el.querySelectorAll('svg *')]).forEach(n=>{
         const stroke=n.getAttribute('stroke');
         const fill=n.getAttribute('fill');
@@ -656,6 +663,7 @@
     }
   }
   function applyVisualElementStyles(data){
+    resetBuilderElementTextStyles();
     applyTypographySettings(data);
     const device=builderDevice(),palette=builderPalette(data);
     document.querySelectorAll('[data-cms-element]').forEach(el=>{
