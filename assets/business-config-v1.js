@@ -411,7 +411,7 @@
     if(!el)return;
     ['translate','width','height','fontSize','fontFamily','fontWeight','borderRadius','padding','opacity','background','backgroundColor','color','borderColor','borderStyle','borderWidth'].forEach(p=>el.style[p]='');
     el.removeAttribute('data-builder-colored');
-    el.querySelectorAll('svg *').forEach(n=>{n.style.stroke='';n.style.fill='';});
+    (el.tagName==='svg'?[...el.querySelectorAll('*')]:[...el.querySelectorAll('svg *')]).forEach(n=>{n.style.stroke='';n.style.fill='';});
   }
   function applyBuilderElementStyle(el,cfg={},palette={}){
     if(!el)return;
@@ -440,7 +440,7 @@
       const color=tokenColor(palette,cfg.colorToken);
       el.style.color=color;
       el.dataset.builderColored='true';
-      el.querySelectorAll('svg *').forEach(n=>{
+      (el.tagName==='svg'?[...el.querySelectorAll('*')]:[...el.querySelectorAll('svg *')]).forEach(n=>{
         const stroke=n.getAttribute('stroke');
         const fill=n.getAttribute('fill');
         if(stroke!==null&&stroke!=='none')n.style.stroke='currentColor';
