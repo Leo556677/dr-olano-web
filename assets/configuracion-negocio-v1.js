@@ -2144,9 +2144,14 @@ function bindEvents() {
     document.querySelectorAll('.tab').forEach((x)=>x.classList.toggle('active',x===tab));
     document.querySelectorAll('.tab-panel').forEach((p)=>p.classList.toggle('active',p.dataset.panel===tab.dataset.tab));
     if(tab.dataset.tab==='vista-publica') loadPublicConfig();
-    if(tab.dataset.tab==='contenido') setTimeout(setupVisualPreview,250);
+    if(tab.dataset.tab==='contenido') setTimeout(()=>{setupVisualPreview();updateEditorDirty();},250);
+    else updateEditorDirty();
   }));
-  $('refreshAll').addEventListener('click',()=>guard(async()=>{await loadAll({publicCheck:true});setStatus('Datos actualizados.','ok');}));
+  $('refreshAll').addEventListener('click',()=>guard(async()=>{
+    if(state.editorDirty&&!confirm('Hay cambios del editor sin publicar. Actualizar conservará el borrador actual. ¿Continuar?'))return;
+    await loadAll({publicCheck:true});
+    updateEditorDirty();setStatus('Datos actualizados.','ok');
+  }));
   $('refreshPublicBtn').addEventListener('click',()=>loadPublicConfig());
   $('logoutBtn').addEventListener('click',async()=>{await sb.auth.signOut();location.replace('/agenda-admin/');});
   $('agendaForm').addEventListener('submit',(e)=>guard(()=>saveAgenda(e)));
@@ -2208,12 +2213,12 @@ function bindEvents() {
   $('builderEditMode').addEventListener('click',()=>setBuilderMode('edit'));
   $('builderNavigateMode').addEventListener('click',()=>setBuilderMode('navigate'));
   setupInspectorPalette();
-  $('inspectBgMode').addEventListener('change',()=>{updateInspectorVisibility();applySelectedInspectorConfig();});
+  $('inspectBgMode').addEventListener('change',(e)=>{consumeUndoArm(e.currentTarget);updateInspectorVisibility();applySelectedInspectorConfig();});
   ['inspectWidth','inspectHeight','inspectFontSize','inspectRadius','inspectBgFrom','inspectBgTo','inspectGradientAngle','inspectBorder','inspectOpacity','inspectPadding']
-    .forEach(id=>$(id).addEventListener('input',()=>applySelectedInspectorConfig()));
-  $('inspectTypographyScope').addEventListener('change',()=>{populateTypographyControls();editorTrace('TYPOGRAPHY_SCOPE','OK',{scope:$('inspectTypographyScope').value});});
-  ['inspectFontFamily','inspectFontWeight','inspectFontScale','inspectColor'].forEach(id=>$(id).addEventListener('input',()=>applyTypographyFromInspector()));
-  $('inspectText').addEventListener('input',()=>setSelectedElementTextOverride($('inspectText').value));
+    .forEach(id=>$(id).addEventListener('input',(e)=>{consumeUndoArm(e.currentTarget);applySelectedInspectorConfig();}));
+  $('inspectTypographyScope').addEventListener('change',(e)=>{consumeUndoArm(e.currentTarget);populateTypographyControls();editorTrace('TYPOGRAPHY_SCOPE','OK',{scope:$('inspectTypographyScope').value});});
+  ['inspectFontFamily','inspectFontWeight','inspectFontScale','inspectColor'].forEach(id=>$(id).addEventListener('input',(e)=>{consumeUndoArm(e.currentTarget);applyTypographyFromInspector();}));
+  $('inspectText').addEventListener('input',(e)=>{consumeUndoArm(e.currentTarget);setSelectedElementTextOverride($('inspectText').value);});
   $('inspectImageFile').addEventListener('change',()=>{
     const file=$('inspectImageFile').files?.[0];
     if(file)guard(()=>setSelectedElementImage(file));
@@ -2221,7 +2226,10 @@ function bindEvents() {
   $('inspectorResetBtn').addEventListener('click',()=>resetSelectedElementStyle());
   document.querySelector('.visual-builder-sidebar')?.addEventListener('focusin',(e)=>{
     const control=e.target.closest('input,textarea,select');
-    if(control)syncFocusFromEditorControl(control);
+    if(control){armUndo(control);syncFocusFromEditorControl(control);}
+  });
+  document.querySelector('.visual-builder-sidebar')?.addEventListener('focusout',(e)=>{
+    if(state.undoArm?.control===e.target)setTimeout(()=>{if(state.undoArm?.control===e.target)state.undoArm=null;},0);
   });
   $('copyTraceBtn').addEventListener('click',()=>copyEditorTrace());
   $('clearTraceBtn').addEventListener('click',()=>clearEditorTrace());
@@ -2230,6 +2238,23 @@ function bindEvents() {
     $('brandPrimary').value='#0b2e4f';$('brandSecondary').value='#1aa79d';
     $('brandAccent').value='#d7ab33';$('brandBackground').value='#f4f7f8';
     stageBrandingControls();
+  });
+  $('publishEditorBtn').addEventListener('click',()=>guard(()=>publishEditorDraft()));
+  $('discardDraftBtn').addEventListener('click',()=>guard(()=>discardEditorDraft()));
+  $('redoUndoBtn').addEventListener('click',()=>redoEditorChange());
+  document.addEventListener('keydown',(e)=>{
+    const mod=e.ctrlKey||e.metaKey;
+    if(!mod)return;
+    if(String(e.key).toLowerCase()==='z'){
+      e.preventDefault();
+      if(e.shiftKey)redoEditorChange();else undoEditorChange();
+    }else if(String(e.key).toLowerCase()==='y'){
+      e.preventDefault();redoEditorChange();
+    }
+  });
+  window.addEventListener('beforeunload',(e)=>{
+    if(!state.editorDirty)return;
+    e.preventDefault();e.returnValue='';
   });
   $('promotionScope').addEventListener('change',()=>{updatePromotionScope();updatePromotionPreview();});
   ['promotionTitle','promotionMessage','promotionCta','promotionDiscount','promotionCountdown'].forEach((id)=>$(id).addEventListener('input',updatePromotionPreview));
