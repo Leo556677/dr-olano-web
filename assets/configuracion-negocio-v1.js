@@ -1018,8 +1018,8 @@ function selectVisualElement(el){
   $('inspectorMeta').textContent=contentSlotLabel(builderSlotByKey(slotKey)||{slot_key:slotKey})+' · '+state.builderDevice.toUpperCase();
   inspectorNumber('inspectWidth',cfg.w??rect.width);
   inspectorNumber('inspectHeight',cfg.h??rect.height);
-  inspectorNumber('inspectFontSize',cfg.fontSize??parseFloat(cs.fontSize)||null);
-  inspectorNumber('inspectRadius',cfg.radius??parseFloat(cs.borderRadius)||0);
+  inspectorNumber('inspectFontSize',cfg.fontSize ?? (parseFloat(cs.fontSize)||null));
+  inspectorNumber('inspectRadius',cfg.radius ?? (parseFloat(cs.borderRadius)||0));
   $('inspectBgMode').value=cfg.bgMode||'none';
   $('inspectBgFrom').value=cfg.bgFrom||'primary';
   $('inspectBgTo').value=cfg.bgTo||'secondary';
@@ -1027,7 +1027,7 @@ function selectVisualElement(el){
   $('inspectColor').value=cfg.colorToken||'primary';
   $('inspectBorder').value=cfg.borderToken||'none';
   inspectorNumber('inspectOpacity',cfg.opacity??100);
-  inspectorNumber('inspectPadding',cfg.padding??parseFloat(cs.paddingTop)||0);
+  inspectorNumber('inspectPadding',cfg.padding ?? (parseFloat(cs.paddingTop)||0));
   updateInspectorVisibility();
   showElementOverlay(el);
 }
