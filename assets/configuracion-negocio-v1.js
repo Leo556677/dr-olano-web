@@ -216,7 +216,7 @@ function updateEditorDirty(){
   const count=editorChangeCount();
   const bar=$('editorPublishBar'),btn=$('publishEditorBtn'),label=$('editorPendingCount');
   const active=document.querySelector('.tab.active')?.dataset.tab==='contenido';
-  if(bar)bar.hidden=!active;
+  if(bar)bar.hidden=!(active||state.editorDirty);
   if(btn)btn.disabled=!state.editorDirty;
   if(label)label.textContent=count===1?'1 cambio pendiente':count+' cambios pendientes';
   builderSetState(state.editorDirty?'Borrador sin publicar':'Sin cambios',state.editorDirty?'warn':'neutral');
