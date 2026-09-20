@@ -548,6 +548,7 @@
           el=document.createElement('a');el.href=item.href||'#';el.textContent=item.text||'Enlace';el.target=item.target||'_self';
         }else if(item.type==='icon'){
           el=document.createElement('span');el.innerHTML=BUILDER_ICONS[item.iconKey]||BUILDER_ICONS.star;
+          const svg=el.querySelector('svg');if(svg){svg.setAttribute('fill','none');svg.setAttribute('stroke','currentColor');svg.setAttribute('stroke-width','1.8');svg.setAttribute('stroke-linecap','round');svg.setAttribute('stroke-linejoin','round');}
         }else if(item.type==='line'){
           el=document.createElement('div');el.setAttribute('aria-hidden','true');
         }else if(item.type==='text'){
