@@ -840,6 +840,7 @@ function contentSlotLabel(slot) {
     'home.faq':'Preguntas frecuentes',
     'home.profile':'Conoce al Dr. Olano',
     'home.areas':'Áreas de atención',
+    'home.location':'Dónde te atendemos',
     'site.footer':'Pie de página'
   };
   return labels[slot.slot_key]||slot.section_label||slot.slot_key;
@@ -958,6 +959,15 @@ function contentSlotFields(slot){
       builderField('Texto','body',slot.body||'','textarea',700)+
       '<div class="builder-linked-note">Las áreas enlazadas se alimentan de la estructura pública vigente.</div>';
   }
+  if(key==='home.location'){
+    return builderField('Título','title',slot.title||'¿Dónde te atendemos?')+
+      builderSetting('Dirección','address',st.address||'')+
+      builderField('Texto de apoyo','body',slot.body||'','textarea',800)+
+      builderSetting('Texto botón de ruta','route_label',st.route_label||'Cómo llegar desde mi ubicación')+
+      builderSetting('Enlace botón de ruta','route_url',st.route_url||'')+
+      builderSetting('Texto botón Google Maps','map_label',st.map_label||'Ver en Google Maps')+
+      builderSetting('Enlace Google Maps','map_url',st.map_url||'');
+  }
   if(key==='site.footer'){
     return builderField('Nombre visible en el pie','title',slot.title||'Dr. Olano')+
       builderSetting('Texto del botón WhatsApp','whatsapp_label',st.whatsapp_label||'WhatsApp')+
@@ -989,12 +999,40 @@ function renderContentEditor() {
       '<form class="builder-section-form">'+
         (canHide?'<label class="toggle-line"><input data-content-enabled type="checkbox" '+(slot.enabled===false?'':'checked')+'><span>Mostrar esta sección en la web</span></label>':'<div class="notice neutral">Este bloque permanece fijo en su posición para conservar la navegación.</div>')+
         contentSlotFields(slot)+
-        '<div class="form-actions"><button class="button primary write-control" type="submit">Guardar sección</button><button class="button ghost" type="button" data-focus-preview="'+attr(slot.slot_key)+'">Ver en la página</button></div>'+
+        '<div class="form-actions"><button class="button primary write-control" type="submit">Aplicar al borrador</button><button class="button ghost" type="button" data-focus-preview="'+attr(slot.slot_key)+'">Ver en la página</button></div>'+
       '</form>'+
     '</details>';
   }).join('');
   wireContentEditor();
   setWriteMode();
+}
+function stageCardDraft(card){
+  const id=card?.dataset?.contentForm;
+  const slot=state.contentSlots.find(x=>x.id===id);if(!slot)return null;
+  const field=(name)=>{
+    const el=card.querySelector('[data-content-field="'+name+'"]');
+    return el?el.value.trim():slot[name];
+  };
+  ['eyebrow','title','subtitle','body','cta_label','image_alt'].forEach(name=>{
+    const el=card.querySelector('[data-content-field="'+name+'"]');
+    if(el)slot[name]=el.value.trim()||null;
+  });
+  const enabled=card.querySelector('[data-content-enabled]');
+  if(enabled)slot.enabled=enabled.checked;
+  slot.settings=collectSlotSettings(card,slot);
+  markEditorDirty('DRAFT_CONTENT_CHANGE',{slot:slot.slot_key});
+  return slot;
+}
+async function stageContentImageFile(card,file){
+  if(!file)return;
+  const slot=state.contentSlots.find(x=>x.id===card.dataset.contentForm);if(!slot)return;
+  pushUndoSnapshot('Cambiar imagen · '+contentSlotLabel(slot));
+  const uploaded=await uploadBusinessContentImage(file,slot.slot_key);
+  slot.image_url=uploaded.url;slot.image_path=uploaded.path;
+  const p=card.querySelector('[data-content-image-preview]');
+  if(p)p.innerHTML='<img src="'+attr(uploaded.url)+'" alt="Vista previa">';
+  applyPreviewImage(slot.slot_key,uploaded.url);
+  markEditorDirty('DRAFT_IMAGE_CHANGE',{slot:slot.slot_key,url:uploaded.url});
 }
 function wireContentEditor(){
   const box=$('contentEditorList'); if(!box)return;
@@ -1002,20 +1040,17 @@ function wireContentEditor(){
     const form=card.querySelector('form');
     form?.addEventListener('submit',(e)=>guard(()=>saveContentSlot(e,card)));
     card.querySelectorAll('input,textarea').forEach((input)=>input.addEventListener('input',()=>{
-      builderSetState('Cambios sin guardar','warn');
+      consumeUndoArm(input);
+      stageCardDraft(card);
       applyEditorCardDraftToPreview(card);
     }));
-    card.querySelector('[data-content-enabled]')?.addEventListener('change',()=>{
-      builderSetState('Cambios sin guardar','warn'); applyEditorCardDraftToPreview(card);
+    card.querySelector('[data-content-enabled]')?.addEventListener('change',(e)=>{
+      consumeUndoArm(e.currentTarget);
+      stageCardDraft(card);applyEditorCardDraftToPreview(card);
     });
     const file=card.querySelector('[data-content-image]');
     if(file)file.addEventListener('change',()=>{
-      const f=file.files?.[0]; if(!f)return;
-      const url=URL.createObjectURL(f);
-      const p=card.querySelector('[data-content-image-preview]');
-      if(p)p.innerHTML='<img src="'+attr(url)+'" alt="Vista previa">';
-      applyPreviewImage(card.dataset.builderSlot,url);
-      builderSetState('Cambios sin guardar','warn');
+      const selected=file.files?.[0];if(selected)guard(()=>stageContentImageFile(card,selected));
     });
     card.querySelector('[data-focus-preview]')?.addEventListener('click',()=>focusPreviewSlot(card.dataset.builderSlot));
     card.querySelectorAll('[data-open-tab]').forEach(btn=>btn.addEventListener('click',()=>openAdminTab(btn.dataset.openTab)));
@@ -1072,19 +1107,12 @@ async function persistBuilderOrderFromSidebar(){
     const slot=state.contentSlots.find(x=>x.id===card.dataset.contentForm);
     return builderSlotCanMove(slot);
   });
-  builderSetState('Guardando orden…','neutral');
-  const updates=movable.map((card,i)=>{
+  movable.forEach((card,i)=>{
     const slot=state.contentSlots.find(x=>x.id===card.dataset.contentForm);
-    const order=(i+1)*10;
-    slot.sort_order=order;
-    return sb.from('web_content_slots').update({sort_order:order,updated_at:new Date().toISOString()})
-      .eq('id',slot.id).eq('negocio_id',state.business.id);
+    if(slot)slot.sort_order=(i+1)*10;
   });
-  const results=await Promise.all(updates);
-  const err=results.find(x=>x.error)?.error; if(err)throw err;
   applyPreviewOrderFromState();
-  builderSetState('Orden guardado','');
-  editorTrace('SECTION_ORDER_SAVE','OK',{order:movable.map(card=>state.contentSlots.find(x=>x.id===card.dataset.contentForm)?.slot_key).filter(Boolean)});
+  markEditorDirty('DRAFT_SECTION_ORDER',{order:movable.map(card=>state.contentSlots.find(x=>x.id===card.dataset.contentForm)?.slot_key).filter(Boolean)});
 }
 function collectSlotSettings(card,slot){
   const st=slotSettings(slot);
@@ -1100,37 +1128,14 @@ function collectSlotSettings(card,slot){
   return st;
 }
 async function saveContentSlot(e,card) {
-  e.preventDefault(); canWriteOrThrow();
-  const id=card.dataset.contentForm;
-  const slot=state.contentSlots.find(x=>x.id===id);
-  if(!slot) throw new Error('No se encontró esta sección.');
-  const value=(name)=>{
-    const el=card.querySelector('[data-content-field="'+name+'"]');
-    if(!el)return slot[name]??null;
-    return el.value.trim()||null;
-  };
-  let image_url=slot.image_url||null, image_path=slot.image_path||null;
+  e.preventDefault();canWriteOrThrow();
+  const slot=stageCardDraft(card);
+  if(!slot)throw new Error('No se encontró esta sección.');
   const file=card.querySelector('[data-content-image]')?.files?.[0]||null;
-  let uploaded=null;
-  if(file){
-    uploaded=await uploadBusinessContentImage(file,slot.slot_key);
-    image_url=uploaded.url; image_path=uploaded.path;
-  }
-  const payload={
-    eyebrow:value('eyebrow'),title:value('title'),subtitle:value('subtitle'),body:value('body'),
-    cta_label:value('cta_label'),image_alt:value('image_alt'),image_url,image_path,
-    enabled:card.querySelector('[data-content-enabled]') ? card.querySelector('[data-content-enabled]').checked : true,
-    settings:collectSlotSettings(card,slot),updated_at:new Date().toISOString()
-  };
-  const {error}=await sb.from('web_content_slots').update(payload).eq('id',id).eq('negocio_id',state.business.id);
-  if(error)throw error;
-  if(uploaded && slot.image_path && slot.image_path!==uploaded.path){
-    sb.storage.from('business-content').remove([slot.image_path]).catch(()=>{});
-  }
-  builderSetState('Guardado','');
-  editorTrace('CONTENT_SAVE','OK',{slot:slot.slot_key});
-  await loadAll();
-  reloadVisualSitePreview();
+  if(file)await stageContentImageFile(card,file);
+  builderSetState('Borrador actualizado','warn');
+  editorTrace('DRAFT_SECTION_APPLY','OK',{slot:slot.slot_key});
+  updateEditorDirty();
 }
 function openAdminTab(name){
   const tab=document.querySelector('.tab[data-tab="'+name+'"]');
