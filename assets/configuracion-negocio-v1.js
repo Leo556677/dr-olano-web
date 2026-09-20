@@ -179,7 +179,8 @@ function editorSnapshot(){
   return {
     branding: structuredClone(state.branding||{}),
     contentSlots: structuredClone(state.contentSlots||[]),
-    previewLogoUrl: state.previewLogoUrl||null
+    previewLogoUrl: state.previewLogoUrl||null,
+    builderGrid: structuredClone(state.builderGrid||{})
   };
 }
 function editorComparable(snapshot=editorSnapshot()){
@@ -291,9 +292,11 @@ function restoreEditorSnapshot(snapshot,{reload=false}={}){
   state.branding=structuredClone(snapshot.branding||{});
   state.contentSlots=structuredClone(snapshot.contentSlots||[]);
   state.previewLogoUrl=snapshot.previewLogoUrl||null;
+  if(snapshot.builderGrid)state.builderGrid=structuredClone(snapshot.builderGrid);
   renderBranding();renderContentEditor();
+  syncGridControls();saveBuilderGridPrefs();
   updateEditorDirty();
-  if(reload)reloadVisualSitePreview();else syncDraftToPreview();
+  if(reload)reloadVisualSitePreview();else{syncDraftToPreview();applyGridToPreview();}
 }
 function undoEditorChange(){
   if(!state.undoStack.length){showUndoToast('No hay cambios anteriores para deshacer.');return;}
@@ -1660,6 +1663,7 @@ async function saveBuilderSlotSettings(slotKey){
 }
 function resetSelectedElementStyle(){
   const sel=state.builderSelection;if(!sel)return;
+  pushUndoSnapshot('Restablecer '+(visualElement(sel.slotKey,sel.elementKey)?.dataset.cmsElementLabel||sel.elementKey));
   const slot=builderSlotByKey(sel.slotKey);if(!slot)return;
   const map=slot.settings?.builder?.[state.builderDevice];
   if(map)delete map[sel.elementKey];
@@ -2692,8 +2696,8 @@ function bindEvents() {
     setTimeout(setupVisualPreview,450);setTimeout(setupVisualPreview,1500);
   });
   document.querySelectorAll('[data-visual-device]').forEach((btn)=>btn.addEventListener('click',()=>setVisualPreviewDevice(btn.dataset.visualDevice)));
-  $('builderGridToggle').addEventListener('change',()=>updateGridPrefsFromControls());
-  ['builderGridX','builderGridY'].forEach(id=>$(id).addEventListener('change',()=>updateGridPrefsFromControls()));
+  $('builderGridToggle').addEventListener('change',(e)=>{consumeUndoArm(e.currentTarget);updateGridPrefsFromControls();});
+  ['builderGridX','builderGridY'].forEach(id=>$(id).addEventListener('change',(e)=>{consumeUndoArm(e.currentTarget);updateGridPrefsFromControls();}));
   $('hideInspectorDockBtn').addEventListener('click',()=>setInspectorDock(false,'hide-button'));
   $('showInspectorDockBtn').addEventListener('click',()=>setInspectorDock(!state.inspectorDockOpen,'toolbar-button'));
   $('builderEditMode').addEventListener('click',()=>setBuilderMode('edit'));
