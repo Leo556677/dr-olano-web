@@ -1253,8 +1253,13 @@ function updateGridOverflowFeedback(el,section){
       badge.hidden=!info.invalid;
       badge.textContent=info.invalid?'Fuera: '+info.cols+' col · '+info.rows+' fila'+(info.rows===1?'':'s'):'';
     }
+    const sig=info.invalid?(info.cols+':'+info.rows):'ok';
+    if(overlay.dataset.gridOverflowSig!==sig){
+      overlay.dataset.gridOverflowSig=sig;
+      if(info.invalid)editorTrace('GRID_OVERFLOW','WARN',{cols:info.cols,rows:info.rows,device:state.builderDevice});
+      else editorTrace('GRID_OVERFLOW_CLEAR','OK',{device:state.builderDevice});
+    }
   }
-  if(info.invalid)editorTrace('GRID_OVERFLOW','WARN',{cols:info.cols,rows:info.rows,device:state.builderDevice});
   return info;
 }
 function correctMoveToGrid(el,section,cfg,startCfg){
@@ -2120,7 +2125,7 @@ function previewTargetForControl(control){
   return slot;
 }
 function syncFocusFromEditorControl(control){
-  if(state.builderMode!=='edit')return;
+  if(state.builderMode!=='edit'||control?.closest('.builder-grid-toolbar'))return;
   const target=previewTargetForControl(control);
   if(target)flashPreviewTarget(target,control.id||control.dataset.contentField||control.dataset.settingField||control.tagName);
   else editorTrace('FOCUS_SYNC','ERROR',{control:control.id||control.name||control.tagName,message:'No se encontró destino visual'});
