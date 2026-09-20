@@ -385,6 +385,185 @@
     applyLayout(data,map);
   }
 
+
+  function builderDevice(){
+    const w=window.innerWidth||document.documentElement.clientWidth||1200;
+    if(w<=560)return 'mobile';
+    if(w<=950)return 'tablet';
+    return 'desktop';
+  }
+  function builderPalette(data){
+    const b=data?.branding||{};
+    return {
+      primary:validHex(b.primary)?b.primary:'#0b2e4f',
+      secondary:validHex(b.secondary)?b.secondary:'#1aa79d',
+      accent:validHex(b.accent)?b.accent:'#d7ab33',
+      background:validHex(b.background)?b.background:'#f4f7f8',
+      white:'#ffffff',
+      transparent:'transparent'
+    };
+  }
+  function tokenColor(palette,token){
+    return palette?.[token]||palette?.primary||'#0b2e4f';
+  }
+  function clearBuilderStyle(el){
+    if(!el)return;
+    ['translate','width','height','fontSize','borderRadius','padding','opacity','background','backgroundColor','color','borderColor','borderStyle','borderWidth'].forEach(p=>el.style[p]='');
+    el.removeAttribute('data-builder-colored');
+    el.querySelectorAll('svg *').forEach(n=>{n.style.stroke='';n.style.fill='';});
+  }
+  function applyBuilderElementStyle(el,cfg={},palette={}){
+    if(!el)return;
+    clearBuilderStyle(el);
+    const num=(v)=>Number.isFinite(Number(v))?Number(v):null;
+    const x=num(cfg.x),y=num(cfg.y),w=num(cfg.w),h=num(cfg.h),fs=num(cfg.fontSize),radius=num(cfg.radius),padding=num(cfg.padding),opacity=num(cfg.opacity);
+    if(x!==null||y!==null)el.style.translate=(x||0)+'px '+(y||0)+'px';
+    if(w!==null&&w>0)el.style.width=w+'px';
+    if(h!==null&&h>0)el.style.height=h+'px';
+    if(fs!==null&&fs>0)el.style.fontSize=fs+'px';
+    if(radius!==null&&radius>=0)el.style.borderRadius=radius+'px';
+    if(padding!==null&&padding>=0)el.style.padding=padding+'px';
+    if(opacity!==null)el.style.opacity=String(Math.max(.1,Math.min(1,opacity/100)));
+    const bgMode=String(cfg.bgMode||'').toLowerCase();
+    const from=tokenColor(palette,cfg.bgFrom||'primary');
+    const to=tokenColor(palette,cfg.bgTo||'secondary');
+    if(bgMode==='none')el.style.background='transparent';
+    if(bgMode==='solid')el.style.background=from;
+    if(bgMode==='gradient'){
+      const angle=Math.max(0,Math.min(360,Number(cfg.gradientAngle)||135));
+      el.style.background='linear-gradient('+angle+'deg,'+from+','+to+')';
+    }
+    if(cfg.colorToken){
+      const color=tokenColor(palette,cfg.colorToken);
+      el.style.color=color;
+      el.dataset.builderColored='true';
+      el.querySelectorAll('svg *').forEach(n=>{
+        const stroke=n.getAttribute('stroke');
+        const fill=n.getAttribute('fill');
+        if(stroke!==null&&stroke!=='none')n.style.stroke='currentColor';
+        if(fill!==null&&fill!=='none'&&fill!=='transparent')n.style.fill='currentColor';
+      });
+    }
+    if(cfg.borderToken&&cfg.borderToken!=='none'){
+      el.style.borderColor=tokenColor(palette,cfg.borderToken);
+      el.style.borderStyle='solid';
+      if(!el.style.borderWidth)el.style.borderWidth='1px';
+    }
+  }
+  function markBuilderElement(slot,key,el,label){
+    if(!el)return;
+    el.dataset.cmsElement=key;
+    if(label)el.dataset.cmsElementLabel=label;
+    if(slot&&!el.closest('[data-cms-slot]'))el.dataset.cmsSlotOwner=slot;
+  }
+  function registerVisualElements(data){
+    const slots=cmsSections();
+    Object.entries(slots).forEach(([slot,root])=>{
+      if(!root)return;
+      markBuilderElement(slot,'section',root,'Fondo / sección');
+    });
+
+    const header=slots['site.header'];
+    markBuilderElement('site.header','logo',header?.querySelector('.brand-logo'),'Logo');
+    markBuilderElement('site.header','brand',header?.querySelector('.brand-name'),'Nombre de marca');
+    markBuilderElement('site.header','menu',header?.querySelector('.menu'),'Botón de menú');
+
+    const hero=slots['home.hero'];
+    markBuilderElement('home.hero','eyebrow',hero?.querySelector('.hero-copy .eyebrow'),'Etiqueta superior');
+    markBuilderElement('home.hero','title',hero?.querySelector('.hero-copy h1'),'Título');
+    markBuilderElement('home.hero','subtitle',hero?.querySelector('.hero-copy .hero-focus'),'Texto destacado');
+    const heroBody=[...(hero?.querySelectorAll('.hero-copy > p')||[])].find(x=>!x.classList.contains('hero-focus'));
+    markBuilderElement('home.hero','body',heroBody,'Texto de apoyo');
+    markBuilderElement('home.hero','primary_button',hero?.querySelector('#heroBook'),'Botón Agendar');
+    markBuilderElement('home.hero','whatsapp_button',hero?.querySelector('#heroWhatsApp'),'Botón WhatsApp');
+    markBuilderElement('home.hero','trust',hero?.querySelector('.trust'),'Datos rápidos');
+    markBuilderElement('home.hero','image',hero?.querySelector('.hero-media img'),'Imagen principal');
+    markBuilderElement('home.hero','caption',hero?.querySelector('.hero-caption'),'Texto sobre imagen');
+
+    const start=slots['home.start'];
+    markBuilderElement('home.start','heading',start?.querySelector('.section-head h2'),'Título de sección');
+    const o1=start?.querySelector('#routeDirect'),o2=start?.querySelector('#routeExplore');
+    markBuilderElement('home.start','option_1',o1,'Opción 1');
+    markBuilderElement('home.start','option_1_icon',o1?.querySelector('.route-icon'),'Icono opción 1');
+    markBuilderElement('home.start','option_2',o2,'Opción 2');
+    markBuilderElement('home.start','option_2_icon',o2?.querySelector('.route-icon'),'Icono opción 2');
+
+    const featured=slots['home.featured'];
+    markBuilderElement('home.featured','heading',featured?.querySelector('.section-head h2'),'Título de sección');
+    markBuilderElement('home.featured','subheading',featured?.querySelector('.section-head p'),'Texto de sección');
+    featured?.querySelectorAll('[data-v240-category]').forEach(card=>{
+      const slug=card.getAttribute('data-v240-category')||'item';
+      markBuilderElement('home.featured','card.'+slug,card,'Tarjeta · '+slug);
+      markBuilderElement('home.featured','media.'+slug,card.querySelector('.v240-media'),'Imagen · '+slug);
+      markBuilderElement('home.featured','title.'+slug,card.querySelector('.v240-copy b'),'Título · '+slug);
+      markBuilderElement('home.featured','cta.'+slug,card.querySelector('.v240-cta'),'Botón · '+slug);
+    });
+
+    const trust=slots['home.trust'];
+    markBuilderElement('home.trust','card',trust?.querySelector('.trust-pro'),'Contenedor');
+    markBuilderElement('home.trust','icon',trust?.querySelector('.trust-pro-icon'),'Icono');
+    markBuilderElement('home.trust','title',trust?.querySelector('.trust-pro h2'),'Título');
+    markBuilderElement('home.trust','body',trust?.querySelector('.trust-pro p'),'Texto');
+    markBuilderElement('home.trust','chips',trust?.querySelector('.trust-chips'),'Datos rápidos');
+
+    const faq=slots['home.faq'];
+    markBuilderElement('home.faq','heading',faq?.querySelector('.cms-faq-title'),'Título');
+    faq?.querySelectorAll('details').forEach((item,i)=>{
+      markBuilderElement('home.faq','item.'+i,item,'Pregunta '+(i+1));
+      markBuilderElement('home.faq','question.'+i,item.querySelector('summary'),'Pregunta '+(i+1));
+      markBuilderElement('home.faq','answer.'+i,item.querySelector('p'),'Respuesta '+(i+1));
+    });
+
+    const profile=slots['home.profile'];
+    markBuilderElement('home.profile','heading',profile?.querySelector('.section-head'),'Encabezado');
+    markBuilderElement('home.profile','card',profile?.querySelector('.route'),'Tarjeta de perfil');
+
+    const areas=slots['home.areas'];
+    markBuilderElement('home.areas','heading',areas?.querySelector('.section-head'),'Encabezado');
+    areas?.querySelectorAll('.route').forEach((card,i)=>{
+      markBuilderElement('home.areas','card.'+i,card,'Tarjeta de área '+(i+1));
+      markBuilderElement('home.areas','icon.'+i,card.querySelector('.route-icon'),'Icono área '+(i+1));
+    });
+
+    const footer=slots['site.footer'];
+    markBuilderElement('site.footer','logo',footer?.querySelector('.footer-brand img'),'Logo');
+    markBuilderElement('site.footer','brand',footer?.querySelector('.cms-footer-brand-text'),'Nombre');
+    markBuilderElement('site.footer','meta',footer?.querySelector('.footer-meta'),'Datos');
+    markBuilderElement('site.footer','whatsapp_button',footer?.querySelector('.footer-wa'),'Botón WhatsApp');
+    markBuilderElement('site.footer','booking_button',footer?.querySelector('.footer-book'),'Botón Agendar');
+    markBuilderElement('site.footer','note',footer?.querySelector('.footer-note'),'Nota');
+  }
+  function builderSlotOfElement(el){
+    const root=el?.closest('[data-cms-slot]');
+    return root?.dataset.cmsSlot||el?.dataset.cmsSlotOwner||null;
+  }
+  function applyVisualElementStyles(data){
+    const device=builderDevice(),palette=builderPalette(data);
+    document.querySelectorAll('[data-cms-element]').forEach(el=>{
+      const slotKey=builderSlotOfElement(el);
+      const slot=contentSlot(data,slotKey);
+      const cfg=slot?.settings?.builder?.[device]?.[el.dataset.cmsElement]||{};
+      applyBuilderElementStyle(el,cfg,palette);
+    });
+  }
+  let builderResizeTimer=null;
+  function bindBuilderResponsive(data){
+    if(window.__olanoBuilderResponsiveBound)return;
+    window.__olanoBuilderResponsiveBound=true;
+    window.addEventListener('resize',()=>{
+      clearTimeout(builderResizeTimer);
+      builderResizeTimer=setTimeout(()=>applyVisualElementStyles(window.OLANO_BUSINESS_CONFIG||data),120);
+    });
+  }
+  window.OLANO_BUILDER_API={
+    builderDevice,
+    builderPalette,
+    applyBuilderElementStyle,
+    registerVisualElements,
+    applyVisualElementStyles,
+    builderSlotOfElement
+  };
+
 function addStyles(){
     if(document.getElementById('olano-business-config-styles'))return;
     const st=document.createElement('style');
@@ -409,6 +588,9 @@ function addStyles(){
       wrapCatalogRenderer(data);
       renderFeaturedCategories(data);
       applyContent(data);
+      registerVisualElements(data);
+      applyVisualElementStyles(data);
+      bindBuilderResponsive(data);
       document.dispatchEvent(new CustomEvent('olano:business-config',{detail:data}));
       return data;
     }catch(e){
