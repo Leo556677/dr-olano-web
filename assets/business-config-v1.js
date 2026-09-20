@@ -195,54 +195,185 @@
     });
   }
 
+  
   function contentSlot(data,key){
     return (data.content||[]).find(x=>x.slot_key===key)||null;
   }
   function setText(el,value){
     if(el&&value!=null&&String(value).trim()!=='')el.textContent=String(value);
   }
+  function setButtonText(el,value){
+    if(!el||value==null||String(value).trim()==='')return;
+    const icon=el.querySelector('svg');
+    el.textContent=String(value);
+    if(icon)el.prepend(icon);
+  }
+  function cmsMark(el,key,field=null,setting=null){
+    if(!el)return null;
+    const section=el.closest('[data-cms-slot]')||el;
+    if(key&&section)section.dataset.cmsSlot=key;
+    if(field)el.dataset.cmsField=field;
+    if(setting)el.dataset.cmsSetting=setting;
+    return el;
+  }
+  function cmsSections(){
+    const main=document.querySelector('main');
+    const blockWithoutId=[...(main?.querySelectorAll(':scope > section.block')||[])].find(x=>!x.id)||null;
+    return {
+      'site.header':document.querySelector('header.top'),
+      'home.hero':main?.querySelector(':scope > section.hero')||document.querySelector('.hero'),
+      'home.start':blockWithoutId,
+      'home.featured':document.querySelector('#unidades'),
+      'home.trust':document.querySelector('#confianza'),
+      'home.faq':document.querySelector('#faq'),
+      'home.profile':document.querySelector('#perfil-medico'),
+      'home.areas':document.querySelector('#areas-medicas'),
+      'site.footer':document.querySelector('.site-footer')
+    };
+  }
+  function markCmsSections(){
+    const map=cmsSections();
+    Object.entries(map).forEach(([key,el])=>{if(el)el.dataset.cmsSlot=key});
+    return map;
+  }
+  function applyLayout(data,map){
+    const slots=[...(data.content||[])];
+    const main=document.querySelector('main');
+    if(main){
+      slots.filter(x=>String(x.slot_key||'').startsWith('home.'))
+        .sort((a,b)=>Number(a.sort_order||0)-Number(b.sort_order||0))
+        .forEach(slot=>{
+          const el=map[slot.slot_key];
+          if(!el)return;
+          el.style.display=slot.enabled===false?'none':'';
+          main.appendChild(el);
+        });
+    }
+    ['site.header','site.footer'].forEach(key=>{
+      const slot=contentSlot(data,key),el=map[key];
+      if(el&&slot)el.style.display=slot.enabled===false?'none':'';
+    });
+  }
   function applyContent(data){
+    const map=markCmsSections();
+
+    const header=contentSlot(data,'site.header');
+    if(header&&map['site.header']){
+      const st=header.settings||{};
+      const brand=map['site.header'].querySelector('.brand-name');
+      setText(brand,st.brand_name||header.title);
+      cmsMark(brand,'site.header',null,'brand_name');
+      const menuBook=document.querySelector('#menuBook'),menuServices=document.querySelector('#menuServices'),menuFaq=document.querySelector('#menuFaq');
+      setButtonText(menuBook,st.menu_book); setButtonText(menuServices,st.menu_services); setButtonText(menuFaq,st.menu_faq);
+    }
+
     const hero=contentSlot(data,'home.hero');
-    if(hero){
-      setText(document.querySelector('.hero-copy .eyebrow'),hero.eyebrow);
-      setText(document.querySelector('.hero-copy h1'),hero.title);
-      setText(document.querySelector('.hero-copy .hero-focus'),hero.subtitle);
-      const heroBody=[...document.querySelectorAll('.hero-copy > p')].find(x=>!x.classList.contains('hero-focus'));
-      setText(heroBody,hero.body);
-      const heroBtn=document.querySelector('#heroBook');
-      if(heroBtn&&hero.cta_label){
-        const svg=heroBtn.querySelector('svg');
-        heroBtn.textContent=hero.cta_label;
-        if(svg)heroBtn.prepend(svg);
-      }
-      const heroImg=document.querySelector('.hero-media img');
-      if(heroImg&&hero.image_url){
-        heroImg.removeAttribute('data-optimized');
-        heroImg.src=hero.image_url;
+    if(hero&&map['home.hero']){
+      const section=map['home.hero'];
+      const eyebrow=section.querySelector('.hero-copy .eyebrow');
+      const title=section.querySelector('.hero-copy h1');
+      const subtitle=section.querySelector('.hero-copy .hero-focus');
+      const body=[...section.querySelectorAll('.hero-copy > p')].find(x=>!x.classList.contains('hero-focus'));
+      setText(eyebrow,hero.eyebrow); setText(title,hero.title); setText(subtitle,hero.subtitle); setText(body,hero.body);
+      cmsMark(eyebrow,'home.hero','eyebrow'); cmsMark(title,'home.hero','title'); cmsMark(subtitle,'home.hero','subtitle'); cmsMark(body,'home.hero','body');
+      const heroBtn=section.querySelector('#heroBook');
+      if(heroBtn&&hero.cta_label)setButtonText(heroBtn,hero.cta_label);
+      const heroImg=section.querySelector('.hero-media img');
+      if(heroImg){
+        heroImg.dataset.cmsField='image_url';
+        if(hero.image_url){heroImg.removeAttribute('data-optimized');heroImg.src=hero.image_url;}
         if(hero.image_alt)heroImg.alt=hero.image_alt;
       }
     }
+
+    const start=contentSlot(data,'home.start');
+    if(start&&map['home.start']){
+      const section=map['home.start'],st=start.settings||{};
+      const title=section.querySelector('.section-head h2');
+      setText(title,start.title); cmsMark(title,'home.start','title');
+      const r1=section.querySelector('#routeDirect'),r2=section.querySelector('#routeExplore');
+      const r1t=r1?.querySelector('b'),r1b=r1?.querySelector('small'),r2t=r2?.querySelector('b'),r2b=r2?.querySelector('small');
+      setText(r1t,st.option_1_title);setText(r1b,st.option_1_body);setText(r2t,st.option_2_title);setText(r2b,st.option_2_body);
+      cmsMark(r1t,'home.start',null,'option_1_title');cmsMark(r1b,'home.start',null,'option_1_body');
+      cmsMark(r2t,'home.start',null,'option_2_title');cmsMark(r2b,'home.start',null,'option_2_body');
+    }
+
     const featured=contentSlot(data,'home.featured');
-    const featuredHead=document.querySelector('#unidades .section-head');
+    const featuredHead=map['home.featured']?.querySelector('.section-head');
     if(featuredHead){
-      setText(featuredHead.querySelector('h2'),featured?.title);
-      setText(featuredHead.querySelector('p'),featured?.body);
+      const h=featuredHead.querySelector('h2'),p=featuredHead.querySelector('p');
+      setText(h,featured?.title);setText(p,featured?.body);
+      cmsMark(h,'home.featured','title');cmsMark(p,'home.featured','body');
     }
+
+    const trust=contentSlot(data,'home.trust');
+    if(trust&&map['home.trust']){
+      const section=map['home.trust'],st=trust.settings||{};
+      const title=section.querySelector('.trust-pro h2'),p=section.querySelector('.trust-pro p');
+      setText(title,trust.title);cmsMark(title,'home.trust','title');
+      if(p){
+        p.textContent='';
+        const strong=document.createElement('strong'); strong.textContent=st.lead||''; strong.dataset.cmsSetting='lead';
+        const span=document.createElement('span'); span.textContent=(st.lead?' ':'')+(trust.body||''); span.dataset.cmsField='body';
+        p.append(strong,span);
+      }
+    }
+
+    const faq=contentSlot(data,'home.faq');
+    if(faq&&map['home.faq']){
+      const section=map['home.faq'],items=Array.isArray(faq.settings?.items)?faq.settings.items:[];
+      let heading=section.querySelector(':scope > .wrap > h2');
+      if(!heading&&faq.title){
+        heading=document.createElement('h2');heading.className='cms-faq-title';section.querySelector('.wrap')?.prepend(heading);
+      }
+      setText(heading,faq.title);cmsMark(heading,'home.faq','title');
+      const details=[...section.querySelectorAll('details')];
+      items.forEach((item,i)=>{
+        let d=details[i];
+        if(!d){
+          d=document.createElement('details');d.innerHTML='<summary></summary><p></p>';section.querySelector('.wrap')?.appendChild(d);
+        }
+        const q=d.querySelector('summary'),a=d.querySelector('p');
+        setText(q,item?.q);setText(a,item?.a);
+        cmsMark(q,'home.faq',null,'faq.'+i+'.q');cmsMark(a,'home.faq',null,'faq.'+i+'.a');
+      });
+      details.slice(items.length).forEach(d=>d.style.display=items.length?'none':'');
+    }
+
     const profile=contentSlot(data,'home.profile');
-    const profileHead=document.querySelector('#perfil-medico .section-head');
+    const profileHead=map['home.profile']?.querySelector('.section-head');
     if(profileHead){
-      setText(profileHead.querySelector('h2'),profile?.title);
-      setText(profileHead.querySelector('p'),profile?.body);
+      const h=profileHead.querySelector('h2'),p=profileHead.querySelector('p');
+      setText(h,profile?.title);setText(p,profile?.body);
+      cmsMark(h,'home.profile','title');cmsMark(p,'home.profile','body');
     }
+
     const areas=contentSlot(data,'home.areas');
-    const areasHead=document.querySelector('#areas-medicas .section-head');
+    const areasHead=map['home.areas']?.querySelector('.section-head');
     if(areasHead){
-      setText(areasHead.querySelector('h2'),areas?.title);
-      setText(areasHead.querySelector('p'),areas?.body);
+      const h=areasHead.querySelector('h2'),p=areasHead.querySelector('p');
+      setText(h,areas?.title);setText(p,areas?.body);
+      cmsMark(h,'home.areas','title');cmsMark(p,'home.areas','body');
     }
+
+    const footer=contentSlot(data,'site.footer');
+    if(footer&&map['site.footer']){
+      const section=map['site.footer'],st=footer.settings||{};
+      const brand=section.querySelector('.footer-brand');
+      if(brand){
+        let span=brand.querySelector('.cms-footer-brand-text');
+        if(!span){span=document.createElement('span');span.className='cms-footer-brand-text';brand.appendChild(span);}
+        setText(span,footer.title);cmsMark(span,'site.footer','title');
+      }
+      const wa=section.querySelector('.footer-wa'),book=section.querySelector('.footer-book'),note=section.querySelector('.footer-note');
+      setButtonText(wa,st.whatsapp_label);setButtonText(book,st.booking_label);setText(note,st.note);
+      cmsMark(note,'site.footer',null,'note');
+    }
+
+    applyLayout(data,map);
   }
 
-  function addStyles(){
+function addStyles(){
     if(document.getElementById('olano-business-config-styles'))return;
     const st=document.createElement('style');
     st.id='olano-business-config-styles';
