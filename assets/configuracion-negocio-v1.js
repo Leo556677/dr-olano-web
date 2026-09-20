@@ -1568,24 +1568,31 @@ function beginElementMove(e){
   if(sel.elementKey==='section'){editorTrace('ELEMENT_MOVE_BLOCKED','ERROR',{slot:sel.slotKey,element:sel.elementKey,message:'Las secciones completas se reordenan con Mover sección'});return;}
   const doc=visualDoc(),section=el.closest('[data-cms-slot]');if(!doc||!section)return;
   pushUndoSnapshot('Mover '+(el.dataset.cmsElementLabel||sel.elementKey));
-  editorTrace('ELEMENT_MOVE_START','OK',{slot:sel.slotKey,element:sel.elementKey});
   const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;
   if(!api){editorTrace('BUILDER_API_MISSING','ERROR',{slot:sel.slotKey,element:sel.elementKey,action:'move'});return;}
-  const cfg=builderElementConfig(sel.slotKey,sel.elementKey,true);
-  const startX=e.clientX,startY=e.clientY,startCfgX=Number(cfg.x)||0,startCfgY=Number(cfg.y)||0;
+  const keys=groupMembers(sel.slotKey,sel.elementKey);
+  const members=keys.map(key=>{
+    const node=visualElement(sel.slotKey,key);if(!node)return null;
+    const cfg=builderElementConfig(sel.slotKey,key,true);
+    return {key,node,cfg,startX:Number(cfg.x)||0,startY:Number(cfg.y)||0};
+  }).filter(Boolean);
+  const startX=e.clientX,startY=e.clientY;
   const er=el.getBoundingClientRect(),sr=section.getBoundingClientRect();
+  editorTrace('ELEMENT_MOVE_START','OK',{slot:sel.slotKey,element:sel.elementKey,groupSize:members.length});
   const move=(ev)=>{
     let dx=ev.clientX-startX,dy=ev.clientY-startY;
     dx=Math.max(sr.left-er.left,Math.min(sr.right-er.right,dx));
     dy=Math.max(sr.top-er.top,Math.min(sr.bottom-er.bottom,dy));
-    cfg.x=Math.round(startCfgX+dx);cfg.y=Math.round(startCfgY+dy);
-    api.applyBuilderElementStyle(el,combinedBuilderElementConfig(sel.slotKey,sel.elementKey,cfg),currentEditorPalette());
+    for(const m of members){
+      m.cfg.x=Math.round(m.startX+dx);m.cfg.y=Math.round(m.startY+dy);
+      api.applyBuilderElementStyle(m.node,combinedBuilderElementConfig(sel.slotKey,m.key,m.cfg),currentEditorPalette());
+    }
     updateElementOverlay(el);builderSetState('Moviendo…','warn');
   };
   const up=()=>{
     doc.removeEventListener('pointermove',move);doc.removeEventListener('pointerup',up);
     scheduleBuilderStyleSave(sel.slotKey);
-    editorTrace('ELEMENT_MOVE_END','OK',{slot:sel.slotKey,element:sel.elementKey,x:cfg.x||0,y:cfg.y||0});
+    editorTrace('ELEMENT_MOVE_END','OK',{slot:sel.slotKey,element:sel.elementKey,groupSize:members.length,x:builderElementConfig(sel.slotKey,sel.elementKey,false)?.x||0,y:builderElementConfig(sel.slotKey,sel.elementKey,false)?.y||0});
     selectVisualElement(el);
   };
   doc.addEventListener('pointermove',move);doc.addEventListener('pointerup',up,{once:true});
