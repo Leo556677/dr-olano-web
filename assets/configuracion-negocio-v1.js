@@ -50,6 +50,8 @@ const state = {
   builderDevice: 'desktop',
   builderSelection: null,
   builderSaveTimer: null,
+  builderPreviewDragKey: null,
+  traceLog: [],
   publicConfig: null
 };
 
@@ -659,6 +661,47 @@ function slotSettings(slot){ return slot?.settings && typeof slot.settings==='ob
 function builderSetState(text='Sin cambios',kind='neutral'){
   const el=$('builderSaveState'); if(!el)return;
   el.textContent=text; el.className='pill '+kind;
+}
+function editorTrace(event,status='OK',detail={}){
+  const sel=state.builderSelection||{};
+  const row={
+    time:new Date().toISOString(),
+    event:String(event),
+    status:String(status),
+    device:state.builderDevice,
+    mode:state.builderMode,
+    slot:detail.slot||sel.slotKey||null,
+    element:detail.element||sel.elementKey||null,
+    detail:{...detail}
+  };
+  delete row.detail.slot;delete row.detail.element;
+  state.traceLog.push(row);
+  if(state.traceLog.length>80)state.traceLog.splice(0,state.traceLog.length-80);
+  renderEditorTrace();
+  return row;
+}
+function renderEditorTrace(){
+  const out=$('editorTraceOutput'),health=$('traceHealth');
+  if(!out||!health)return;
+  if(!state.traceLog.length){
+    out.textContent='Aún no hay eventos.';
+    health.textContent='Sin eventos';health.className='pill neutral';return;
+  }
+  out.textContent=state.traceLog.map(x=>JSON.stringify(x)).join('\n');
+  const lastError=[...state.traceLog].reverse().find(x=>x.status==='ERROR');
+  const last=state.traceLog[state.traceLog.length-1];
+  if(last?.status==='ERROR'){health.textContent='Error';health.className='pill off';}
+  else if(lastError){health.textContent='Con trazas';health.className='pill neutral';}
+  else{health.textContent='OK';health.className='pill';}
+  out.scrollTop=out.scrollHeight;
+}
+async function copyEditorTrace(){
+  const text=state.traceLog.map(x=>JSON.stringify(x)).join('\n')||'Sin trazas.';
+  try{await navigator.clipboard.writeText(text);setStatus('Trazas copiadas.','ok');}
+  catch{window.prompt('Copia estas trazas:',text);}
+}
+function clearEditorTrace(){
+  state.traceLog=[];renderEditorTrace();editorTrace('TRACE_RESET','OK',{message:'Registro reiniciado'});
 }
 function builderField(label,name,value='',type='input',max=500){
   const safe=esc(value||'');
