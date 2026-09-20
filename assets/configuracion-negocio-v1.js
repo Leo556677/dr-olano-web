@@ -1526,6 +1526,7 @@ function setSelectedElementTextOverride(value){
 }
 async function setSelectedElementImage(file){
   const sel=state.builderSelection;if(!sel||!file)return;
+  pushUndoSnapshot('Reemplazar imagen');
   const el=visualElement(sel.slotKey,sel.elementKey);
   if(!selectedElementSupportsImage(el))throw new Error('El elemento seleccionado no es una imagen.');
   const uploaded=await uploadBusinessContentImage(file,'builder-'+sel.slotKey+'-'+sel.elementKey);
