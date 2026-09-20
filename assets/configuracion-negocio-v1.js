@@ -1230,12 +1230,17 @@ function mergeInspectorConfig(){
   Object.entries(next).forEach(([k,v])=>{if(v==null)delete cfg[k];else cfg[k]=v});
   return cfg;
 }
+function combinedBuilderElementConfig(slotKey,elementKey,styleCfg=null){
+  const style=styleCfg||builderElementConfig(slotKey,elementKey,false)||{};
+  const content=builderElementContentConfig(slotKey,elementKey,false)||{};
+  return {...content,...style};
+}
 function applySelectedInspectorConfig(scheduleSave=true){
   const sel=state.builderSelection;if(!sel)return;
   const el=visualElement(sel.slotKey,sel.elementKey);if(!el)return;
   const cfg=mergeInspectorConfig();
   const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;
-  if(api)api.applyBuilderElementStyle(el,cfg,currentEditorPalette());
+  if(api)api.applyBuilderElementStyle(el,combinedBuilderElementConfig(sel.slotKey,sel.elementKey,cfg),currentEditorPalette());
   updateElementOverlay();
   builderSetState('Cambios de diseño','warn');
   editorTrace('ELEMENT_STYLE_CHANGE','OK',{slot:sel.slotKey,element:sel.elementKey,config:cfg});
@@ -1345,7 +1350,7 @@ function beginElementMove(e){
     dx=Math.max(sr.left-er.left,Math.min(sr.right-er.right,dx));
     dy=Math.max(sr.top-er.top,Math.min(sr.bottom-er.bottom,dy));
     cfg.x=Math.round(startCfgX+dx);cfg.y=Math.round(startCfgY+dy);
-    const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;if(api)api.applyBuilderElementStyle(el,cfg,currentEditorPalette());
+    const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;if(api)api.applyBuilderElementStyle(el,combinedBuilderElementConfig(sel.slotKey,sel.elementKey,cfg),currentEditorPalette());
     updateElementOverlay(el);builderSetState('Moviendo…','warn');
   };
   const up=()=>{
@@ -1370,7 +1375,7 @@ function beginElementResize(e){
     const maxW=Math.max(20,sr.right-er.left),maxH=Math.max(20,sr.bottom-er.top);
     cfg.w=Math.round(Math.max(20,Math.min(maxW,startW+(ev.clientX-startX))));
     cfg.h=Math.round(Math.max(20,Math.min(maxH,startH+(ev.clientY-startY))));
-    const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;if(api)api.applyBuilderElementStyle(el,cfg,currentEditorPalette());
+    const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;if(api)api.applyBuilderElementStyle(el,combinedBuilderElementConfig(sel.slotKey,sel.elementKey,cfg),currentEditorPalette());
     updateElementOverlay(el);builderSetState('Redimensionando…','warn');
   };
   const up=()=>{
