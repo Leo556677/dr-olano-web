@@ -57,7 +57,6 @@
   | replace: '<p>El horario queda pendiente hasta que el centro confirme la cita.</p>', '<p>Tu cita quedó registrada en el sistema de reservas.</p>'
   | replace: '<p>El cupo se bloqueará definitivamente cuando el negocio lo confirme.</p>', '<p>La sincronización con la agenda del Dr. Olano se realiza automáticamente.</p>'
   | replace: '<span>Cita<br>pendiente</span>', '<span>Reserva<br>en curso</span>'
-  | replace: 'metaPixelId:""', 'metaPixelId:"2579515552504402"'
 }}
 {% capture v28_part05 %}{% include v28/part05.html %}{% endcapture %}{{ v28_part05
   | replace: 'if(typeof window.fbq==="function")window.fbq("trackCustom",event,clean);', '/* Meta custom events disabled for health/wellness compliance. Standard PageView remains enabled in initTracking(). */'
@@ -78,4 +77,5 @@ initTracking();
 {% include v28/patch10-direct-service-links.html %}
 {% include v28/patch11-meta-ads-launch-safety.html %}
 {% include v28/patch12-booking-step2-focus.html %}
+{% include v28/patch14-generic-booking-entry.html %}
 {% include v28/part07.html %}
