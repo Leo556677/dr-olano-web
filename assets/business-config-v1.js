@@ -526,10 +526,13 @@
       const posY=Number.isFinite(Number(cfg.imagePosY))?Math.max(0,Math.min(100,Number(cfg.imagePosY))):50;
       if(cfg.imagePosX!=null||cfg.imagePosY!=null)el.style.objectPosition=posX+'% '+posY+'%';
       const zoom=Number.isFinite(Number(cfg.imageZoom))?Math.max(100,Math.min(300,Number(cfg.imageZoom))):100;
+      if(el.parentElement&&el.parentElement.dataset.builderBaseOverflow==null)el.parentElement.dataset.builderBaseOverflow=el.parentElement.style.overflow||'';
       if(cfg.imageZoom!=null){
         el.style.scale=String(zoom/100);
         el.style.transformOrigin=posX+'% '+posY+'%';
         if(el.parentElement)el.parentElement.style.overflow='hidden';
+      }else if(el.parentElement&&el.parentElement.dataset.builderBaseOverflow!=null){
+        el.parentElement.style.overflow=el.parentElement.dataset.builderBaseOverflow;
       }
     }
   }
