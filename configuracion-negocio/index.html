@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260919-10">
+  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260920-1">
 </head>
 <body>
   <div id="authGate" class="gate">
@@ -64,7 +64,7 @@
         <button class="tab" data-tab="disponibilidad" type="button">Horarios especiales</button>
         <button class="tab" data-tab="categorias" type="button">Categorías</button>
         <button class="tab" data-tab="servicios" type="button">Servicios</button>
-        <button class="tab" data-tab="contenido" type="button">Contenido web</button>
+        <button class="tab" data-tab="contenido" type="button">Editor visual</button>
         <button class="tab" data-tab="promociones" type="button">Ofertas</button>
         <button class="tab" data-tab="marca" type="button">Logo y colores</button>
         <button class="tab" data-tab="vista-publica" type="button">Comprobar web</button>
@@ -340,15 +340,40 @@
       <section class="tab-panel" data-panel="contenido">
         <div class="section-head">
           <div>
-            <div class="eyebrow">TEXTOS E IMÁGENES</div>
-            <h2>Contenido de la web</h2>
-            <p>Edita únicamente contenido visual permitido. No modifica reservas, base de datos clínica ni lógica interna del sitio.</p>
+            <div class="eyebrow">EDITOR VISUAL</div>
+            <h2>Edita la página viendo el resultado</h2>
+            <p>Mueve secciones, cambia textos e imágenes y revisa el resultado en PC, tablet o celular. La reserva y la infraestructura permanecen protegidas.</p>
           </div>
         </div>
         <div class="notice neutral content-safety-note">
-          <strong>Seguro por diseño:</strong> aquí no se pega HTML ni código. Solo cambias textos e imágenes de zonas controladas; si un campo queda vacío, la web conserva su contenido actual.
+          <strong>Cómo funciona:</strong> arrastra las secciones de la izquierda para cambiar su orden. También puedes tocar una sección dentro de la vista previa para abrir su edición. Los bloques de sistema, como reserva y horarios, siguen conectados a sus datos reales.
         </div>
-        <div id="contentEditorList" class="content-editor-list"></div>
+        <div class="visual-builder-layout">
+          <div class="visual-builder-sidebar">
+            <div class="panel builder-toolbar">
+              <div>
+                <strong>Página: Inicio</strong>
+                <small>Los cambios de texto se ven al instante en la vista previa. Guardar los hace públicos.</small>
+              </div>
+              <span id="builderSaveState" class="pill neutral">Sin cambios</span>
+            </div>
+            <div id="contentEditorList" class="content-editor-list"></div>
+          </div>
+          <aside class="panel card visual-builder-preview">
+            <div class="card-head">
+              <div><span class="step">👁</span><h3>Vista previa real</h3></div>
+              <div class="preview-device-switch" role="group" aria-label="Tamaño de vista previa">
+                <button class="button mini active" type="button" data-visual-device="desktop">PC</button>
+                <button class="button mini" type="button" data-visual-device="tablet">Tablet</button>
+                <button class="button mini" type="button" data-visual-device="mobile">Celular</button>
+              </div>
+            </div>
+            <div class="builder-preview-help">Puedes navegar la página. En modo editor, las secciones editables muestran un borde al pasar el mouse.</div>
+            <div id="visualSitePreviewShell" class="site-preview-shell desktop visual-editor-preview">
+              <iframe id="visualSitePreview" title="Editor visual de doctorolano.pe" src="/?admin-preview=visual"></iframe>
+            </div>
+          </aside>
+        </div>
       </section>
 
       <section class="tab-panel" data-panel="promociones">
@@ -486,6 +511,6 @@
     </main>
   </div>
 
-  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260919-10"></script>
+  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260920-1"></script>
 </body>
 </html>
