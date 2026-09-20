@@ -409,7 +409,7 @@
   }
   function clearBuilderStyle(el){
     if(!el)return;
-    ['translate','width','height','fontSize','borderRadius','padding','opacity','background','backgroundColor','color','borderColor','borderStyle','borderWidth'].forEach(p=>el.style[p]='');
+    ['translate','width','height','fontSize','fontFamily','fontWeight','borderRadius','padding','opacity','background','backgroundColor','color','borderColor','borderStyle','borderWidth'].forEach(p=>el.style[p]='');
     el.removeAttribute('data-builder-colored');
     el.querySelectorAll('svg *').forEach(n=>{n.style.stroke='';n.style.fill='';});
   }
@@ -454,13 +454,24 @@
       el.style.borderStyle='solid';
       if(!el.style.borderWidth)el.style.borderWidth='1px';
     }
-    if(cfg.textOverride!=null && /^(H1|H2|H3|H4|P|SPAN|B|STRONG|SMALL|SUMMARY|LABEL)$/.test(el.tagName)){
-      el.textContent=String(cfg.textOverride);
+    const textTag=/^(H1|H2|H3|H4|P|SPAN|B|STRONG|SMALL|SUMMARY|LABEL)$/.test(el.tagName);
+    let textTarget=textTag?el:null;
+    if(!textTarget&&el.matches?.('button,a'))textTarget=el.querySelector('.cms-button-label,.builder-action-label,.v240-cta');
+    if(textTarget){
+      if(textTarget.dataset.builderBaseText==null)textTarget.dataset.builderBaseText=String(textTarget.textContent||'');
+      textTarget.textContent=cfg.textOverride!=null?String(cfg.textOverride):textTarget.dataset.builderBaseText;
     }
-    if(cfg.srcOverride && el.tagName==='IMG'){
-      el.removeAttribute('data-optimized');
-      el.src=String(cfg.srcOverride);
-      if(cfg.altOverride!=null)el.alt=String(cfg.altOverride);
+    if(el.tagName==='IMG'){
+      if(!el.dataset.builderBaseSrc)el.dataset.builderBaseSrc=el.currentSrc||el.src||'';
+      if(el.dataset.builderBaseAlt==null)el.dataset.builderBaseAlt=el.alt||'';
+      if(cfg.srcOverride){
+        el.removeAttribute('data-optimized');
+        el.src=String(cfg.srcOverride);
+        if(cfg.altOverride!=null)el.alt=String(cfg.altOverride);
+      }else if(el.dataset.builderBaseSrc){
+        el.src=el.dataset.builderBaseSrc;
+        el.alt=el.dataset.builderBaseAlt||'';
+      }
     }
   }
   function markBuilderElement(slot,key,el,label){
