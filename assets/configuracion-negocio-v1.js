@@ -916,6 +916,14 @@ function setBuilderMode(mode){
   if(state.builderMode==='navigate'){
     hideElementOverlay();
     $('elementInspector').hidden=true;
+  } else {
+    try{
+      const frame=visualFrame();
+      if(frame?.contentWindow?.location?.pathname!=='/'){
+        frame.src='/?admin-preview=visual&t='+Date.now();
+        return;
+      }
+    }catch{}
   }
   setupVisualPreview();
 }
