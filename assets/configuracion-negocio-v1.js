@@ -1360,6 +1360,7 @@ function bindEvents() {
     document.querySelectorAll('.tab').forEach((x)=>x.classList.toggle('active',x===tab));
     document.querySelectorAll('.tab-panel').forEach((p)=>p.classList.toggle('active',p.dataset.panel===tab.dataset.tab));
     if(tab.dataset.tab==='vista-publica') loadPublicConfig();
+    if(tab.dataset.tab==='contenido') setTimeout(setupVisualPreview,250);
   }));
   $('refreshAll').addEventListener('click',()=>guard(async()=>{await loadAll({publicCheck:true});setStatus('Datos actualizados.','ok');}));
   $('refreshPublicBtn').addEventListener('click',()=>loadPublicConfig());
@@ -1415,6 +1416,8 @@ function bindEvents() {
   });
   $('brandSitePreview').addEventListener('load',()=>{setTimeout(applyBrandPreviewToIframe,350);setTimeout(applyBrandPreviewToIframe,1300);});
   document.querySelectorAll('[data-preview-device]').forEach((btn)=>btn.addEventListener('click',()=>setPreviewDevice(btn.dataset.previewDevice)));
+  $('visualSitePreview').addEventListener('load',()=>{setTimeout(setupVisualPreview,450);setTimeout(setupVisualPreview,1500);});
+  document.querySelectorAll('[data-visual-device]').forEach((btn)=>btn.addEventListener('click',()=>setVisualPreviewDevice(btn.dataset.visualDevice)));
   $('brandDefaultsBtn').addEventListener('click',()=>{
     $('brandPrimary').value='#0b2e4f'; $('brandSecondary').value='#1aa79d';
     $('brandAccent').value='#d7ab33'; $('brandBackground').value='#f4f7f8';
