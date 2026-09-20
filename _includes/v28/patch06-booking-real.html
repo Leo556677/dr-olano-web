@@ -257,6 +257,18 @@
     return `https://wa.me/${businessPhone}?text=${encodeURIComponent(lines.join("\n"))}`
   }
 
+  function trackTikTokSchedule(){
+    try{
+      const bookingKey=String(state.id||"").trim();
+      const dedupeKey=bookingKey?`olanoTikTokSchedule:${bookingKey}`:"";
+      if(dedupeKey&&sessionStorage.getItem(dedupeKey)==="1")return;
+      if(window.ttq&&typeof window.ttq.track==="function"){
+        window.ttq.track("Schedule",{});
+        if(dedupeKey)sessionStorage.setItem(dedupeKey,"1");
+      }
+    }catch{}
+  }
+
   async function sendRealBooking(){
     state.name=$("#clientName").value.trim();state.phone=$("#clientPhone").value.replace(/\s+/g,"");
     if(!state.service||!state.date||!state.time||state.name.length<3||state.phone.length<7)return;
@@ -276,7 +288,7 @@
         if(manage)manage.href=state.manageUrl||"#";
       }
       const waUrl=buildWhatsAppHandoff();state.url=waUrl;const wa=$("#openWhatsApp");if(wa&&waUrl){wa.href=waUrl;wa.style.display="inline-flex";wa.innerHTML=`${icon("i-send")}Abrir WhatsApp`}
-      clearConfirmedUi();trackEvent("booking_confirmed");go(5);
+      clearConfirmedUi();trackEvent("booking_confirmed");trackTikTokSchedule();go(5);
       if(waUrl){trackEvent("booking_whatsapp_handoff",{source:"auto_redirect"});requestAnimationFrame(()=>window.location.assign(waUrl))}
     }catch(e){
       turnstileToken="";if(turnstileWidgetId!==null&&window.turnstile){try{window.turnstile.reset(turnstileWidgetId)}catch{}}
