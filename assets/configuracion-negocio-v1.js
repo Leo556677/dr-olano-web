@@ -1714,7 +1714,7 @@ function ensureElementOverlay(){
   let overlay=doc.getElementById('adminElementOverlay');
   if(overlay)return overlay;
   overlay=doc.createElement('div');overlay.id='adminElementOverlay';overlay.dataset.adminBuilderControl='1';
-  overlay.innerHTML='<button type="button" class="admin-element-move" data-admin-builder-control="1">↔ Mover</button><button type="button" class="admin-element-resize" data-admin-builder-control="1" aria-label="Redimensionar">↘</button>';
+  overlay.innerHTML='<button type="button" class="admin-element-move" data-admin-builder-control="1">↔ Mover</button><span class="admin-grid-overflow" hidden></span><button type="button" class="admin-element-resize" data-admin-builder-control="1" aria-label="Redimensionar">↘</button>';
   doc.body.appendChild(overlay);
   overlay.querySelector('.admin-element-move').addEventListener('pointerdown',beginElementMove);
   overlay.querySelector('.admin-element-resize').addEventListener('pointerdown',beginElementResize);
@@ -1750,6 +1750,7 @@ function beginElementMove(e){
   pushUndoSnapshot('Mover '+(el.dataset.cmsElementLabel||sel.elementKey));
   const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;
   if(!api){editorTrace('BUILDER_API_MISSING','ERROR',{slot:sel.slotKey,element:sel.elementKey,action:'move'});return;}
+  const g=currentGridPrefs();
   const keys=groupMembers(sel.slotKey,sel.elementKey);
   const members=keys.map(key=>{
     const node=visualElement(sel.slotKey,key);if(!node)return null;
@@ -1757,24 +1758,40 @@ function beginElementMove(e){
     return {key,node,cfg,startX:Number(cfg.x)||0,startY:Number(cfg.y)||0};
   }).filter(Boolean);
   const startX=e.clientX,startY=e.clientY;
-  const er=el.getBoundingClientRect(),sr=section.getBoundingClientRect();
-  editorTrace('ELEMENT_MOVE_START','OK',{slot:sel.slotKey,element:sel.elementKey,groupSize:members.length});
+  const startMain={x:Number(builderElementConfig(sel.slotKey,sel.elementKey,true).x)||0,y:Number(builderElementConfig(sel.slotKey,sel.elementKey,true).y)||0};
+  editorTrace('ELEMENT_MOVE_START','OK',{slot:sel.slotKey,element:sel.elementKey,groupSize:members.length,grid:{x:g.x,y:g.y}});
   const move=(ev)=>{
-    let dx=ev.clientX-startX,dy=ev.clientY-startY;
-    dx=Math.max(sr.left-er.left,Math.min(sr.right-er.right,dx));
-    dy=Math.max(sr.top-er.top,Math.min(sr.bottom-er.bottom,dy));
+    const dx=ev.clientX-startX,dy=ev.clientY-startY;
     for(const m of members){
-      m.cfg.x=Math.round(m.startX+dx);m.cfg.y=Math.round(m.startY+dy);
+      m.cfg.x=snapGrid(m.startX+dx,g.x);
+      m.cfg.y=snapGrid(m.startY+dy,g.y);
       api.applyBuilderElementStyle(m.node,combinedBuilderElementConfig(sel.slotKey,m.key,m.cfg),currentEditorPalette());
     }
-    updateElementOverlay(el);builderSetState('Moviendo…','warn');
+    updateElementOverlay(el);
+    updateGridOverflowFeedback(el,section);
+    builderSetState('Moviendo sobre cuadrícula…','warn');
   };
   const up=()=>{
     doc.removeEventListener('pointermove',move);doc.removeEventListener('pointerup',up);
+    const mainCfg=builderElementConfig(sel.slotKey,sel.elementKey,true);
+    const before={x:mainCfg.x,y:mainCfg.y};
+    const overflow=correctMoveToGrid(el,section,mainCfg,startMain);
+    const deltaX=(Number(mainCfg.x)||0)-(Number(before.x)||0),deltaY=(Number(mainCfg.y)||0)-(Number(before.y)||0);
+    if(deltaX||deltaY){
+      for(const m of members){
+        if(m.key===sel.elementKey)continue;
+        m.cfg.x=snapGrid((Number(m.cfg.x)||0)+deltaX,g.x);
+        m.cfg.y=snapGrid((Number(m.cfg.y)||0)+deltaY,g.y);
+      }
+    }
+    for(const m of members)api.applyBuilderElementStyle(m.node,combinedBuilderElementConfig(sel.slotKey,m.key,m.cfg),currentEditorPalette());
+    updateElementOverlay(el);
+    const finalOverflow=updateGridOverflowFeedback(el,section);
+    if(overflow.invalid||finalOverflow.invalid)editorTrace('GRID_SNAP_CORRECTION','WARN',{slot:sel.slotKey,element:sel.elementKey,cols:overflow.cols,rows:overflow.rows});
     updateEditorDirty();
     scheduleBuilderStyleSave(sel.slotKey);
-    editorTrace('ELEMENT_MOVE_END','OK',{slot:sel.slotKey,element:sel.elementKey,groupSize:members.length,x:builderElementConfig(sel.slotKey,sel.elementKey,false)?.x||0,y:builderElementConfig(sel.slotKey,sel.elementKey,false)?.y||0});
-    selectVisualElement(el);
+    editorTrace('ELEMENT_MOVE_END','OK',{slot:sel.slotKey,element:sel.elementKey,groupSize:members.length,x:mainCfg.x||0,y:mainCfg.y||0,grid:{x:g.x,y:g.y}});
+    selectVisualElement(el,false);
   };
   doc.addEventListener('pointermove',move);doc.addEventListener('pointerup',up,{once:true});
 }
@@ -1785,28 +1802,35 @@ function beginElementResize(e){
   if(sel.elementKey==='section'){editorTrace('ELEMENT_RESIZE_BLOCKED','ERROR',{slot:sel.slotKey,element:sel.elementKey,message:'No se redimensiona la sección completa con el tirador'});return;}
   const doc=visualDoc(),section=el.closest('[data-cms-slot]');if(!doc||!section)return;
   pushUndoSnapshot('Redimensionar '+(el.dataset.cmsElementLabel||sel.elementKey));
-  editorTrace('ELEMENT_RESIZE_START','OK',{slot:sel.slotKey,element:sel.elementKey});
   const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;
   if(!api){editorTrace('BUILDER_API_MISSING','ERROR',{slot:sel.slotKey,element:sel.elementKey,action:'resize'});return;}
-  const cfg=builderElementConfig(sel.slotKey,sel.elementKey,true);
-  const er=el.getBoundingClientRect(),sr=section.getBoundingClientRect();
+  const g=currentGridPrefs(),cfg=builderElementConfig(sel.slotKey,sel.elementKey,true);
+  const er=el.getBoundingClientRect();
   const startX=e.clientX,startY=e.clientY,startW=er.width,startH=er.height;
+  editorTrace('ELEMENT_RESIZE_START','OK',{slot:sel.slotKey,element:sel.elementKey,grid:{x:g.x,y:g.y}});
   const move=(ev)=>{
-    const maxW=Math.max(20,sr.right-er.left),maxH=Math.max(20,sr.bottom-er.top);
-    cfg.w=Math.round(Math.max(20,Math.min(maxW,startW+(ev.clientX-startX))));
-    cfg.h=Math.round(Math.max(20,Math.min(maxH,startH+(ev.clientY-startY))));
+    cfg.w=Math.max(g.x,snapGrid(startW+(ev.clientX-startX),g.x));
+    cfg.h=Math.max(g.y,snapGrid(startH+(ev.clientY-startY),g.y));
     api.applyBuilderElementStyle(el,combinedBuilderElementConfig(sel.slotKey,sel.elementKey,cfg),currentEditorPalette());
-    updateElementOverlay(el);builderSetState('Redimensionando…','warn');
+    updateElementOverlay(el);
+    updateGridOverflowFeedback(el,section);
+    builderSetState('Redimensionando por celdas…','warn');
   };
   const up=()=>{
     doc.removeEventListener('pointermove',move);doc.removeEventListener('pointerup',up);
+    const overflow=correctResizeToGrid(el,section,cfg);
+    api.applyBuilderElementStyle(el,combinedBuilderElementConfig(sel.slotKey,sel.elementKey,cfg),currentEditorPalette());
+    updateElementOverlay(el);
+    updateGridOverflowFeedback(el,section);
+    if(overflow.invalid)editorTrace('GRID_SNAP_CORRECTION','WARN',{slot:sel.slotKey,element:sel.elementKey,cols:overflow.cols,rows:overflow.rows});
     updateEditorDirty();
     scheduleBuilderStyleSave(sel.slotKey);
-    editorTrace('ELEMENT_RESIZE_END','OK',{slot:sel.slotKey,element:sel.elementKey,width:cfg.w||Math.round(el.getBoundingClientRect().width),height:cfg.h||Math.round(el.getBoundingClientRect().height)});
-    selectVisualElement(el);
+    editorTrace('ELEMENT_RESIZE_END','OK',{slot:sel.slotKey,element:sel.elementKey,width:cfg.w||Math.round(el.getBoundingClientRect().width),height:cfg.h||Math.round(el.getBoundingClientRect().height),grid:{x:g.x,y:g.y}});
+    selectVisualElement(el,false);
   };
   doc.addEventListener('pointermove',move);doc.addEventListener('pointerup',up,{once:true});
 }
+
 
 function slotCustomElements(slot){
   slot.settings=slot.settings&&typeof slot.settings==='object'?slot.settings:{};
