@@ -1247,11 +1247,32 @@ function updateGridOverflowFeedback(el,section){
   const info=gridOverflowInfo(el,section);
   const overlay=visualDoc()?.getElementById('adminElementOverlay');
   if(overlay){
+    const g=currentGridPrefs(),r=el?.getBoundingClientRect();
     overlay.classList.toggle('admin-grid-invalid',info.invalid);
+    overlay.style.setProperty('--grid-x',g.x+'px');
+    overlay.style.setProperty('--grid-y',g.y+'px');
     const badge=overlay.querySelector('.admin-grid-overflow');
     if(badge){
       badge.hidden=!info.invalid;
       badge.textContent=info.invalid?'Fuera: '+info.cols+' col · '+info.rows+' fila'+(info.rows===1?'':'s'):'';
+    }
+    const sides=[
+      ['is-left',info.left,g.x,'width',r?.width],
+      ['is-right',info.right,g.x,'width',r?.width],
+      ['is-top',info.top,g.y,'height',r?.height],
+      ['is-bottom',info.bottom,g.y,'height',r?.height]
+    ];
+    for(const [cls,pixels,step,dimension,maxSize] of sides){
+      const zone=overlay.querySelector('.admin-grid-overflow-zone.'+cls);
+      if(!zone)continue;
+      const cells=Math.ceil(Math.max(0,pixels)/Math.max(1,step));
+      zone.hidden=!info.invalid||cells===0;
+      if(cells>0){
+        const size=Math.min(Math.max(0,Number(maxSize)||0),cells*Math.max(1,step));
+        zone.style[dimension]=size+'px';
+      }else{
+        zone.style[dimension]='0px';
+      }
     }
     const sig=info.invalid?(info.cols+':'+info.rows):'ok';
     if(overlay.dataset.gridOverflowSig!==sig){
@@ -1593,6 +1614,35 @@ function updateInspectorVisibility(){
   if($('inspectBgToWrap'))$('inspectBgToWrap').hidden=!gradient;
   if($('inspectAngleWrap'))$('inspectAngleWrap').hidden=!gradient;
 }
+function clampImageControl(value,min,max){
+  return Math.max(min,Math.min(max,Number(value)||0));
+}
+function applyImageCropPatch(patch,label='Ajustar imagen'){
+  if($('inspectImageCropWrap')?.hidden||!state.builderSelection)return;
+  pushUndoSnapshot(label);
+  if(patch.objectFit)$('inspectObjectFit').value=patch.objectFit;
+  if(patch.zoom!=null)$('inspectImageZoom').value=String(clampImageControl(patch.zoom,100,300));
+  if(patch.x!=null)$('inspectImagePosX').value=String(clampImageControl(patch.x,0,100));
+  if(patch.y!=null)$('inspectImagePosY').value=String(clampImageControl(patch.y,0,100));
+  applySelectedInspectorConfig();
+  editorTrace('IMAGE_CROP_ACTION','OK',{action:label,fit:$('inspectObjectFit').value,zoom:Number($('inspectImageZoom').value),x:Number($('inspectImagePosX').value),y:Number($('inspectImagePosY').value)});
+}
+function runImageCropAction(action){
+  const zoom=Number($('inspectImageZoom')?.value)||100;
+  const x=Number($('inspectImagePosX')?.value)||50;
+  const y=Number($('inspectImagePosY')?.value)||50;
+  if(action==='zoom-out')return applyImageCropPatch({zoom:zoom-10},'Reducir zoom de imagen');
+  if(action==='zoom-in')return applyImageCropPatch({zoom:zoom+10},'Aumentar zoom de imagen');
+  if(action==='left')return applyImageCropPatch({x:x-5},'Mover imagen a la izquierda');
+  if(action==='right')return applyImageCropPatch({x:x+5},'Mover imagen a la derecha');
+  if(action==='up')return applyImageCropPatch({y:y-5},'Mover imagen hacia arriba');
+  if(action==='down')return applyImageCropPatch({y:y+5},'Mover imagen hacia abajo');
+  if(action==='center')return applyImageCropPatch({x:50,y:50},'Centrar imagen');
+  if(action==='contain')return applyImageCropPatch({objectFit:'contain',zoom:100,x:50,y:50},'Ajustar imagen completa');
+  if(action==='cover')return applyImageCropPatch({objectFit:'cover',zoom:100,x:50,y:50},'Rellenar marco con imagen');
+  if(action==='crop')return applyImageCropPatch({objectFit:'cover',zoom:Math.max(110,zoom)},'Recortar imagen');
+  if(action==='reset')return applyImageCropPatch({objectFit:'cover',zoom:100,x:50,y:50},'Restablecer encuadre');
+}
 function readInspectorConfig(){
   const n=(id)=>{const el=$(id);if(!el||String(el.value).trim()==='')return null;const x=Number(el.value);return Number.isFinite(x)?x:null};
   const bgMode=$('inspectBgMode')?.value||'inherit';
@@ -1729,7 +1779,7 @@ function ensureElementOverlay(){
   let overlay=doc.getElementById('adminElementOverlay');
   if(overlay)return overlay;
   overlay=doc.createElement('div');overlay.id='adminElementOverlay';overlay.dataset.adminBuilderControl='1';
-  overlay.innerHTML='<button type="button" class="admin-element-move" data-admin-builder-control="1">↔ Mover</button><span class="admin-grid-overflow" hidden></span><button type="button" class="admin-element-resize" data-admin-builder-control="1" aria-label="Redimensionar">↘</button>';
+  overlay.innerHTML='<button type="button" class="admin-element-move" data-admin-builder-control="1">↔ Mover</button><span class="admin-grid-size" hidden></span><span class="admin-grid-overflow" hidden></span><span class="admin-grid-overflow-zone is-left" hidden></span><span class="admin-grid-overflow-zone is-right" hidden></span><span class="admin-grid-overflow-zone is-top" hidden></span><span class="admin-grid-overflow-zone is-bottom" hidden></span><button type="button" class="admin-element-resize" data-admin-builder-control="1" aria-label="Redimensionar">↘</button>';
   doc.body.appendChild(overlay);
   overlay.querySelector('.admin-element-move').addEventListener('pointerdown',beginElementMove);
   overlay.querySelector('.admin-element-resize').addEventListener('pointerdown',beginElementResize);
@@ -1750,11 +1800,23 @@ function showElementOverlay(el){
 function updateElementOverlay(explicitEl=null){
   const sel=state.builderSelection,doc=visualDoc();if(!sel||!doc)return;
   const el=explicitEl||visualElement(sel.slotKey,sel.elementKey),overlay=doc.getElementById('adminElementOverlay');if(!el||!overlay)return;
-  const r=el.getBoundingClientRect();
+  const r=el.getBoundingClientRect(),g=currentGridPrefs();
   overlay.style.left=(r.left+doc.defaultView.scrollX)+'px';
   overlay.style.top=(r.top+doc.defaultView.scrollY)+'px';
   overlay.style.width=Math.max(20,r.width)+'px';
   overlay.style.height=Math.max(20,r.height)+'px';
+  overlay.style.setProperty('--grid-x',g.x+'px');
+  overlay.style.setProperty('--grid-y',g.y+'px');
+  const size=overlay.querySelector('.admin-grid-size');
+  if(size){
+    const isSection=sel.elementKey==='section';
+    size.hidden=isSection;
+    if(!isSection){
+      const cols=Math.max(1,Math.ceil(r.width/Math.max(1,g.x)));
+      const rows=Math.max(1,Math.ceil(r.height/Math.max(1,g.y)));
+      size.textContent=cols+' × '+rows+' celdas';
+    }
+  }
 }
 function beginElementMove(e){
   if(state.builderMode!=='edit')return;
@@ -1774,6 +1836,7 @@ function beginElementMove(e){
   }).filter(Boolean);
   const startX=e.clientX,startY=e.clientY;
   const startMain={x:Number(builderElementConfig(sel.slotKey,sel.elementKey,true).x)||0,y:Number(builderElementConfig(sel.slotKey,sel.elementKey,true).y)||0};
+  section.classList.add('admin-grid-active-section');
   editorTrace('ELEMENT_MOVE_START','OK',{slot:sel.slotKey,element:sel.elementKey,groupSize:members.length,grid:{x:g.x,y:g.y}});
   const move=(ev)=>{
     const dx=ev.clientX-startX,dy=ev.clientY-startY;
@@ -1788,6 +1851,7 @@ function beginElementMove(e){
   };
   const up=()=>{
     doc.removeEventListener('pointermove',move);doc.removeEventListener('pointerup',up);
+    section.classList.remove('admin-grid-active-section');
     const mainCfg=builderElementConfig(sel.slotKey,sel.elementKey,true);
     const before={x:mainCfg.x,y:mainCfg.y};
     const overflow=correctMoveToGrid(el,section,mainCfg,startMain);
@@ -1822,6 +1886,7 @@ function beginElementResize(e){
   const g=currentGridPrefs(),cfg=builderElementConfig(sel.slotKey,sel.elementKey,true);
   const er=el.getBoundingClientRect();
   const startX=e.clientX,startY=e.clientY,startW=er.width,startH=er.height;
+  section.classList.add('admin-grid-active-section');
   editorTrace('ELEMENT_RESIZE_START','OK',{slot:sel.slotKey,element:sel.elementKey,grid:{x:g.x,y:g.y}});
   const move=(ev)=>{
     cfg.w=Math.max(g.x,snapGrid(startW+(ev.clientX-startX),g.x));
@@ -1833,6 +1898,7 @@ function beginElementResize(e){
   };
   const up=()=>{
     doc.removeEventListener('pointermove',move);doc.removeEventListener('pointerup',up);
+    section.classList.remove('admin-grid-active-section');
     const overflow=correctResizeToGrid(el,section,cfg);
     api.applyBuilderElementStyle(el,combinedBuilderElementConfig(sel.slotKey,sel.elementKey,cfg),currentEditorPalette());
     updateElementOverlay(el);
@@ -2156,15 +2222,20 @@ function setupVisualPreview(){
       '[data-cms-element]{transition:outline .12s ease}'+
       'body.admin-builder-edit [data-cms-element]:hover{outline:2px solid rgba(215,171,51,.7)!important;outline-offset:2px!important}'+
       '#adminElementOverlay{position:absolute;z-index:10050;border:2px solid #d7ab33;pointer-events:none;box-sizing:border-box}'+
-      '#adminElementOverlay .admin-element-move{position:absolute;left:0;top:-31px;pointer-events:auto;border:0;border-radius:8px 8px 0 0;background:#111827;color:#fff;padding:6px 9px;font:700 10px system-ui;cursor:move}'+
-      '#adminElementOverlay .admin-element-resize{position:absolute;right:-9px;bottom:-9px;width:20px;height:20px;pointer-events:auto;border:2px solid #fff;border-radius:50%;background:#d7ab33;color:#111827;padding:0;font:900 11px system-ui;cursor:nwse-resize}'+
+      '#adminElementOverlay .admin-element-move{position:absolute;left:0;top:-31px;z-index:4;pointer-events:auto;border:0;border-radius:8px 8px 0 0;background:#111827;color:#fff;padding:6px 9px;font:700 10px system-ui;cursor:move}'+
+      '#adminElementOverlay .admin-element-resize{position:absolute;right:-9px;bottom:-9px;z-index:4;width:20px;height:20px;pointer-events:auto;border:2px solid #fff;border-radius:50%;background:#d7ab33;color:#111827;padding:0;font:900 11px system-ui;cursor:nwse-resize}'+
       '.admin-multi-selected{outline:3px solid #7c3aed!important;outline-offset:3px!important}'+
       '#adminBuilderContextMenu{position:absolute;z-index:11000;width:220px;padding:7px;background:#111827;border:1px solid #344054;border-radius:12px;box-shadow:0 18px 45px #0007;display:grid;gap:3px}'+
       '#adminBuilderContextMenu button{border:0;background:transparent;color:#fff;text-align:left;padding:8px 10px;border-radius:8px;font:700 11px system-ui}'+
       '#adminBuilderContextMenu button:hover:not(:disabled){background:#344054}#adminBuilderContextMenu button:disabled{opacity:.35}#adminBuilderContextMenu .danger{color:#fda29b}#adminBuilderContextMenu hr{width:100%;border:0;border-top:1px solid #344054;margin:4px 0}'+
       '.admin-grid-layer{position:absolute!important;inset:0!important;z-index:9995!important;pointer-events:none!important;border-radius:inherit!important;background-image:linear-gradient(rgba(11,46,79,.16) 1px,transparent 1px),linear-gradient(90deg,rgba(11,46,79,.16) 1px,transparent 1px)!important;opacity:.72!important}'+
+      '.admin-grid-active-section{outline:2px dashed rgba(11,46,79,.75)!important;outline-offset:-2px!important}'+
       '#adminElementOverlay.admin-grid-invalid{border-color:#e11d48!important;box-shadow:0 0 0 4px rgba(225,29,72,.18)!important}'+
-      '#adminElementOverlay .admin-grid-overflow{position:absolute;left:0;bottom:-28px;background:#e11d48;color:#fff;border-radius:7px;padding:5px 7px;font:800 10px system-ui;white-space:nowrap;pointer-events:none}';
+      '#adminElementOverlay .admin-grid-size{position:absolute;right:0;top:-31px;z-index:4;background:#0b2e4f;color:#fff;border-radius:7px 7px 0 0;padding:5px 7px;font:800 10px system-ui;white-space:nowrap;pointer-events:none}'+
+      '#adminElementOverlay .admin-grid-overflow{position:absolute;left:0;bottom:-29px;z-index:4;background:#e11d48;color:#fff;border-radius:0 0 7px 7px;padding:5px 7px;font:800 10px system-ui;white-space:nowrap;pointer-events:none}'+
+      '#adminElementOverlay .admin-grid-overflow-zone{position:absolute;z-index:2;pointer-events:none;background-color:rgba(225,29,72,.34);background-image:linear-gradient(rgba(225,29,72,.72) 1px,transparent 1px),linear-gradient(90deg,rgba(225,29,72,.72) 1px,transparent 1px);background-size:var(--grid-x,16px) var(--grid-y,16px)}'+
+      '#adminElementOverlay .admin-grid-overflow-zone.is-left{left:0;top:0;bottom:0}#adminElementOverlay .admin-grid-overflow-zone.is-right{right:0;top:0;bottom:0}'+
+      '#adminElementOverlay .admin-grid-overflow-zone.is-top{left:0;right:0;top:0}#adminElementOverlay .admin-grid-overflow-zone.is-bottom{left:0;right:0;bottom:0}';
     doc.head.appendChild(style);
   }
   doc.body.classList.toggle('admin-builder-edit',state.builderMode==='edit');
@@ -2721,6 +2792,13 @@ function bindEvents() {
   $('inspectBgMode').addEventListener('change',(e)=>{consumeUndoArm(e.currentTarget);updateInspectorVisibility();applySelectedInspectorConfig();});
   ['inspectWidth','inspectHeight','inspectFontSize','inspectRadius','inspectBgFrom','inspectBgTo','inspectGradientAngle','inspectBorder','inspectOpacity','inspectPadding','inspectObjectFit','inspectImageZoom','inspectImagePosX','inspectImagePosY']
     .forEach(id=>$(id).addEventListener('input',(e)=>{consumeUndoArm(e.currentTarget);applySelectedInspectorConfig();}));
+  const cropButtons={
+    inspectZoomOutBtn:'zoom-out',inspectZoomInBtn:'zoom-in',
+    inspectImageLeftBtn:'left',inspectImageRightBtn:'right',inspectImageUpBtn:'up',inspectImageDownBtn:'down',
+    inspectImageCenterBtn:'center',inspectImageResetBtn:'reset',
+    inspectImageContainBtn:'contain',inspectImageCoverBtn:'cover',inspectImageCropBtn:'crop'
+  };
+  Object.entries(cropButtons).forEach(([id,action])=>$(id)?.addEventListener('click',()=>runImageCropAction(action)));
   $('inspectTypographyScope').addEventListener('change',(e)=>{consumeUndoArm(e.currentTarget);populateTypographyControls();editorTrace('TYPOGRAPHY_SCOPE','OK',{scope:$('inspectTypographyScope').value});});
   ['inspectFontFamily','inspectFontWeight','inspectFontScale','inspectColor'].forEach(id=>$(id).addEventListener('input',(e)=>{consumeUndoArm(e.currentTarget);applyTypographyFromInspector();}));
   $('inspectText').addEventListener('input',(e)=>{consumeUndoArm(e.currentTarget);setSelectedElementTextOverride($('inspectText').value);});

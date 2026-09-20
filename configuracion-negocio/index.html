@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260920-16">
+  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260920-17">
 </head>
 <body>
   <div id="authGate" class="gate">
@@ -431,6 +431,24 @@
                     <label><span>Zoom</span><div class="input-suffix"><input id="inspectImageZoom" type="number" min="100" max="300" step="5" value="100"><em>%</em></div></label>
                     <label><span>Posición horizontal</span><div class="input-suffix"><input id="inspectImagePosX" type="number" min="0" max="100" step="1" value="50"><em>%</em></div></label>
                     <label><span>Posición vertical</span><div class="input-suffix"><input id="inspectImagePosY" type="number" min="0" max="100" step="1" value="50"><em>%</em></div></label>
+                    <div class="full image-crop-actions" role="group" aria-label="Zoom y encuadre">
+                      <button id="inspectZoomOutBtn" class="button mini ghost" type="button">− Zoom</button>
+                      <button id="inspectZoomInBtn" class="button mini ghost" type="button">+ Zoom</button>
+                      <button id="inspectImageCenterBtn" class="button mini ghost" type="button">Centrar</button>
+                      <button id="inspectImageResetBtn" class="button mini ghost" type="button">Restablecer</button>
+                    </div>
+                    <div class="full image-pan-actions" role="group" aria-label="Mover imagen">
+                      <button id="inspectImageLeftBtn" class="button mini ghost" type="button" aria-label="Mover imagen a la izquierda">←</button>
+                      <button id="inspectImageUpBtn" class="button mini ghost" type="button" aria-label="Mover imagen hacia arriba">↑</button>
+                      <button id="inspectImageDownBtn" class="button mini ghost" type="button" aria-label="Mover imagen hacia abajo">↓</button>
+                      <button id="inspectImageRightBtn" class="button mini ghost" type="button" aria-label="Mover imagen a la derecha">→</button>
+                    </div>
+                    <div class="full image-fit-actions" role="group" aria-label="Ajuste rápido de imagen">
+                      <button id="inspectImageContainBtn" class="button mini ghost" type="button">Ajustar</button>
+                      <button id="inspectImageCoverBtn" class="button mini ghost" type="button">Rellenar</button>
+                      <button id="inspectImageCropBtn" class="button mini ghost" type="button">Recortar</button>
+                    </div>
+                    <small class="help full">El marco conserva su tamaño. Estos controles solo cambian qué parte de la fotografía se ve dentro del marco.</small>
                   </div>
                 </div>
                 <label id="inspectLinkWrap" class="full"><span>Enlace al hacer clic</span><input id="inspectLinkHref" type="text" placeholder="https://... o /ruta"><small id="inspectLinkHelp" class="help">Déjalo vacío para no agregar un enlace.</small></label>
@@ -471,9 +489,9 @@
             </div>
             <div class="builder-grid-toolbar">
               <label class="toggle-line builder-grid-toggle"><input id="builderGridToggle" type="checkbox" checked><span>Ver cuadrícula</span></label>
-              <label><span>Cuadro horizontal</span><div class="input-suffix"><input id="builderGridX" type="number" min="4" max="120" step="1" value="16"><em>px</em></div></label>
-              <label><span>Cuadro vertical</span><div class="input-suffix"><input id="builderGridY" type="number" min="4" max="120" step="1" value="16"><em>px</em></div></label>
-              <button id="showInspectorDockBtn" class="button mini ghost" type="button">Propiedades</button>
+              <label><span>Separación horizontal</span><div class="input-suffix"><input id="builderGridX" type="number" min="4" max="120" step="1" value="16"><em>px</em></div></label>
+              <label><span>Separación vertical</span><div class="input-suffix"><input id="builderGridY" type="number" min="4" max="120" step="1" value="16"><em>px</em></div></label>
+              <button id="showInspectorDockBtn" class="button mini ghost" type="button">Mostrar propiedades</button>
             </div>
             <div id="builderModeHelp" class="builder-preview-help"><b>Modo Editar:</b> los botones y enlaces no navegan. Selecciona, mueve, redimensiona o edita contenido.</div>
             <div id="visualSitePreviewShell" class="site-preview-shell desktop visual-editor-preview">
@@ -597,6 +615,6 @@
     </div>
   </div>
 
-  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260920-16"></script>
+  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260920-17"></script>
 </body>
 </html>
