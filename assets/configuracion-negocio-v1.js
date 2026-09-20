@@ -1239,9 +1239,12 @@ function applySelectedInspectorConfig(scheduleSave=true){
   const sel=state.builderSelection;if(!sel)return;
   const el=visualElement(sel.slotKey,sel.elementKey);if(!el)return;
   const cfg=mergeInspectorConfig();
-  const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;
-  if(!api){editorTrace('BUILDER_API_MISSING','ERROR',{slot:sel.slotKey,element:sel.elementKey,action:'style'});return;}
-  api.applyBuilderElementStyle(el,combinedBuilderElementConfig(sel.slotKey,sel.elementKey,cfg),currentEditorPalette());
+  const frame=visualFrame(),api=frame?.contentWindow?.OLANO_BUILDER_API,live=frame?.contentWindow?.OLANO_BUSINESS_CONFIG;
+  if(!api||!live){editorTrace('BUILDER_API_MISSING','ERROR',{slot:sel.slotKey,element:sel.elementKey,action:'style'});return;}
+  const liveSlot=(live.content||[]).find(x=>x.slot_key===sel.slotKey);
+  const slot=builderSlotByKey(sel.slotKey);
+  if(liveSlot&&slot)liveSlot.settings=structuredClone(slot.settings);
+  api.applyVisualElementStyles(live);
   updateElementOverlay();
   builderSetState('Cambios de diseño','warn');
   editorTrace('ELEMENT_STYLE_CHANGE','OK',{slot:sel.slotKey,element:sel.elementKey,config:cfg});
