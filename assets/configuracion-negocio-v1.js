@@ -1404,8 +1404,10 @@ function installPreviewInteractionGuard(doc){
     if(e.target.closest('[data-admin-builder-control]'))return;
     const element=e.target.closest('[data-cms-element]');
     if(element)selectVisualElement(element);
-    const interactive=e.target.closest('a,button,[role="button"],input[type="submit"]');
-    if(interactive){e.preventDefault();e.stopImmediatePropagation();}
+    const editable=e.target.closest('[data-cms-editable="true"]');
+    if(editable){e.stopPropagation();return;}
+    e.preventDefault();
+    e.stopImmediatePropagation();
   },true);
   doc.addEventListener('submit',(e)=>{if(state.builderMode==='edit'){e.preventDefault();e.stopImmediatePropagation();}},true);
 }
