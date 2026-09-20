@@ -468,6 +468,7 @@
     markBuilderElement('site.header','logo',header?.querySelector('.brand-logo'),'Logo');
     markBuilderElement('site.header','brand',header?.querySelector('.brand-name'),'Nombre de marca');
     markBuilderElement('site.header','menu',header?.querySelector('.menu'),'Botón de menú');
+    markBuilderElement('site.header','menu_icon',header?.querySelector('.menu svg'),'Icono del menú');
 
     const hero=slots['home.hero'];
     markBuilderElement('home.hero','eyebrow',hero?.querySelector('.hero-copy .eyebrow'),'Etiqueta superior');
@@ -476,7 +477,9 @@
     const heroBody=[...(hero?.querySelectorAll('.hero-copy > p')||[])].find(x=>!x.classList.contains('hero-focus'));
     markBuilderElement('home.hero','body',heroBody,'Texto de apoyo');
     markBuilderElement('home.hero','primary_button',hero?.querySelector('#heroBook'),'Botón Agendar');
+    markBuilderElement('home.hero','primary_icon',hero?.querySelector('#heroBook svg'),'Icono Agendar');
     markBuilderElement('home.hero','whatsapp_button',hero?.querySelector('#heroWhatsApp'),'Botón WhatsApp');
+    markBuilderElement('home.hero','whatsapp_icon',hero?.querySelector('#heroWhatsApp svg'),'Icono WhatsApp');
     markBuilderElement('home.hero','trust',hero?.querySelector('.trust'),'Datos rápidos');
     markBuilderElement('home.hero','image',hero?.querySelector('.hero-media img'),'Imagen principal');
     markBuilderElement('home.hero','caption',hero?.querySelector('.hero-caption'),'Texto sobre imagen');
@@ -531,7 +534,9 @@
     markBuilderElement('site.footer','brand',footer?.querySelector('.cms-footer-brand-text'),'Nombre');
     markBuilderElement('site.footer','meta',footer?.querySelector('.footer-meta'),'Datos');
     markBuilderElement('site.footer','whatsapp_button',footer?.querySelector('.footer-wa'),'Botón WhatsApp');
+    markBuilderElement('site.footer','whatsapp_icon',footer?.querySelector('.footer-wa svg'),'Icono WhatsApp');
     markBuilderElement('site.footer','booking_button',footer?.querySelector('.footer-book'),'Botón Agendar');
+    markBuilderElement('site.footer','booking_icon',footer?.querySelector('.footer-book svg'),'Icono Agendar');
     markBuilderElement('site.footer','note',footer?.querySelector('.footer-note'),'Nota');
   }
   function builderSlotOfElement(el){
