@@ -422,6 +422,8 @@
     if(w!==null&&w>0)el.style.width=w+'px';
     if(h!==null&&h>0)el.style.height=h+'px';
     if(fs!==null&&fs>0)el.style.fontSize=fs+'px';
+    if(cfg.fontFamily)el.style.fontFamily=String(cfg.fontFamily);
+    if(cfg.fontWeight)el.style.fontWeight=String(cfg.fontWeight);
     if(radius!==null&&radius>=0)el.style.borderRadius=radius+'px';
     if(padding!==null&&padding>=0)el.style.padding=padding+'px';
     if(opacity!==null)el.style.opacity=String(Math.max(.1,Math.min(1,opacity/100)));
@@ -452,12 +454,31 @@
       el.style.borderStyle='solid';
       if(!el.style.borderWidth)el.style.borderWidth='1px';
     }
+    if(cfg.textOverride!=null && /^(H1|H2|H3|H4|P|SPAN|B|STRONG|SMALL|SUMMARY|LABEL)$/.test(el.tagName)){
+      el.textContent=String(cfg.textOverride);
+    }
+    if(cfg.srcOverride && el.tagName==='IMG'){
+      el.removeAttribute('data-optimized');
+      el.src=String(cfg.srcOverride);
+      if(cfg.altOverride!=null)el.alt=String(cfg.altOverride);
+    }
   }
   function markBuilderElement(slot,key,el,label){
     if(!el)return;
     el.dataset.cmsElement=key;
     if(label)el.dataset.cmsElementLabel=label;
     if(slot&&!el.closest('[data-cms-slot]'))el.dataset.cmsSlotOwner=slot;
+  }
+  function ensureDirectActionLabel(el){
+    if(!el||el.querySelector('.cms-button-label,.builder-action-label'))return el?.querySelector('.cms-button-label,.builder-action-label')||null;
+    const nodes=[...el.childNodes].filter(n=>n.nodeType===Node.TEXT_NODE&&String(n.textContent||'').trim());
+    if(!nodes.length)return null;
+    const span=document.createElement('span');
+    span.className='builder-action-label';
+    span.textContent=nodes.map(n=>String(n.textContent||'').trim()).join(' ');
+    nodes.forEach(n=>n.remove());
+    el.appendChild(span);
+    return span;
   }
   function registerVisualElements(data){
     const slots=cmsSections();
@@ -543,6 +564,7 @@
 
     Object.entries(slots).forEach(([slot,root])=>{
       if(!root)return;
+      root.querySelectorAll('button,a').forEach(ensureDirectActionLabel);
       const register=(selector,prefix,label)=>{
         let n=0;
         root.querySelectorAll(selector).forEach(el=>{
@@ -551,6 +573,7 @@
         });
       };
       register('button,a','action','Botón / enlace');
+      register('.cms-button-label,.builder-action-label,.v240-cta','action_label','Texto de botón');
       register('img','image','Imagen');
       register('svg.icon,.route-icon,.trust-pro-icon','icon','Icono');
       register('article,.route,.unit,details,.trust-chip,.trust > div','container','Contenedor');
@@ -560,7 +583,69 @@
     const root=el?.closest('[data-cms-slot]');
     return root?.dataset.cmsSlot||el?.dataset.cmsSlotOwner||null;
   }
+  function textNodesForTypography(root){
+    if(!root)return[];
+    const selector='h1,h2,h3,h4,p,span,b,strong,small,a,button,summary,label';
+    const nodes=[...root.querySelectorAll(selector)];
+    if(root.matches?.(selector))nodes.unshift(root);
+    return [...new Set(nodes)].filter(el=>!el.closest('svg'));
+  }
+  function resetTypographyTouched(root=document){
+    root.querySelectorAll?.('[data-builder-typography-touched="1"]').forEach(el=>{
+      const base=el.dataset.builderTypographyBase;
+      if(base){
+        try{
+          const x=JSON.parse(base);
+          el.style.fontFamily=x.fontFamily||'';
+          el.style.fontWeight=x.fontWeight||'';
+          el.style.fontSize=x.fontSize||'';
+          el.style.color=x.color||'';
+        }catch{}
+      }
+      delete el.dataset.builderTypographyTouched;
+      delete el.dataset.builderTypographyBase;
+    });
+  }
+  function applyTypographyScope(root,cfg,palette){
+    if(!root||!cfg||typeof cfg!=='object')return;
+    const scale=Number(cfg.fontScale);
+    for(const el of textNodesForTypography(root)){
+      if(!el.dataset.builderTypographyBase){
+        el.dataset.builderTypographyBase=JSON.stringify({
+          fontFamily:el.style.fontFamily||'',
+          fontWeight:el.style.fontWeight||'',
+          fontSize:el.style.fontSize||'',
+          color:el.style.color||''
+        });
+      }
+      el.dataset.builderTypographyTouched='1';
+      if(cfg.fontFamily)el.style.fontFamily=String(cfg.fontFamily);
+      if(cfg.fontWeight)el.style.fontWeight=String(cfg.fontWeight);
+      if(cfg.colorToken)el.style.color=tokenColor(palette,cfg.colorToken);
+      if(Number.isFinite(scale)&&scale>0){
+        const current=parseFloat(getComputedStyle(el).fontSize)||16;
+        const baseAttr=el.dataset.builderTypographyComputedBase;
+        const base=baseAttr?Number(baseAttr):current;
+        if(!baseAttr)el.dataset.builderTypographyComputedBase=String(base);
+        el.style.fontSize=(base*scale/100)+'px';
+      }
+    }
+  }
+  function applyTypographySettings(data){
+    const device=builderDevice(),palette=builderPalette(data);
+    resetTypographyTouched(document);
+    const globalSlot=contentSlot(data,'site.header');
+    const globalCfg=globalSlot?.settings?.globalTypography?.[device]||null;
+    if(globalCfg)applyTypographyScope(document.body,globalCfg,palette);
+    for(const slot of data.content||[]){
+      const cfg=slot?.settings?.sectionTypography?.[device]||null;
+      if(!cfg)continue;
+      const root=document.querySelector('[data-cms-slot="'+CSS.escape(slot.slot_key)+'"]');
+      if(root)applyTypographyScope(root,cfg,palette);
+    }
+  }
   function applyVisualElementStyles(data){
+    applyTypographySettings(data);
     const device=builderDevice(),palette=builderPalette(data);
     document.querySelectorAll('[data-cms-element]').forEach(el=>{
       const slotKey=builderSlotOfElement(el);
@@ -582,6 +667,7 @@
     builderDevice,
     builderPalette,
     applyBuilderElementStyle,
+    applyTypographySettings,
     registerVisualElements,
     applyVisualElementStyles,
     builderSlotOfElement
