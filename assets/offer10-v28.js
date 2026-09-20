@@ -118,6 +118,11 @@
     }
   }
 
+  function safeLocationUrl(raw,fallback){
+    const href=String(raw||'').trim();
+    if(/^https:\/\//i.test(href)||/^http:\/\//i.test(href)||/^\/(?!\/)/.test(href)||/^#/.test(href))return href;
+    return fallback;
+  }
   function locationConfig(){
     const slot=(window.OLANO_BUSINESS_CONFIG?.content||[]).find(x=>x.slot_key==='home.location')||null;
     const st=slot?.settings||{};
@@ -127,9 +132,9 @@
       body:String(slot?.body||'Google Maps puede calcular la ruta y el tiempo estimado desde la ubicación disponible en tu dispositivo.'),
       address:String(st.address||ADDRESS),
       routeLabel:String(st.route_label||'Cómo llegar desde mi ubicación'),
-      routeUrl:String(st.route_url||DIR),
+      routeUrl:safeLocationUrl(st.route_url,DIR),
       mapLabel:String(st.map_label||'Ver en Google Maps'),
-      mapUrl:String(st.map_url||MAP)
+      mapUrl:safeLocationUrl(st.map_url,MAP)
     };
   }
   function injectLocation(){
