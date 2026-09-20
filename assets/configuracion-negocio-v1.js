@@ -1120,6 +1120,7 @@ function populateTypographyControls(){
   $('inspectFontWeight').value=cfg.fontWeight||'inherit';
   inspectorNumber('inspectFontScale',cfg.fontScale,null);
   $('inspectFontScaleWrap').hidden=scope==='element';
+  if($('inspectFontSizeWrap'))$('inspectFontSizeWrap').hidden=scope!=='element';
   $('inspectColor').value=cfg.colorToken||'inherit';
 }
 function applyTypographyFromInspector(){
