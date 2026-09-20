@@ -1289,6 +1289,7 @@ function setVisualPreviewDevice(device){
   const shell=$('visualSitePreviewShell'); if(!shell)return;
   shell.className='site-preview-shell visual-editor-preview '+device;
   document.querySelectorAll('[data-visual-device]').forEach(b=>b.classList.toggle('active',b.dataset.visualDevice===device));
+  syncGridControls();
   const frame=visualFrame();
   try{
     if(frame?.contentWindow){
@@ -1298,7 +1299,7 @@ function setVisualPreviewDevice(device){
       if(api&&cfg)api.applyVisualElementStyles(cfg);
     }
   }catch{}
-  setTimeout(()=>{setupVisualPreview();restoreBuilderSelection();},180);
+  setTimeout(()=>{setupVisualPreview();restoreBuilderSelection();applyGridToPreview();},180);
 }
 function setBuilderMode(mode){
   state.builderMode=mode==='navigate'?'navigate':'edit';
@@ -1590,8 +1591,9 @@ function readInspectorConfig(){
   const borderToken=$('inspectBorder')?.value||'inherit';
   const font=$('inspectFontFamily')?.value||'inherit';
   const weight=$('inspectFontWeight')?.value||'inherit';
+  const g=currentGridPrefs(),rawW=n('inspectWidth'),rawH=n('inspectHeight');
   const out={
-    w:n('inspectWidth'),h:n('inspectHeight'),fontSize:n('inspectFontSize'),radius:n('inspectRadius'),
+    w:rawW==null?null:Math.max(g.x,snapGrid(rawW,g.x)),h:rawH==null?null:Math.max(g.y,snapGrid(rawH,g.y)),fontSize:n('inspectFontSize'),radius:n('inspectRadius'),
     bgMode:bgMode==='inherit'?null:bgMode,
     bgFrom:bgMode==='inherit'||bgFrom==='inherit'?null:bgFrom,
     bgTo:bgMode!=='gradient'||bgTo==='inherit'?null:bgTo,
@@ -2146,8 +2148,9 @@ function setupVisualPreview(){
       '#adminBuilderContextMenu{position:absolute;z-index:11000;width:220px;padding:7px;background:#111827;border:1px solid #344054;border-radius:12px;box-shadow:0 18px 45px #0007;display:grid;gap:3px}'+
       '#adminBuilderContextMenu button{border:0;background:transparent;color:#fff;text-align:left;padding:8px 10px;border-radius:8px;font:700 11px system-ui}'+
       '#adminBuilderContextMenu button:hover:not(:disabled){background:#344054}#adminBuilderContextMenu button:disabled{opacity:.35}#adminBuilderContextMenu .danger{color:#fda29b}#adminBuilderContextMenu hr{width:100%;border:0;border-top:1px solid #344054;margin:4px 0}'+
-      'body.admin-builder-edit #unidades [data-cms-element^="card."]{position:relative!important}'+
-      'body.admin-builder-edit #unidades [data-cms-element^="card."]::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:9997;border-radius:inherit;background-image:linear-gradient(rgba(11,46,79,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(11,46,79,.12) 1px,transparent 1px);background-size:16px 16px}';
+      '.admin-grid-layer{position:absolute!important;inset:0!important;z-index:9995!important;pointer-events:none!important;border-radius:inherit!important;background-image:linear-gradient(rgba(11,46,79,.16) 1px,transparent 1px),linear-gradient(90deg,rgba(11,46,79,.16) 1px,transparent 1px)!important;opacity:.72!important}'+
+      '#adminElementOverlay.admin-grid-invalid{border-color:#e11d48!important;box-shadow:0 0 0 4px rgba(225,29,72,.18)!important}'+
+      '#adminElementOverlay .admin-grid-overflow{position:absolute;left:0;bottom:-28px;background:#e11d48;color:#fff;border-radius:7px;padding:5px 7px;font:800 10px system-ui;white-space:nowrap;pointer-events:none}';
     doc.head.appendChild(style);
   }
   doc.body.classList.toggle('admin-builder-edit',state.builderMode==='edit');
@@ -2210,6 +2213,7 @@ function setupVisualPreview(){
   });
   if(state.builderMode==='edit')restoreBuilderSelection();else hideElementOverlay();
   applyPreviewOrderFromState();
+  applyGridToPreview();
   editorTrace('PREVIEW_READY','OK',{url:visualFrame()?.contentWindow?.location?.pathname||'/',device:state.builderDevice,mode:state.builderMode});
 }
 function selectEditorCard(key){
