@@ -1234,7 +1234,12 @@ function syncPreviewTextToEditor(key,kind,name,value){
     const [i,part]=name.split('.');
     input=card.querySelector(part==='q'?'[data-faq-q][data-faq-index="'+i+'"]':'[data-faq-a][data-faq-index="'+i+'"]');
   }
-  if(input){input.value=value;builderSetState('Cambios sin guardar','warn');}
+  if(input){
+    input.value=value;
+    const card=input.closest('.builder-section-card');
+    if(card)stageCardDraft(card);
+    builderSetState('Borrador sin publicar','warn');
+  }
 }
 function builderSlotByKey(slotKey){return state.contentSlots.find(x=>x.slot_key===slotKey)||null}
 function builderElementConfig(slotKey,elementKey,create=true){
@@ -1967,9 +1972,11 @@ function setupVisualPreview(){
     el.contentEditable=state.builderMode==='edit'?'true':'false';
     el.dataset.cmsEditable=state.builderMode==='edit'?'true':'false';el.spellcheck=true;
     if(el.__olanoInlineBound)return;el.__olanoInlineBound=true;
+    el.addEventListener('focus',()=>{if(state.builderMode==='edit'){el.__olanoUndoSnapshot=editorSnapshot();el.__olanoUndoUsed=false;}});
     el.addEventListener('click',e=>{if(state.builderMode==='edit'){const section=el.closest('[data-cms-slot]');if(section)selectEditorCard(section.dataset.cmsSlot);e.stopPropagation();}});
     el.addEventListener('input',()=>{
       if(state.builderMode!=='edit')return;
+      if(!el.__olanoUndoUsed&&el.__olanoUndoSnapshot){pushUndoSnapshot('Editar texto en vista previa',el.__olanoUndoSnapshot);el.__olanoUndoUsed=true;}
       const section=el.closest('[data-cms-slot]'); if(!section)return;
       const key=section.dataset.cmsSlot;
       if(el.dataset.cmsField)syncPreviewTextToEditor(key,'field',el.dataset.cmsField,el.textContent||'');
@@ -2457,9 +2464,9 @@ function bindEvents() {
   $('inspectText').addEventListener('input',(e)=>{consumeUndoArm(e.currentTarget);setSelectedElementTextOverride($('inspectText').value);});
   $('inspectLinkHref').addEventListener('input',(e)=>{consumeUndoArm(e.currentTarget);setSelectedElementLinkOverride();});
   $('inspectLinkTarget').addEventListener('change',(e)=>{consumeUndoArm(e.currentTarget);setSelectedElementLinkOverride();});
-  $('inspectImageFile').addEventListener('change',()=>{
+  $('inspectImageFile').addEventListener('change',(e)=>{
     const file=$('inspectImageFile').files?.[0];
-    if(file)guard(()=>setSelectedElementImage(file));
+    if(file){consumeUndoArm(e.currentTarget);guard(()=>setSelectedElementImage(file));}
   });
   $('inspectorResetBtn').addEventListener('click',()=>resetSelectedElementStyle());
   document.querySelector('.visual-builder-sidebar')?.addEventListener('focusin',(e)=>{
