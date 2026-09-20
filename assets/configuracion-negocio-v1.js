@@ -2478,6 +2478,8 @@ function bindEvents() {
   });
   $('copyTraceBtn').addEventListener('click',()=>copyEditorTrace());
   $('clearTraceBtn').addEventListener('click',()=>clearEditorTrace());
+  $('closeIconBankBtn').addEventListener('click',()=>closeBuilderIconBank());
+  $('builderIconBankModal').addEventListener('click',(e)=>{if(e.target===e.currentTarget)closeBuilderIconBank();});
   $('brandDefaultsBtn').addEventListener('click',()=>{
     pushUndoSnapshot('Restablecer paleta');
     $('brandPrimary').value='#0b2e4f';$('brandSecondary').value='#1aa79d';
@@ -2489,7 +2491,7 @@ function bindEvents() {
   $('redoUndoBtn').addEventListener('click',()=>redoEditorChange());
   document.addEventListener('keydown',(e)=>{
     const mod=e.ctrlKey||e.metaKey;
-    if(!mod)return;
+    if(!mod||document.querySelector('.tab.active')?.dataset.tab!=='contenido')return;
     if(String(e.key).toLowerCase()==='z'){
       e.preventDefault();
       if(e.shiftKey)redoEditorChange();else undoEditorChange();
