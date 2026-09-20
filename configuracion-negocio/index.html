@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260920-14">
+  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260920-15">
 </head>
 <body>
   <div id="authGate" class="gate">
@@ -385,6 +385,13 @@
               </form>
             </details>
 
+            <div id="contentEditorList" class="content-editor-list"></div>
+          </div>
+          <aside id="builderInspectorDock" class="builder-inspector-dock" hidden>
+            <div class="builder-inspector-dock-head">
+              <div><strong>Propiedades</strong><small>Elemento seleccionado</small></div>
+              <button id="hideInspectorDockBtn" class="button mini ghost" type="button">Ocultar</button>
+            </div>
             <div id="elementInspector" class="panel builder-inspector" hidden>
               <div class="card-head">
                 <div><span class="step">↔</span><h3 id="inspectorTitle">Elemento seleccionado</h3></div>
@@ -417,6 +424,15 @@
                 <label id="inspectFontScaleWrap" class="full"><span>Escala de texto del alcance</span><div class="input-suffix"><input id="inspectFontScale" type="number" min="60" max="180" step="5" placeholder="100"><em>%</em></div></label>
                 <label id="inspectTextWrap" class="full" hidden><span>Contenido del texto / botón</span><input id="inspectText" maxlength="500"></label>
                 <label id="inspectImageWrap" class="full" hidden><span>Reemplazar imagen</span><input id="inspectImageFile" type="file" accept="image/png,image/jpeg,image/webp"><small class="help">PNG, JPG o WebP · máximo 5 MB. Se guarda solo para este elemento.</small></label>
+                <div id="inspectImageCropWrap" class="full inspector-image-crop" hidden>
+                  <div class="builder-subgroup">
+                    <b>Encuadre de imagen</b>
+                    <label><span>Ajuste</span><select id="inspectObjectFit"><option value="cover">Recortar para llenar</option><option value="contain">Mostrar completa</option><option value="fill">Estirar</option></select></label>
+                    <label><span>Zoom</span><div class="input-suffix"><input id="inspectImageZoom" type="number" min="100" max="300" step="5" value="100"><em>%</em></div></label>
+                    <label><span>Posición horizontal</span><div class="input-suffix"><input id="inspectImagePosX" type="number" min="0" max="100" step="1" value="50"><em>%</em></div></label>
+                    <label><span>Posición vertical</span><div class="input-suffix"><input id="inspectImagePosY" type="number" min="0" max="100" step="1" value="50"><em>%</em></div></label>
+                  </div>
+                </div>
                 <label id="inspectLinkWrap" class="full"><span>Enlace al hacer clic</span><input id="inspectLinkHref" type="text" placeholder="https://... o /ruta"><small id="inspectLinkHelp" class="help">Déjalo vacío para no agregar un enlace.</small></label>
                 <label id="inspectLinkTargetWrap"><span>Abrir enlace</span><select id="inspectLinkTarget"><option value="_self">En esta pestaña</option><option value="_blank">En nueva pestaña</option></select></label>
                 <label><span>Ancho</span><div class="input-suffix"><input id="inspectWidth" type="number" min="20" max="1600" step="1"><em>px</em></div></label>
@@ -439,9 +455,7 @@
               </div>
               <div class="notice neutral inspector-note">Selecciona el elemento y usa <b>↔ Mover</b> para reubicarlo dentro de su sección. El tirador amarillo <b>↘</b> cambia su tamaño. Las trazas de abajo confirman si la acción empezó, terminó y se guardó.</div>
             </div>
-
-            <div id="contentEditorList" class="content-editor-list"></div>
-          </div>
+          </aside>
           <aside class="panel card visual-builder-preview">
             <div class="card-head builder-preview-head">
               <div><span class="step">👁</span><h3>Vista previa real</h3></div>
@@ -454,6 +468,12 @@
               <button class="button mini active" type="button" data-visual-device="desktop">PC</button>
               <button class="button mini" type="button" data-visual-device="tablet">Tablet</button>
               <button class="button mini" type="button" data-visual-device="mobile">Celular</button>
+            </div>
+            <div class="builder-grid-toolbar">
+              <label class="toggle-line builder-grid-toggle"><input id="builderGridToggle" type="checkbox" checked><span>Ver cuadrícula</span></label>
+              <label><span>Cuadro horizontal</span><div class="input-suffix"><input id="builderGridX" type="number" min="4" max="120" step="1" value="16"><em>px</em></div></label>
+              <label><span>Cuadro vertical</span><div class="input-suffix"><input id="builderGridY" type="number" min="4" max="120" step="1" value="16"><em>px</em></div></label>
+              <button id="showInspectorDockBtn" class="button mini ghost" type="button">Propiedades</button>
             </div>
             <div id="builderModeHelp" class="builder-preview-help"><b>Modo Editar:</b> los botones y enlaces no navegan. Selecciona, mueve, redimensiona o edita contenido.</div>
             <div id="visualSitePreviewShell" class="site-preview-shell desktop visual-editor-preview">
@@ -577,6 +597,6 @@
     </div>
   </div>
 
-  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260920-14"></script>
+  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260920-15"></script>
 </body>
 </html>
