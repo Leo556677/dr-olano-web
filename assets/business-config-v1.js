@@ -387,6 +387,7 @@
 
 
   function builderDevice(){
+    if(['desktop','tablet','mobile'].includes(window.__OLANO_PREVIEW_DEVICE))return window.__OLANO_PREVIEW_DEVICE;
     const w=window.innerWidth||document.documentElement.clientWidth||1200;
     if(w<=560)return 'mobile';
     if(w<=950)return 'tablet';
