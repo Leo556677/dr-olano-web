@@ -1425,7 +1425,11 @@ function bindEvents() {
   });
   $('brandSitePreview').addEventListener('load',()=>{setTimeout(applyBrandPreviewToIframe,350);setTimeout(applyBrandPreviewToIframe,1300);});
   document.querySelectorAll('[data-preview-device]').forEach((btn)=>btn.addEventListener('click',()=>setPreviewDevice(btn.dataset.previewDevice)));
-  $('visualSitePreview').addEventListener('load',()=>{setupVisualPreview();setTimeout(setupVisualPreview,450);setTimeout(setupVisualPreview,1500);});
+  $('visualSitePreview').addEventListener('load',()=>{
+    setupVisualPreview();
+    try{$('visualSitePreview').contentDocument?.addEventListener('olano:business-config',setupVisualPreview,{once:true});}catch{}
+    setTimeout(setupVisualPreview,450);setTimeout(setupVisualPreview,1500);
+  });
   document.querySelectorAll('[data-visual-device]').forEach((btn)=>btn.addEventListener('click',()=>setVisualPreviewDevice(btn.dataset.visualDevice)));
   $('brandDefaultsBtn').addEventListener('click',()=>{
     $('brandPrimary').value='#0b2e4f'; $('brandSecondary').value='#1aa79d';
