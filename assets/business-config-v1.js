@@ -397,7 +397,9 @@
       }
       const wa=section.querySelector('.footer-wa'),book=section.querySelector('.footer-book'),note=section.querySelector('.footer-note');
       const wal=setButtonText(wa,st.whatsapp_label),bookl=setButtonText(book,st.booking_label);setText(note,st.note);
-      cmsMark(wal,'site.footer',null,'whatsapp_label');cmsMark(bookl,'site.footer',null,'booking_label');cmsMark(note,'site.footer',null,'note');
+      const policy=section.querySelector('.footer-policy-note');
+      setText(policy,st.policy_note);
+      cmsMark(wal,'site.footer',null,'whatsapp_label');cmsMark(bookl,'site.footer',null,'booking_label');cmsMark(note,'site.footer',null,'note');cmsMark(policy,'site.footer',null,'policy_note');
     }
 
     applyLayout(data,map);
@@ -427,7 +429,7 @@
   }
   function clearBuilderStyle(el){
     if(!el)return;
-    ['translate','width','height','borderRadius','padding','opacity','background','backgroundColor','borderColor','borderStyle','borderWidth'].forEach(p=>el.style[p]='');
+    ['translate','width','height','borderRadius','padding','opacity','background','backgroundColor','borderColor','borderStyle','borderWidth','objectFit','objectPosition','scale','transformOrigin'].forEach(p=>el.style[p]='');
   }
   function resetBuilderElementTextStyles(){
     document.querySelectorAll('[data-builder-element-text-style="1"]').forEach(el=>{
@@ -508,6 +510,17 @@
       }else if(el.dataset.builderBaseSrc){
         el.src=el.dataset.builderBaseSrc;
         el.alt=el.dataset.builderBaseAlt||'';
+      }
+      const fit=String(cfg.objectFit||'').toLowerCase();
+      if(['cover','contain','fill'].includes(fit))el.style.objectFit=fit;
+      const posX=Number.isFinite(Number(cfg.imagePosX))?Math.max(0,Math.min(100,Number(cfg.imagePosX))):50;
+      const posY=Number.isFinite(Number(cfg.imagePosY))?Math.max(0,Math.min(100,Number(cfg.imagePosY))):50;
+      if(cfg.imagePosX!=null||cfg.imagePosY!=null)el.style.objectPosition=posX+'% '+posY+'%';
+      const zoom=Number.isFinite(Number(cfg.imageZoom))?Math.max(100,Math.min(300,Number(cfg.imageZoom))):100;
+      if(cfg.imageZoom!=null){
+        el.style.scale=String(zoom/100);
+        el.style.transformOrigin=posX+'% '+posY+'%';
+        if(el.parentElement)el.parentElement.style.overflow='hidden';
       }
     }
   }
@@ -697,6 +710,7 @@
     markBuilderElement('site.footer','booking_button',footer?.querySelector('.footer-book'),'Botón Agendar');
     markBuilderElement('site.footer','booking_icon',footer?.querySelector('.footer-book svg'),'Icono Agendar');
     markBuilderElement('site.footer','note',footer?.querySelector('.footer-note'),'Nota');
+    markBuilderElement('site.footer','policy_note',footer?.querySelector('.footer-policy-note'),'Texto legal / informativo');
     [footer?.querySelector('.footer-wa'),footer?.querySelector('.footer-book')].filter(Boolean).forEach(el=>el.dataset.builderProtectedLink='1');
 
     Object.entries(slots).forEach(([slot,root])=>{
