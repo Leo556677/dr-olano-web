@@ -1614,6 +1614,35 @@ function updateInspectorVisibility(){
   if($('inspectBgToWrap'))$('inspectBgToWrap').hidden=!gradient;
   if($('inspectAngleWrap'))$('inspectAngleWrap').hidden=!gradient;
 }
+function clampImageControl(value,min,max){
+  return Math.max(min,Math.min(max,Number(value)||0));
+}
+function applyImageCropPatch(patch,label='Ajustar imagen'){
+  if($('inspectImageCropWrap')?.hidden||!state.builderSelection)return;
+  pushUndoSnapshot(label);
+  if(patch.objectFit)$('inspectObjectFit').value=patch.objectFit;
+  if(patch.zoom!=null)$('inspectImageZoom').value=String(clampImageControl(patch.zoom,100,300));
+  if(patch.x!=null)$('inspectImagePosX').value=String(clampImageControl(patch.x,0,100));
+  if(patch.y!=null)$('inspectImagePosY').value=String(clampImageControl(patch.y,0,100));
+  applySelectedInspectorConfig();
+  editorTrace('IMAGE_CROP_ACTION','OK',{action:label,fit:$('inspectObjectFit').value,zoom:Number($('inspectImageZoom').value),x:Number($('inspectImagePosX').value),y:Number($('inspectImagePosY').value)});
+}
+function runImageCropAction(action){
+  const zoom=Number($('inspectImageZoom')?.value)||100;
+  const x=Number($('inspectImagePosX')?.value)||50;
+  const y=Number($('inspectImagePosY')?.value)||50;
+  if(action==='zoom-out')return applyImageCropPatch({zoom:zoom-10},'Reducir zoom de imagen');
+  if(action==='zoom-in')return applyImageCropPatch({zoom:zoom+10},'Aumentar zoom de imagen');
+  if(action==='left')return applyImageCropPatch({x:x-5},'Mover imagen a la izquierda');
+  if(action==='right')return applyImageCropPatch({x:x+5},'Mover imagen a la derecha');
+  if(action==='up')return applyImageCropPatch({y:y-5},'Mover imagen hacia arriba');
+  if(action==='down')return applyImageCropPatch({y:y+5},'Mover imagen hacia abajo');
+  if(action==='center')return applyImageCropPatch({x:50,y:50},'Centrar imagen');
+  if(action==='contain')return applyImageCropPatch({objectFit:'contain',zoom:100,x:50,y:50},'Ajustar imagen completa');
+  if(action==='cover')return applyImageCropPatch({objectFit:'cover',zoom:100,x:50,y:50},'Rellenar marco con imagen');
+  if(action==='crop')return applyImageCropPatch({objectFit:'cover',zoom:Math.max(110,zoom)},'Recortar imagen');
+  if(action==='reset')return applyImageCropPatch({objectFit:'cover',zoom:100,x:50,y:50},'Restablecer encuadre');
+}
 function readInspectorConfig(){
   const n=(id)=>{const el=$(id);if(!el||String(el.value).trim()==='')return null;const x=Number(el.value);return Number.isFinite(x)?x:null};
   const bgMode=$('inspectBgMode')?.value||'inherit';
@@ -2763,6 +2792,13 @@ function bindEvents() {
   $('inspectBgMode').addEventListener('change',(e)=>{consumeUndoArm(e.currentTarget);updateInspectorVisibility();applySelectedInspectorConfig();});
   ['inspectWidth','inspectHeight','inspectFontSize','inspectRadius','inspectBgFrom','inspectBgTo','inspectGradientAngle','inspectBorder','inspectOpacity','inspectPadding','inspectObjectFit','inspectImageZoom','inspectImagePosX','inspectImagePosY']
     .forEach(id=>$(id).addEventListener('input',(e)=>{consumeUndoArm(e.currentTarget);applySelectedInspectorConfig();}));
+  const cropButtons={
+    inspectZoomOutBtn:'zoom-out',inspectZoomInBtn:'zoom-in',
+    inspectImageLeftBtn:'left',inspectImageRightBtn:'right',inspectImageUpBtn:'up',inspectImageDownBtn:'down',
+    inspectImageCenterBtn:'center',inspectImageResetBtn:'reset',
+    inspectImageContainBtn:'contain',inspectImageCoverBtn:'cover',inspectImageCropBtn:'crop'
+  };
+  Object.entries(cropButtons).forEach(([id,action])=>$(id)?.addEventListener('click',()=>runImageCropAction(action)));
   $('inspectTypographyScope').addEventListener('change',(e)=>{consumeUndoArm(e.currentTarget);populateTypographyControls();editorTrace('TYPOGRAPHY_SCOPE','OK',{scope:$('inspectTypographyScope').value});});
   ['inspectFontFamily','inspectFontWeight','inspectFontScale','inspectColor'].forEach(id=>$(id).addEventListener('input',(e)=>{consumeUndoArm(e.currentTarget);applyTypographyFromInspector();}));
   $('inspectText').addEventListener('input',(e)=>{consumeUndoArm(e.currentTarget);setSelectedElementTextOverride($('inspectText').value);});
