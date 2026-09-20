@@ -138,7 +138,7 @@
     footer.parentNode.insertBefore(el,footer);
     try{
       const api=window.OLANO_BUILDER_API,cfg=window.OLANO_BUSINESS_CONFIG;
-      if(api&&cfg){api.registerVisualElements(cfg);api.applyVisualElementStyles(cfg);}
+      if(api&&cfg){api.reapply?api.reapply(cfg):(api.registerVisualElements(cfg),api.applyVisualElementStyles(cfg));}
     }catch{}
   }
 
