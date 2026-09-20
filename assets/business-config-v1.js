@@ -233,6 +233,7 @@
       'home.faq':document.querySelector('#faq'),
       'home.profile':document.querySelector('#perfil-medico'),
       'home.areas':document.querySelector('#areas-medicas'),
+      'home.location':document.querySelector('#olanoLocation'),
       'site.footer':document.querySelector('.site-footer')
     };
   }
@@ -572,6 +573,13 @@
       markBuilderElement('home.areas','icon.'+i,card.querySelector('.route-icon'),'Icono área '+(i+1));
     });
 
+    const location=slots['home.location'];
+    markBuilderElement('home.location','card',location?.querySelector('.olano-location-card'),'Contenedor de ubicación');
+    markBuilderElement('home.location','title',location?.querySelector('h2'),'Título de ubicación');
+    markBuilderElement('home.location','body',location?.querySelector('p'),'Texto de ubicación');
+    markBuilderElement('home.location','route_button',location?.querySelector('.olano-route'),'Botón Cómo llegar');
+    markBuilderElement('home.location','map_button',location?.querySelector('.olano-map'),'Botón Google Maps');
+
     const footer=slots['site.footer'];
     markBuilderElement('site.footer','logo',footer?.querySelector('.footer-brand img'),'Logo');
     markBuilderElement('site.footer','brand',footer?.querySelector('.cms-footer-brand-text'),'Nombre');
@@ -692,7 +700,12 @@
     applyTypographySettings,
     registerVisualElements,
     applyVisualElementStyles,
-    builderSlotOfElement
+    builderSlotOfElement,
+    reapply(data){
+      applyContent(data);
+      registerVisualElements(data);
+      applyVisualElementStyles(data);
+    }
   };
 
 function addStyles(){
