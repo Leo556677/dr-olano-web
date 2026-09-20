@@ -1388,6 +1388,12 @@ function selectVisualElement(el){
   const imageSupported=selectedElementSupportsImage(el);
   $('inspectImageWrap').hidden=!imageSupported;
   if($('inspectImageFile'))$('inspectImageFile').value='';
+  const protectedLink=el.dataset.builderProtectedLink==='1';
+  $('inspectLinkHref').disabled=protectedLink;
+  $('inspectLinkTarget').disabled=protectedLink;
+  $('inspectLinkHelp').textContent=protectedLink?'Este enlace está protegido por la lógica del sistema y no se reemplaza desde el editor.':'Déjalo vacío para no agregar un enlace.';
+  $('inspectLinkHref').value=protectedLink?'':(contentCfg.linkHref||(el.tagName==='A'?el.getAttribute('href')||'':''));
+  $('inspectLinkTarget').value=contentCfg.linkTarget||(el.tagName==='A'&&el.target?el.target:'_self');
   updateInspectorVisibility();
   showElementOverlay(el);
   scrollLeftEditorToSelection(slotKey);
@@ -1477,6 +1483,22 @@ function resetSelectedElementStyle(){
   editorTrace('ELEMENT_RESET','OK',{slot:sel.slotKey,element:sel.elementKey});
   scheduleBuilderStyleSave(sel.slotKey);
   setTimeout(()=>reloadVisualSitePreview(),650);
+}
+function setSelectedElementLinkOverride(){
+  const sel=state.builderSelection;if(!sel)return;
+  const el=visualElement(sel.slotKey,sel.elementKey);if(!el)return;
+  if(el.dataset.builderProtectedLink==='1'){
+    editorTrace('LINK_CHANGE_BLOCKED','ERROR',{slot:sel.slotKey,element:sel.elementKey,message:'Enlace protegido por sistema'});
+    return;
+  }
+  const cfg=builderElementContentConfig(sel.slotKey,sel.elementKey,true);
+  const href=$('inspectLinkHref').value.trim();
+  if(href)cfg.linkHref=href;else delete cfg.linkHref;
+  cfg.linkTarget=$('inspectLinkTarget').value||'_self';
+  const styleCfg=builderElementConfig(sel.slotKey,sel.elementKey,false)||{};
+  const api=visualFrame()?.contentWindow?.OLANO_BUILDER_API;
+  if(api)api.applyBuilderElementStyle(el,{...cfg,...styleCfg},currentEditorPalette());
+  markEditorDirty('DRAFT_LINK_CHANGE',{slot:sel.slotKey,element:sel.elementKey,href:href||null});
 }
 function setSelectedElementTextOverride(value){
   const sel=state.builderSelection;if(!sel)return;
@@ -2219,6 +2241,8 @@ function bindEvents() {
   $('inspectTypographyScope').addEventListener('change',(e)=>{consumeUndoArm(e.currentTarget);populateTypographyControls();editorTrace('TYPOGRAPHY_SCOPE','OK',{scope:$('inspectTypographyScope').value});});
   ['inspectFontFamily','inspectFontWeight','inspectFontScale','inspectColor'].forEach(id=>$(id).addEventListener('input',(e)=>{consumeUndoArm(e.currentTarget);applyTypographyFromInspector();}));
   $('inspectText').addEventListener('input',(e)=>{consumeUndoArm(e.currentTarget);setSelectedElementTextOverride($('inspectText').value);});
+  $('inspectLinkHref').addEventListener('input',(e)=>{consumeUndoArm(e.currentTarget);setSelectedElementLinkOverride();});
+  $('inspectLinkTarget').addEventListener('change',(e)=>{consumeUndoArm(e.currentTarget);setSelectedElementLinkOverride();});
   $('inspectImageFile').addEventListener('change',()=>{
     const file=$('inspectImageFile').files?.[0];
     if(file)guard(()=>setSelectedElementImage(file));
