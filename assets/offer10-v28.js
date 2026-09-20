@@ -7,6 +7,7 @@
   const ADDRESS='Av. Pacayal 1243, Carabayllo 15319 - CARABAYLLO';
   const DIR=`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(ADDRESS)}&travelmode=driving`;
   const STORE='olanoOffer10V2';
+  const INTENT_STORE='olanoBookingEntryIntent';
   let wait=null,tickTimer=null,lastWa='';
   const livePromo=()=>window.OLANO_BUSINESS_CONFIG?.promotion||null;
   const promoLoaded=()=>Object.prototype.hasOwnProperty.call(window,'OLANO_BUSINESS_CONFIG');
@@ -27,6 +28,8 @@
   const starSvg=()=>`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.6 2.75 5.57 6.15.89-4.45 4.34 1.05 6.13L12 16.64l-5.5 2.89 1.05-6.13L3.1 9.06l6.15-.89L12 2.6Z"/></svg>`;
 
   function read(){try{return JSON.parse(sessionStorage.getItem(STORE)||'null')}catch{return null}}
+  function bookingIntent(){try{return sessionStorage.getItem(INTENT_STORE)||''}catch{return window.__OLANO_BOOKING_INTENT__||''}}
+  function markDiscountApplied(){try{sessionStorage.setItem(INTENT_STORE,'discount-applied')}catch{}window.__OLANO_BOOKING_INTENT__='discount-applied'}
   function save(o){try{sessionStorage.setItem(STORE,JSON.stringify(o))}catch{}}
   function left(o){return Math.max(0,new Date(o?.claim?.expires_at||0).getTime()-Date.now())}
   function duration(o){const a=new Date(o?.claim?.issued_at||0).getTime(),b=new Date(o?.claim?.expires_at||0).getTime();return Math.max(1,b-a)}
@@ -211,12 +214,27 @@
 
   async function issue(service){
     if(!service?.id)return;
+    const autoApply=bookingIntent()==='discount';
     const old=read();
-    if(old?.claim?.service_code===service.id&&left(old)>0){if(!old.accepted&&!old.declined)show(old);return}
+    if(old?.claim?.service_code===service.id&&left(old)>0){
+      if(autoApply){
+        old.accepted=true;old.declined=false;old.expired=false;save(old);markDiscountApplied();renderOfferInBanner();startTick();
+        try{trackEvent('offer10_accepted',{source:'generic_discount_entry'})}catch{}
+        goCalendar();
+      }else if(!old.accepted&&!old.declined)show(old);
+      return;
+    }
     try{
       const d=await call({action:'issue',service_code:service.id});
       if(state.service?.id!==service.id||!$('#booking')?.classList.contains('open'))return;
-      const o={token:d.token,proof_url:d.proof_url,claim:d.claim,accepted:false,declined:false,redeemed:false,expired:false};save(o);show(o);
+      const o={token:d.token,proof_url:d.proof_url,claim:d.claim,accepted:autoApply,declined:false,redeemed:false,expired:false};save(o);
+      if(autoApply){
+        markDiscountApplied();renderOfferInBanner();startTick();
+        try{trackEvent('offer10_accepted',{source:'generic_discount_entry'})}catch{}
+        goCalendar();
+      }else{
+        show(o);
+      }
     }catch(e){console.warn('offer10',e.message)}
   }
   function schedule(service){if(!service?.id||!promoActive())return;clearTimeout(wait);const id=service.id;wait=setTimeout(()=>{if(promoActive()&&state.service?.id===id&&$('#booking')?.classList.contains('open'))issue(state.service)},2000)}
