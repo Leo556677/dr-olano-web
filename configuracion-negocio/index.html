@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260920-2">
+  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260920-5">
 </head>
 <body>
   <div id="authGate" class="gate">
@@ -66,7 +66,6 @@
         <button class="tab" data-tab="servicios" type="button">Servicios</button>
         <button class="tab" data-tab="contenido" type="button">Editor visual</button>
         <button class="tab" data-tab="promociones" type="button">Ofertas</button>
-        <button class="tab" data-tab="marca" type="button">Logo y colores</button>
         <button class="tab" data-tab="vista-publica" type="button">Comprobar web</button>
       </nav>
 
@@ -353,22 +352,82 @@
             <div class="panel builder-toolbar">
               <div>
                 <strong>Página: Inicio</strong>
-                <small>Los cambios de texto se ven al instante en la vista previa. Guardar los hace públicos.</small>
+                <small>Edita diseño y contenido sin tocar la lógica de reservas.</small>
               </div>
               <span id="builderSaveState" class="pill neutral">Sin cambios</span>
             </div>
+
+            <details class="panel builder-brand-card" open>
+              <summary><span>🎨</span><strong>Logo y paleta</strong><small>Colores base para toda la página</small></summary>
+              <form id="brandingForm" class="form-grid builder-brand-form">
+                <label class="full">
+                  <span>Logo del negocio</span>
+                  <input id="brandLogoFile" class="write-control" type="file" accept="image/png,image/jpeg,image/webp">
+                  <small class="help">PNG, JPG o WebP · máximo 3 MB.</small>
+                </label>
+                <div class="full brand-logo-preview-wrap">
+                  <div id="brandLogoPreview" class="brand-logo-preview">Sin logo personalizado</div>
+                  <div><strong>Logo actual</strong><small class="help">Se actualiza en la vista previa antes de guardar.</small></div>
+                </div>
+                <label><span>Principal</span><input id="brandPrimary" type="color" value="#0b2e4f"></label>
+                <label><span>Secundario</span><input id="brandSecondary" type="color" value="#1aa79d"></label>
+                <label><span>Acento</span><input id="brandAccent" type="color" value="#d7ab33"></label>
+                <label><span>Fondo</span><input id="brandBackground" type="color" value="#f4f7f8"></label>
+                <div class="full brand-preview" id="brandPreview">
+                  <div class="brand-preview-logo" id="brandPreviewLogo">DO</div>
+                  <div><b>Dr. Olano</b><span>Paleta activa del editor</span></div>
+                  <button type="button">Ejemplo</button>
+                </div>
+                <div class="form-actions full">
+                  <button class="button primary write-control" type="submit">Guardar logo y colores</button>
+                  <button id="brandDefaultsBtn" class="button ghost write-control" type="button">Restablecer</button>
+                </div>
+              </form>
+            </details>
+
+            <div id="elementInspector" class="panel builder-inspector" hidden>
+              <div class="card-head">
+                <div><span class="step">↔</span><h3 id="inspectorTitle">Elemento seleccionado</h3></div>
+                <button id="inspectorResetBtn" class="button mini danger write-control" type="button">Restablecer</button>
+              </div>
+              <div id="inspectorMeta" class="muted"></div>
+              <div class="inspector-grid">
+                <label><span>Ancho</span><div class="input-suffix"><input id="inspectWidth" type="number" min="20" max="1600" step="1"><em>px</em></div></label>
+                <label><span>Alto</span><div class="input-suffix"><input id="inspectHeight" type="number" min="20" max="1600" step="1"><em>px</em></div></label>
+                <label><span>Tamaño texto/icono</span><div class="input-suffix"><input id="inspectFontSize" type="number" min="8" max="120" step="1"><em>px</em></div></label>
+                <label><span>Esquinas</span><div class="input-suffix"><input id="inspectRadius" type="number" min="0" max="100" step="1"><em>px</em></div></label>
+                <label class="full"><span>Fondo</span><select id="inspectBgMode">
+                  <option value="none">Sin fondo</option>
+                  <option value="solid">Color sólido</option>
+                  <option value="gradient">Degradado</option>
+                </select></label>
+                <label><span>Color / inicio</span><select id="inspectBgFrom"></select></label>
+                <label id="inspectBgToWrap"><span>Fin degradado</span><select id="inspectBgTo"></select></label>
+                <label id="inspectAngleWrap"><span>Ángulo</span><div class="input-suffix"><input id="inspectGradientAngle" type="number" min="0" max="360" step="5" value="135"><em>°</em></div></label>
+                <label><span>Texto / icono</span><select id="inspectColor"></select></label>
+                <label><span>Borde</span><select id="inspectBorder"></select></label>
+                <label><span>Opacidad</span><div class="input-suffix"><input id="inspectOpacity" type="number" min="10" max="100" step="5" value="100"><em>%</em></div></label>
+                <label><span>Padding</span><div class="input-suffix"><input id="inspectPadding" type="number" min="0" max="80" step="1"><em>px</em></div></label>
+              </div>
+              <div class="notice neutral inspector-note">Arrastra el elemento directamente dentro de su sección para moverlo. Usa el tirador de la esquina para cambiar su tamaño. Los cambios se guardan para la vista actual: PC, tablet o celular.</div>
+            </div>
+
             <div id="contentEditorList" class="content-editor-list"></div>
           </div>
           <aside class="panel card visual-builder-preview">
-            <div class="card-head">
+            <div class="card-head builder-preview-head">
               <div><span class="step">👁</span><h3>Vista previa real</h3></div>
-              <div class="preview-device-switch" role="group" aria-label="Tamaño de vista previa">
-                <button class="button mini active" type="button" data-visual-device="desktop">PC</button>
-                <button class="button mini" type="button" data-visual-device="tablet">Tablet</button>
-                <button class="button mini" type="button" data-visual-device="mobile">Celular</button>
+              <div class="builder-global-mode" role="group" aria-label="Modo del editor">
+                <button id="builderEditMode" class="button mini active" type="button">Editar</button>
+                <button id="builderNavigateMode" class="button mini" type="button">Probar navegación</button>
               </div>
             </div>
-            <div class="builder-preview-help">Puedes navegar la página. En modo editor, las secciones editables muestran un borde al pasar el mouse.</div>
+            <div class="preview-device-switch visual-device-switch" role="group" aria-label="Tamaño de vista previa">
+              <button class="button mini active" type="button" data-visual-device="desktop">PC</button>
+              <button class="button mini" type="button" data-visual-device="tablet">Tablet</button>
+              <button class="button mini" type="button" data-visual-device="mobile">Celular</button>
+            </div>
+            <div id="builderModeHelp" class="builder-preview-help"><b>Modo Editar:</b> los botones y enlaces no navegan. Selecciona, mueve, redimensiona o edita contenido.</div>
             <div id="visualSitePreviewShell" class="site-preview-shell desktop visual-editor-preview">
               <iframe id="visualSitePreview" title="Editor visual de doctorolano.pe" src="/?admin-preview=visual"></iframe>
             </div>
@@ -433,65 +492,6 @@
         </div>
       </section>
 
-      <section class="tab-panel" data-panel="marca">
-        <div class="section-head">
-          <div>
-            <div class="eyebrow">IDENTIDAD VISUAL</div>
-            <h2>Logo y colores</h2>
-            <p>Sube el logo y elige los colores con controles visuales. Guardas y la web los recibe automáticamente.</p>
-          </div>
-        </div>
-
-        <div class="grid brand-layout">
-          <article class="panel card">
-            <form id="brandingForm" class="form-grid">
-              <label class="full">
-                <span>Logo del negocio</span>
-                <input id="brandLogoFile" class="write-control" type="file" accept="image/png,image/jpeg,image/webp">
-                <small class="help">PNG, JPG o WebP. Máximo 3 MB. Si no subes uno nuevo, se conserva el actual.</small>
-              </label>
-              <div class="full brand-logo-preview-wrap">
-                <div id="brandLogoPreview" class="brand-logo-preview">Sin logo personalizado</div>
-                <div>
-                  <strong>Vista previa</strong>
-                  <small class="help">El logo se usa en encabezado, portada de carga y pie de página.</small>
-                </div>
-              </div>
-              <label><span>Color principal</span><input id="brandPrimary" type="color" value="#0b2e4f"></label>
-              <label><span>Color secundario</span><input id="brandSecondary" type="color" value="#1aa79d"></label>
-              <label><span>Color de acento</span><input id="brandAccent" type="color" value="#d7ab33"></label>
-              <label><span>Color de fondo</span><input id="brandBackground" type="color" value="#f4f7f8"></label>
-              <div class="full brand-preview" id="brandPreview">
-                <div class="brand-preview-logo" id="brandPreviewLogo">DO</div>
-                <div>
-                  <b>Dr. Olano</b>
-                  <span>Así se combinarán los colores principales</span>
-                </div>
-                <button type="button">Botón de ejemplo</button>
-              </div>
-              <div class="form-actions full">
-                <button class="button primary write-control" type="submit">Guardar marca</button>
-                <button id="brandDefaultsBtn" class="button ghost write-control" type="button">Restablecer colores</button>
-              </div>
-            </form>
-          </article>
-          <article class="panel card brand-live-card">
-            <div class="card-head">
-              <div><span class="step">👁</span><h3>Vista previa en tiempo real</h3></div>
-              <div class="preview-device-switch" role="group" aria-label="Tamaño de vista previa">
-                <button class="button mini active" type="button" data-preview-device="desktop">PC</button>
-                <button class="button mini" type="button" data-preview-device="tablet">Tablet</button>
-                <button class="button mini" type="button" data-preview-device="mobile">Celular</button>
-              </div>
-            </div>
-            <p class="muted">Puedes navegar la web dentro de esta vista, abrir categorías y revisar cómo cambia antes de guardar.</p>
-            <div id="brandSitePreviewShell" class="site-preview-shell desktop">
-              <iframe id="brandSitePreview" title="Vista previa de doctorolano.pe" src="/?admin-preview=1"></iframe>
-            </div>
-          </article>
-        </div>
-      </section>
-
       <section class="tab-panel" data-panel="vista-publica">
         <div class="section-head">
           <div>
@@ -511,6 +511,6 @@
     </main>
   </div>
 
-  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260920-4"></script>
+  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260920-5"></script>
 </body>
 </html>
