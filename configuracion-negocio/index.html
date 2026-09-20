@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260920-8">
+  <link rel="stylesheet" href="/assets/configuracion-negocio-v1.css?v=20260920-9">
 </head>
 <body>
   <div id="authGate" class="gate">
@@ -392,6 +392,31 @@
               </div>
               <div id="inspectorMeta" class="muted"></div>
               <div class="inspector-grid">
+                <label class="full"><span>Aplicar tipografía a</span><select id="inspectTypographyScope">
+                  <option value="element">Solo este elemento</option>
+                  <option value="section">Toda esta sección</option>
+                  <option value="global">Toda la página</option>
+                </select></label>
+                <label><span>Tipografía</span><select id="inspectFontFamily">
+                  <option value="inherit">Mantener actual</option>
+                  <option value="Public Sans">Public Sans</option>
+                  <option value="Fraunces">Fraunces</option>
+                  <option value="Arial">Arial</option>
+                  <option value="Georgia">Georgia</option>
+                  <option value="system-ui">Sistema</option>
+                </select></label>
+                <label><span>Peso</span><select id="inspectFontWeight">
+                  <option value="inherit">Mantener actual</option>
+                  <option value="400">Regular</option>
+                  <option value="500">Medio</option>
+                  <option value="600">Semibold</option>
+                  <option value="700">Bold</option>
+                  <option value="800">Extra bold</option>
+                  <option value="900">Black</option>
+                </select></label>
+                <label id="inspectFontScaleWrap" class="full"><span>Escala de texto del alcance</span><div class="input-suffix"><input id="inspectFontScale" type="number" min="60" max="180" step="5" placeholder="100"><em>%</em></div></label>
+                <label id="inspectTextWrap" class="full" hidden><span>Contenido del texto / botón</span><input id="inspectText" maxlength="500"></label>
+                <label id="inspectImageWrap" class="full" hidden><span>Reemplazar imagen</span><input id="inspectImageFile" type="file" accept="image/png,image/jpeg,image/webp"><small class="help">PNG, JPG o WebP · máximo 5 MB. Se guarda solo para este elemento.</small></label>
                 <label><span>Ancho</span><div class="input-suffix"><input id="inspectWidth" type="number" min="20" max="1600" step="1"><em>px</em></div></label>
                 <label><span>Alto</span><div class="input-suffix"><input id="inspectHeight" type="number" min="20" max="1600" step="1"><em>px</em></div></label>
                 <label><span>Tamaño texto/icono</span><div class="input-suffix"><input id="inspectFontSize" type="number" min="8" max="120" step="1"><em>px</em></div></label>
@@ -434,6 +459,19 @@
             </div>
           </aside>
         </div>
+
+        <details class="panel editor-trace-panel" id="editorTracePanel">
+          <summary>
+            <span>🧪</span>
+            <div><strong>Trazas del editor</strong><small>Registro visual para comprobar selección, movimiento, redimensionado, guardado y errores.</small></div>
+            <span id="traceHealth" class="pill neutral">Sin eventos</span>
+          </summary>
+          <div class="trace-actions">
+            <button id="copyTraceBtn" class="button mini" type="button">Copiar trazas</button>
+            <button id="clearTraceBtn" class="button mini ghost" type="button">Limpiar</button>
+          </div>
+          <pre id="editorTraceOutput" class="editor-trace-output">Aún no hay eventos.</pre>
+        </details>
       </section>
 
       <section class="tab-panel" data-panel="promociones">
@@ -512,6 +550,6 @@
     </main>
   </div>
 
-  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260920-8"></script>
+  <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260920-9"></script>
 </body>
 </html>
