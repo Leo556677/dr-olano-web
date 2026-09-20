@@ -366,6 +366,23 @@
       cmsMark(h,'home.areas','title');cmsMark(p,'home.areas','body');
     }
 
+    const locationSlot=contentSlot(data,'home.location');
+    if(locationSlot&&map['home.location']){
+      const section=map['home.location'],st=locationSlot.settings||{};
+      const title=section.querySelector('[data-cms-field="title"],h2');
+      const body=section.querySelector('[data-cms-field="body"]');
+      const address=section.querySelector('[data-cms-setting="address"]');
+      const routeLabel=section.querySelector('[data-cms-setting="route_label"]');
+      const mapLabel=section.querySelector('[data-cms-setting="map_label"]');
+      const route=section.querySelector('.olano-route'),mapLink=section.querySelector('.olano-map');
+      setText(title,locationSlot.title);setText(body,locationSlot.body);setText(address,st.address);
+      setText(routeLabel,st.route_label);setText(mapLabel,st.map_label);
+      if(route&&st.route_url)route.href=st.route_url;
+      if(mapLink&&st.map_url)mapLink.href=st.map_url;
+      cmsMark(title,'home.location','title');cmsMark(body,'home.location','body');
+      cmsMark(address,'home.location',null,'address');cmsMark(routeLabel,'home.location',null,'route_label');cmsMark(mapLabel,'home.location',null,'map_label');
+    }
+
     const footer=contentSlot(data,'site.footer');
     if(footer&&map['site.footer']){
       const section=map['site.footer'],st=footer.settings||{};
