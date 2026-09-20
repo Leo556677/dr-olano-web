@@ -725,7 +725,8 @@ function contentSlotFields(slot){
       '<div class="builder-linked-note">Las áreas enlazadas se alimentan de la estructura pública vigente.</div>';
   }
   if(key==='site.footer'){
-    return builderSetting('Texto del botón WhatsApp','whatsapp_label',st.whatsapp_label||'WhatsApp')+
+    return builderField('Nombre visible en el pie','title',slot.title||'Dr. Olano')+
+      builderSetting('Texto del botón WhatsApp','whatsapp_label',st.whatsapp_label||'WhatsApp')+
       builderSetting('Texto del botón de reserva','booking_label',st.booking_label||'Agendar cita')+
       builderSetting('Nota inferior','note',st.note||'','textarea',700)+
       '<div class="builder-linked-note">Dirección, horarios y teléfono se mantienen conectados a datos reales para evitar contradicciones.</div>';
@@ -851,7 +852,11 @@ async function saveContentSlot(e,card) {
   const id=card.dataset.contentForm;
   const slot=state.contentSlots.find(x=>x.id===id);
   if(!slot) throw new Error('No se encontró esta sección.');
-  const value=(name)=>card.querySelector('[data-content-field="'+name+'"]')?.value?.trim()||null;
+  const value=(name)=>{
+    const el=card.querySelector('[data-content-field="'+name+'"]');
+    if(!el)return slot[name]??null;
+    return el.value.trim()||null;
+  };
   let image_url=slot.image_url||null, image_path=slot.image_path||null;
   const file=card.querySelector('[data-content-image]')?.files?.[0]||null;
   let uploaded=null;
@@ -969,9 +974,9 @@ function setupVisualPreview(){
     }
   });
   doc.querySelectorAll('[data-cms-field],[data-cms-setting]').forEach(el=>{
-    if(el.matches('button,a,input,select,textarea'))return;
+    if(el.matches('button,a,input,select,textarea')||el.closest('button,a'))return;
     el.contentEditable='true';el.dataset.cmsEditable='true';el.spellcheck=true;
-    el.addEventListener('click',e=>e.stopPropagation());
+    el.addEventListener('click',e=>{const section=el.closest('[data-cms-slot]');if(section)selectEditorCard(section.dataset.cmsSlot);e.stopPropagation();});
     el.addEventListener('input',()=>{
       const section=el.closest('[data-cms-slot]'); if(!section)return;
       const key=section.dataset.cmsSlot;
