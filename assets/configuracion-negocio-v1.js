@@ -2171,6 +2171,16 @@ function setupVisualPreview(){
   doc.body.classList.toggle('admin-builder-navigate',state.builderMode==='navigate');
   installPreviewInteractionGuard(doc);
   installContextMenu(doc);
+  if(!doc.__olanoDynamicBuilderObserver){
+    let timer=null;
+    doc.__olanoDynamicBuilderObserver=new MutationObserver((mutations)=>{
+      const relevant=mutations.some(m=>[...m.addedNodes].some(n=>n.nodeType===1&&!n.classList?.contains('admin-grid-layer')&&!n.closest?.('[data-admin-builder-control]')));
+      if(!relevant)return;
+      clearTimeout(timer);
+      timer=setTimeout(()=>{try{setupVisualPreview();}catch{}},80);
+    });
+    doc.__olanoDynamicBuilderObserver.observe(doc.body,{childList:true,subtree:true});
+  }
   if(!doc.defaultView.__olanoOverlaySyncBound){
     doc.defaultView.__olanoOverlaySyncBound=true;
     doc.defaultView.addEventListener('scroll',()=>updateElementOverlay(),{passive:true});
