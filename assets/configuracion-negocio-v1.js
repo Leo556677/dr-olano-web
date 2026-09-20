@@ -1034,7 +1034,9 @@ function builderElementConfig(slotKey,elementKey,create=true){
 }
 function visualElement(slotKey,elementKey){
   const doc=visualDoc(),slot=visualSlot(doc,slotKey);
-  return slot?.querySelector('[data-cms-element="'+CSS.escape(elementKey)+'"]')||null;
+  if(!slot)return null;
+  if(slot.dataset.cmsElement===elementKey)return slot;
+  return slot.querySelector('[data-cms-element="'+CSS.escape(elementKey)+'"]')||null;
 }
 function fillPaletteSelect(select,includeNone=false){
   if(!select)return;
@@ -1055,6 +1057,70 @@ function inspectorNumber(id,value,placeholder=null){
   el.value=value==null||value===''?'':String(Math.round(Number(value)*100)/100);
   el.placeholder=placeholder==null?'':String(Math.round(Number(placeholder)*100)/100);
 }
+function isSafeTextElement(el){
+  if(!el)return false;
+  if(/^(H1|H2|H3|H4|P|SPAN|B|STRONG|SMALL|SUMMARY|LABEL)$/.test(el.tagName))return true;
+  if(el.matches('button,a'))return Boolean(el.querySelector('.cms-button-label,.builder-action-label,.v240-cta'));
+  return false;
+}
+function selectedTextTarget(el){
+  if(!el)return null;
+  if(/^(H1|H2|H3|H4|P|SPAN|B|STRONG|SMALL|SUMMARY|LABEL)$/.test(el.tagName))return el;
+  if(el.matches('button,a'))return el.querySelector('.cms-button-label,.builder-action-label,.v240-cta');
+  return null;
+}
+function typographyTargetSlot(scope){
+  if(scope==='global')return builderSlotByKey('site.header');
+  const sel=state.builderSelection;
+  return sel?builderSlotByKey(sel.slotKey):null;
+}
+function typographyConfig(scope,create=true){
+  const slot=typographyTargetSlot(scope);if(!slot)return null;
+  slot.settings=slot.settings&&typeof slot.settings==='object'?slot.settings:{};
+  const key=scope==='global'?'globalTypography':'sectionTypography';
+  if(scope==='element')return builderElementConfig(state.builderSelection?.slotKey,state.builderSelection?.elementKey,create);
+  if(!create)return slot.settings?.[key]?.[state.builderDevice]||{};
+  slot.settings[key]=slot.settings[key]&&typeof slot.settings[key]==='object'?slot.settings[key]:{};
+  slot.settings[key][state.builderDevice]=slot.settings[key][state.builderDevice]&&typeof slot.settings[key][state.builderDevice]==='object'?slot.settings[key][state.builderDevice]:{};
+  return slot.settings[key][state.builderDevice];
+}
+function populateTypographyControls(){
+  const scope=$('inspectTypographyScope')?.value||'element';
+  const cfg=typographyConfig(scope,false)||{};
+  $('inspectFontFamily').value=cfg.fontFamily||'inherit';
+  $('inspectFontWeight').value=cfg.fontWeight||'inherit';
+  inspectorNumber('inspectFontScale',cfg.fontScale,null);
+  $('inspectFontScaleWrap').hidden=scope==='element';
+  if(scope!=='element')$('inspectColor').value=cfg.colorToken||'inherit';
+}
+function applyTypographyFromInspector(){
+  const scope=$('inspectTypographyScope')?.value||'element';
+  if(scope==='element'){
+    applySelectedInspectorConfig();
+    return;
+  }
+  const cfg=typographyConfig(scope,true);if(!cfg)return;
+  const font=$('inspectFontFamily').value,weight=$('inspectFontWeight').value,color=$('inspectColor').value;
+  const scale=numberOrNull($('inspectFontScale').value);
+  if(font==='inherit')delete cfg.fontFamily;else cfg.fontFamily=font;
+  if(weight==='inherit')delete cfg.fontWeight;else cfg.fontWeight=weight;
+  if(color==='inherit')delete cfg.colorToken;else cfg.colorToken=color;
+  if(scale==null)delete cfg.fontScale;else cfg.fontScale=scale;
+  const frame=visualFrame(),api=frame?.contentWindow?.OLANO_BUILDER_API,live=frame?.contentWindow?.OLANO_BUSINESS_CONFIG;
+  if(api&&live){
+    const slot=typographyTargetSlot(scope);
+    if(slot){
+      const liveSlot=(live.content||[]).find(x=>x.slot_key===slot.slot_key);
+      if(liveSlot)liveSlot.settings=structuredClone(slot.settings);
+    }
+    api.applyVisualElementStyles(live);
+  }
+  const slot=typographyTargetSlot(scope);
+  if(slot)scheduleBuilderStyleSave(slot.slot_key);
+  builderSetState('Cambios tipográficos','warn');
+  editorTrace('TYPOGRAPHY_CHANGE','OK',{scope,font:font,weight,color,scale,slot:slot?.slot_key||null});
+}
+function selectedElementSupportsImage(el){return el?.tagName==='IMG';}
 function selectVisualElement(el){
   if(state.builderMode!=='edit'||!el)return;
   const frame=visualFrame(),api=frame?.contentWindow?.OLANO_BUILDER_API;
