@@ -1394,13 +1394,24 @@ function setupVisualPreview(){
       const handle=doc.createElement('button');
       handle.type='button';handle.className='admin-builder-handle';handle.textContent='⋮⋮ Mover sección';handle.draggable=true;handle.dataset.adminBuilderControl='1';
       handle.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();selectEditorCard(key);});
-      handle.addEventListener('dragstart',e=>{e.stopPropagation();e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/x-olano-slot',key);});
+      handle.addEventListener('dragstart',e=>{
+        e.stopPropagation();state.builderPreviewDragKey=key;
+        e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/x-olano-slot',key);
+        editorTrace('SECTION_DRAG_START','OK',{slot:key,source:'preview'});
+      });
+      handle.addEventListener('dragend',()=>{if(state.builderPreviewDragKey)guard(()=>persistPreviewSectionOrder());});
       section.appendChild(handle);
     }
     if(!section.__olanoSectionDropBound){
       section.__olanoSectionDropBound=true;
-      section.addEventListener('dragover',e=>{if(state.builderMode==='edit'&&e.dataTransfer.types.includes('text/x-olano-slot')){e.preventDefault();e.dataTransfer.dropEffect='move';}});
-      section.addEventListener('drop',e=>{if(state.builderMode!=='edit'||!e.dataTransfer.types.includes('text/x-olano-slot'))return;e.preventDefault();e.stopPropagation();guard(()=>dropPreviewSection(e,section.dataset.cmsSlot));});
+      section.addEventListener('dragover',e=>{
+        if(state.builderMode!=='edit'||!e.dataTransfer.types.includes('text/x-olano-slot'))return;
+        e.preventDefault();e.dataTransfer.dropEffect='move';reorderPreviewSectionLive(e,section.dataset.cmsSlot);
+      });
+      section.addEventListener('drop',e=>{
+        if(state.builderMode!=='edit'||!e.dataTransfer.types.includes('text/x-olano-slot'))return;
+        e.preventDefault();e.stopPropagation();guard(()=>dropPreviewSection(e,section.dataset.cmsSlot));
+      });
     }
   });
   doc.querySelectorAll('[data-cms-field],[data-cms-setting]').forEach(el=>{
@@ -1430,19 +1441,32 @@ function selectEditorCard(key){
   document.querySelectorAll('.builder-section-card.selected').forEach(x=>x.classList.remove('selected'));
   card.classList.add('selected');
 }
-async function dropPreviewSection(e,targetKey){
-  const sourceKey=e.dataTransfer.getData('text/x-olano-slot'); if(!sourceKey||sourceKey===targetKey)return;
-  const doc=visualDoc(),source=visualSlot(doc,sourceKey),target=visualSlot(doc,targetKey); if(!source||!target)return;
-  const rect=target.getBoundingClientRect(),after=e.clientY>rect.top+rect.height/2;
-  target.parentNode.insertBefore(source,after?target.nextSibling:target);
-  const mainOrder=[...doc.querySelectorAll('main [data-cms-slot^="home."]')].map(x=>x.dataset.cmsSlot);
-  const box=$('contentEditorList');
+function syncSidebarOrderFromPreview(){
+  const doc=visualDoc(),box=$('contentEditorList');if(!doc||!box)return;
   const footerCard=box.querySelector('[data-builder-slot="site.footer"]');
-  mainOrder.forEach(key=>{
-    const card=box.querySelector('[data-builder-slot="'+CSS.escape(key)+'"]');
+  [...doc.querySelectorAll('main [data-cms-slot^="home."]')].forEach(el=>{
+    const card=box.querySelector('[data-builder-slot="'+CSS.escape(el.dataset.cmsSlot)+'"]');
     if(card)box.insertBefore(card,footerCard||null);
   });
+}
+function reorderPreviewSectionLive(e,targetKey){
+  const sourceKey=state.builderPreviewDragKey;if(!sourceKey||sourceKey===targetKey)return;
+  const doc=visualDoc(),source=visualSlot(doc,sourceKey),target=visualSlot(doc,targetKey);if(!source||!target)return;
+  const rect=target.getBoundingClientRect(),after=e.clientY>rect.top+rect.height/2;
+  const wanted=after?target.nextSibling:target;
+  if(wanted!==source)target.parentNode.insertBefore(source,wanted);
+  syncSidebarOrderFromPreview();
+}
+async function persistPreviewSectionOrder(){
+  syncSidebarOrderFromPreview();
   await persistBuilderOrderFromSidebar();
+  editorTrace('SECTION_DRAG_END','OK',{slot:state.builderPreviewDragKey,source:'preview',order:'persisted'});
+  state.builderPreviewDragKey=null;
+}
+async function dropPreviewSection(e,targetKey){
+  e.preventDefault();
+  reorderPreviewSectionLive(e,targetKey);
+  await persistPreviewSectionOrder();
 }
 function applyPreviewOrderFromState(){
   const doc=visualDoc(); if(!doc)return;
