@@ -958,8 +958,13 @@ function setupVisualPreview(){
   }
   doc.querySelectorAll('[data-cms-slot]').forEach(section=>{
     const key=section.dataset.cmsSlot;
-    section.addEventListener('click',()=>selectEditorCard(key),{capture:false});
     const slot=state.contentSlots.find(x=>x.slot_key===key);
+    if(!section.__olanoBuilderBound){
+      section.__olanoBuilderBound=true;
+      section.addEventListener('click',()=>selectEditorCard(section.dataset.cmsSlot),{capture:false});
+      section.addEventListener('dragover',e=>{if(e.dataTransfer.types.includes('text/x-olano-slot')){e.preventDefault();e.dataTransfer.dropEffect='move';}});
+      section.addEventListener('drop',e=>{if(!e.dataTransfer.types.includes('text/x-olano-slot'))return;e.preventDefault();e.stopPropagation();guard(()=>dropPreviewSection(e,section.dataset.cmsSlot));});
+    }
     section.querySelector('.admin-builder-handle')?.remove();
     if(builderSlotCanMove(slot)){
       const handle=doc.createElement('button');
@@ -969,8 +974,6 @@ function setupVisualPreview(){
         e.stopPropagation(); e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/x-olano-slot',key);
       });
       section.appendChild(handle);
-      section.addEventListener('dragover',e=>{if(e.dataTransfer.types.includes('text/x-olano-slot')){e.preventDefault();e.dataTransfer.dropEffect='move';}});
-      section.addEventListener('drop',e=>{e.preventDefault();e.stopPropagation();guard(()=>dropPreviewSection(e,key));});
     }
   });
   doc.querySelectorAll('[data-cms-field],[data-cms-setting]').forEach(el=>{
@@ -1421,7 +1424,7 @@ function bindEvents() {
   });
   $('brandSitePreview').addEventListener('load',()=>{setTimeout(applyBrandPreviewToIframe,350);setTimeout(applyBrandPreviewToIframe,1300);});
   document.querySelectorAll('[data-preview-device]').forEach((btn)=>btn.addEventListener('click',()=>setPreviewDevice(btn.dataset.previewDevice)));
-  $('visualSitePreview').addEventListener('load',()=>{setTimeout(setupVisualPreview,450);setTimeout(setupVisualPreview,1500);});
+  $('visualSitePreview').addEventListener('load',()=>{setupVisualPreview();setTimeout(setupVisualPreview,450);setTimeout(setupVisualPreview,1500);});
   document.querySelectorAll('[data-visual-device]').forEach((btn)=>btn.addEventListener('click',()=>setVisualPreviewDevice(btn.dataset.visualDevice)));
   $('brandDefaultsBtn').addEventListener('click',()=>{
     $('brandPrimary').value='#0b2e4f'; $('brandSecondary').value='#1aa79d';
