@@ -661,8 +661,9 @@
     document.querySelectorAll('[data-cms-element]').forEach(el=>{
       const slotKey=builderSlotOfElement(el);
       const slot=contentSlot(data,slotKey);
-      const cfg=slot?.settings?.builder?.[device]?.[el.dataset.cmsElement]||{};
-      applyBuilderElementStyle(el,cfg,palette);
+      const styleCfg=slot?.settings?.builder?.[device]?.[el.dataset.cmsElement]||{};
+      const contentCfg=slot?.settings?.builderContent?.[el.dataset.cmsElement]||{};
+      applyBuilderElementStyle(el,{...contentCfg,...styleCfg},palette);
     });
   }
   let builderResizeTimer=null;
