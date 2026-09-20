@@ -203,10 +203,15 @@
     if(el&&value!=null&&String(value).trim()!=='')el.textContent=String(value);
   }
   function setButtonText(el,value){
-    if(!el||value==null||String(value).trim()==='')return;
+    if(!el||value==null||String(value).trim()==='')return null;
     const icon=el.querySelector('svg');
-    el.textContent=String(value);
-    if(icon)el.prepend(icon);
+    el.textContent='';
+    if(icon)el.appendChild(icon);
+    const span=document.createElement('span');
+    span.className='cms-button-label';
+    span.textContent=String(value);
+    el.appendChild(span);
+    return span;
   }
   function cmsMark(el,key,field=null,setting=null){
     if(!el)return null;
@@ -264,7 +269,8 @@
       setText(brand,st.brand_name||header.title);
       cmsMark(brand,'site.header',null,'brand_name');
       const menuBook=document.querySelector('#menuBook'),menuServices=document.querySelector('#menuServices'),menuFaq=document.querySelector('#menuFaq');
-      setButtonText(menuBook,st.menu_book); setButtonText(menuServices,st.menu_services); setButtonText(menuFaq,st.menu_faq);
+      const mb=setButtonText(menuBook,st.menu_book),ms=setButtonText(menuServices,st.menu_services),mf=setButtonText(menuFaq,st.menu_faq);
+      cmsMark(mb,'site.header',null,'menu_book');cmsMark(ms,'site.header',null,'menu_services');cmsMark(mf,'site.header',null,'menu_faq');
     }
 
     const hero=contentSlot(data,'home.hero');
@@ -277,7 +283,10 @@
       setText(eyebrow,hero.eyebrow); setText(title,hero.title); setText(subtitle,hero.subtitle); setText(body,hero.body);
       cmsMark(eyebrow,'home.hero','eyebrow'); cmsMark(title,'home.hero','title'); cmsMark(subtitle,'home.hero','subtitle'); cmsMark(body,'home.hero','body');
       const heroBtn=section.querySelector('#heroBook');
-      if(heroBtn&&hero.cta_label)setButtonText(heroBtn,hero.cta_label);
+      if(heroBtn&&hero.cta_label){
+        const label=setButtonText(heroBtn,hero.cta_label);
+        cmsMark(label,'home.hero','cta_label');
+      }
       const heroImg=section.querySelector('.hero-media img');
       if(heroImg){
         heroImg.dataset.cmsField='image_url';
@@ -362,12 +371,15 @@
       const brand=section.querySelector('.footer-brand');
       if(brand){
         let span=brand.querySelector('.cms-footer-brand-text');
-        if(!span){span=document.createElement('span');span.className='cms-footer-brand-text';brand.appendChild(span);}
+        if(!span){
+          [...brand.childNodes].filter(n=>n.nodeType===Node.TEXT_NODE).forEach(n=>n.remove());
+          span=document.createElement('span');span.className='cms-footer-brand-text';brand.appendChild(span);
+        }
         setText(span,footer.title);cmsMark(span,'site.footer','title');
       }
       const wa=section.querySelector('.footer-wa'),book=section.querySelector('.footer-book'),note=section.querySelector('.footer-note');
-      setButtonText(wa,st.whatsapp_label);setButtonText(book,st.booking_label);setText(note,st.note);
-      cmsMark(note,'site.footer',null,'note');
+      const wal=setButtonText(wa,st.whatsapp_label),bookl=setButtonText(book,st.booking_label);setText(note,st.note);
+      cmsMark(wal,'site.footer',null,'whatsapp_label');cmsMark(bookl,'site.footer',null,'booking_label');cmsMark(note,'site.footer',null,'note');
     }
 
     applyLayout(data,map);
