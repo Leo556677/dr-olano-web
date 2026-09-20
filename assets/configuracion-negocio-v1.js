@@ -1852,7 +1852,11 @@ function installPreviewInteractionGuard(doc){
 }
 function flashPreviewTarget(el,source='input'){
   if(!el)return false;
-  try{el.scrollIntoView({behavior:'smooth',block:'center',inline:'nearest'});}catch{}
+  try{
+    const win=el.ownerDocument.defaultView,r=el.getBoundingClientRect();
+    const target=Math.max(0,win.scrollY+r.top-(win.innerHeight/2)+(r.height/2));
+    win.scrollTo({top:target,behavior:'smooth'});
+  }catch{}
   el.classList.remove('admin-input-focus');
   void el.offsetWidth;
   el.classList.add('admin-input-focus');
