@@ -1510,11 +1510,13 @@ function scrollLeftEditorToSelection(slotKey,previewEl=null){
       target=card.querySelector(faq[2]==='q'?'[data-faq-q][data-faq-index="'+faq[1]+'"]':'[data-faq-a][data-faq-index="'+faq[1]+'"]');
     }else target=card.querySelector('[data-setting-field="'+CSS.escape(name)+'"]');
   }
-  if(!target)target=$('elementInspector')&&!$('elementInspector').hidden?$('elementInspector'):card;
+  if(!target)target=card;
   if(!target)return;
-  const sideRect=sidebar.getBoundingClientRect(),targetRect=target.getBoundingClientRect();
-  const top=sidebar.scrollTop+(targetRect.top-sideRect.top)-Math.max(12,(sidebar.clientHeight-targetRect.height)/3);
-  sidebar.scrollTo({top:Math.max(0,top),behavior:'smooth'});
+  if(sidebar.contains(target)){
+    const sideRect=sidebar.getBoundingClientRect(),targetRect=target.getBoundingClientRect();
+    const top=sidebar.scrollTop+(targetRect.top-sideRect.top)-Math.max(12,(sidebar.clientHeight-targetRect.height)/3);
+    sidebar.scrollTo({top:Math.max(0,top),behavior:'smooth'});
+  }
   target.classList.remove('admin-left-flash');void target.offsetWidth;target.classList.add('admin-left-flash');
   setTimeout(()=>target.classList.remove('admin-left-flash'),1400);
 }
@@ -1865,9 +1867,10 @@ function addCustomElement(type,extra={}){
     iconKey:extra.iconKey||null,src:extra.src||null,srcPath:extra.srcPath||null,alt:extra.alt||null,zIndex:20
   };
   slotCustomElements(slot).push(item);
-  const size=customDefaultSize(type);
+  const size=customDefaultSize(type),g=currentGridPrefs();
   const cfg=builderElementConfig(ctx.slotKey,elementKey,true);
-  cfg.x=Math.round(ctx.x||12);cfg.y=Math.round(ctx.y||12);cfg.w=size.w;cfg.h=size.h;
+  cfg.x=snapGrid(ctx.x||g.x,g.x);cfg.y=snapGrid(ctx.y||g.y,g.y);
+  cfg.w=Math.max(g.x,snapGrid(size.w,g.x));cfg.h=Math.max(g.y,snapGrid(size.h,g.y));
   if(type==='box'){cfg.bgMode='solid';cfg.bgFrom='white';cfg.borderToken='primary';cfg.radius=14;cfg.opacity=100;}
   if(type==='line'){cfg.bgMode='solid';cfg.bgFrom='primary';cfg.borderToken='none';}
   if(type==='icon'){cfg.colorToken='primary';}
