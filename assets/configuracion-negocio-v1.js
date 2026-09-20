@@ -1006,9 +1006,10 @@ async function dropPreviewSection(e,targetKey){
   target.parentNode.insertBefore(source,after?target.nextSibling:target);
   const mainOrder=[...doc.querySelectorAll('main [data-cms-slot^="home."]')].map(x=>x.dataset.cmsSlot);
   const box=$('contentEditorList');
+  const footerCard=box.querySelector('[data-builder-slot="site.footer"]');
   mainOrder.forEach(key=>{
     const card=box.querySelector('[data-builder-slot="'+CSS.escape(key)+'"]');
-    if(card)box.appendChild(card);
+    if(card)box.insertBefore(card,footerCard||null);
   });
   await persistBuilderOrderFromSidebar();
 }
