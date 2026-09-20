@@ -1211,8 +1211,11 @@ function applyEditorCardDraftToPreview(card){
     if(target)target.textContent=input.value;
   });
   card.querySelectorAll('[data-setting-field]').forEach(input=>{
-    const target=slotEl.querySelector('[data-cms-setting="'+input.dataset.settingField+'"]');
+    const name=input.dataset.settingField;
+    const target=slotEl.querySelector('[data-cms-setting="'+name+'"]');
     if(target)target.textContent=input.value;
+    if(name==='route_url'){const a=slotEl.querySelector('.olano-route');if(a)a.href=input.value;}
+    if(name==='map_url'){const a=slotEl.querySelector('.olano-map');if(a)a.href=input.value;}
   });
   card.querySelectorAll('[data-faq-q]').forEach(input=>{
     const target=slotEl.querySelector('[data-cms-setting="faq.'+input.dataset.faqIndex+'.q"]');
