@@ -112,6 +112,10 @@
     $('#offer10ConfirmApply')?.addEventListener('click',()=>accept(true));
     $('#offer10ConfirmReject')?.addEventListener('click',()=>decline(true));
     injectLocation();
+    if(!window.__olanoLocationConfigBound){
+      window.__olanoLocationConfigBound=true;
+      document.addEventListener('olano:business-config',()=>injectLocation());
+    }
   }
 
   function locationConfig(){
@@ -129,13 +133,15 @@
     };
   }
   function injectLocation(){
-    if($('#olanoLocation'))return;
     const footer=$('footer.site-footer');if(!footer)return;
     const loc=locationConfig();
-    if(loc.slot?.enabled===false)return;
-    const el=document.createElement('section');el.id='olanoLocation';el.className='olano-location';el.dataset.cmsSlot='home.location';
+    let el=$('#olanoLocation');
+    if(loc.slot?.enabled===false){el?.remove();return;}
+    if(!el){
+      el=document.createElement('section');el.id='olanoLocation';el.className='olano-location';el.dataset.cmsSlot='home.location';
+      footer.parentNode.insertBefore(el,footer);
+    }
     el.innerHTML=`<div class="wrap"><div class="olano-location-card"><h2 data-cms-field="title">${esc(loc.title)}</h2><p><strong data-cms-setting="address">${esc(loc.address)}</strong><br><span data-cms-field="body">${esc(loc.body)}</span></p><div class="olano-location-actions"><a class="olano-route" href="${esc(loc.routeUrl)}" target="_blank" rel="noopener"><span data-cms-setting="route_label">${esc(loc.routeLabel)}</span></a><a class="olano-map" href="${esc(loc.mapUrl)}" target="_blank" rel="noopener"><span data-cms-setting="map_label">${esc(loc.mapLabel)}</span></a></div></div></div>`;
-    footer.parentNode.insertBefore(el,footer);
     try{
       const api=window.OLANO_BUILDER_API,cfg=window.OLANO_BUSINESS_CONFIG;
       if(api&&cfg){api.reapply?api.reapply(cfg):(api.registerVisualElements(cfg),api.applyVisualElementStyles(cfg));}
