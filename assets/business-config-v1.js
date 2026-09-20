@@ -428,7 +428,10 @@
     if(x!==null||y!==null)el.style.translate=(x||0)+'px '+(y||0)+'px';
     if(w!==null&&w>0)el.style.width=w+'px';
     if(h!==null&&h>0)el.style.height=h+'px';
-    if(fs!==null&&fs>0){el.style.fontSize=fs+'px';el.dataset.builderElementTextStyle='1';}
+    if(fs!==null&&fs>0){
+      el.style.fontSize=fs+'px';el.dataset.builderElementTextStyle='1';
+      if(el.tagName==='svg'){el.style.width=fs+'px';el.style.height=fs+'px';}
+    }
     if(cfg.fontFamily){el.style.fontFamily=String(cfg.fontFamily);el.dataset.builderElementTextStyle='1';}
     if(cfg.fontWeight){el.style.fontWeight=String(cfg.fontWeight);el.dataset.builderElementTextStyle='1';}
     if(radius!==null&&radius>=0)el.style.borderRadius=radius+'px';
