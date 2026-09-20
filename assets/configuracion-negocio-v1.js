@@ -60,6 +60,12 @@ const state = {
   undoToastTimer: null,
   builderMultiSelection: [],
   builderContext: null,
+  inspectorDockOpen: false,
+  builderGrid: {
+    desktop:{show:true,x:16,y:16},
+    tablet:{show:true,x:16,y:16},
+    mobile:{show:true,x:12,y:12}
+  },
   publicConfig: null
 };
 
@@ -973,6 +979,7 @@ function contentSlotFields(slot){
       builderSetting('Texto del botón WhatsApp','whatsapp_label',st.whatsapp_label||'WhatsApp')+
       builderSetting('Texto del botón de reserva','booking_label',st.booking_label||'Agendar cita')+
       builderSetting('Nota inferior','note',st.note||'','textarea',700)+
+      builderSetting('Texto legal / informativo','policy_note',st.policy_note||'','textarea',1200)+
       '<div class="builder-linked-note">Dirección, horarios y teléfono se mantienen conectados a datos reales para evitar contradicciones.</div>';
   }
   return builderField('Título','title',slot.title||'')+builderField('Texto','body',slot.body||'','textarea',1200);
@@ -1038,6 +1045,11 @@ function wireContentEditor(){
   const box=$('contentEditorList'); if(!box)return;
   box.querySelectorAll('.builder-section-card').forEach((card)=>{
     const form=card.querySelector('form');
+    card.addEventListener('toggle',()=>{
+      if(!card.open)return;
+      box.querySelectorAll('.builder-section-card[open]').forEach(other=>{if(other!==card)other.open=false;});
+      const brand=document.querySelector('.builder-brand-card');if(brand)brand.open=false;
+    });
     form?.addEventListener('submit',(e)=>guard(()=>saveContentSlot(e,card)));
     card.querySelectorAll('input,textarea').forEach((input)=>input.addEventListener('input',()=>{
       consumeUndoArm(input);
@@ -2479,6 +2491,10 @@ function bindEvents() {
   $('newPromotionBtn').addEventListener('click',()=>openPromotion()); $('cancelPromotionBtn').addEventListener('click',resetPromotionForm);
   $('promotionForm').addEventListener('submit',(e)=>guard(()=>savePromotion(e)));
   $('brandingForm').addEventListener('submit',(e)=>guard(()=>saveBranding(e)));
+  document.querySelector('.builder-brand-card')?.addEventListener('toggle',(e)=>{
+    if(!e.currentTarget.open)return;
+    document.querySelectorAll('.builder-section-card[open]').forEach(card=>card.open=false);
+  });
   ['brandPrimary','brandSecondary','brandAccent','brandBackground'].forEach((id)=>$(id).addEventListener('input',(e)=>{
     consumeUndoArm(e.currentTarget);
     stageBrandingControls();
