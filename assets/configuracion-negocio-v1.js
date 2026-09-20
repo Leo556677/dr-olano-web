@@ -989,6 +989,7 @@ function fillPaletteSelect(select,includeNone=false){
   if(!select)return;
   const current=select.value;
   const opts=[
+    ['inherit','Mantener actual'],
     ...(includeNone?[['none','Sin borde']]:[]),
     ['primary','Principal'],['secondary','Secundario'],['accent','Acento'],['background','Fondo'],['white','Blanco']
   ];
@@ -998,9 +999,10 @@ function fillPaletteSelect(select,includeNone=false){
 function setupInspectorPalette(){
   fillPaletteSelect($('inspectBgFrom'));fillPaletteSelect($('inspectBgTo'));fillPaletteSelect($('inspectColor'));fillPaletteSelect($('inspectBorder'),true);
 }
-function inspectorNumber(id,value){
+function inspectorNumber(id,value,placeholder=null){
   const el=$(id); if(!el)return;
   el.value=value==null||value===''?'':String(Math.round(Number(value)*100)/100);
+  el.placeholder=placeholder==null?'':String(Math.round(Number(placeholder)*100)/100);
 }
 function selectVisualElement(el){
   if(state.builderMode!=='edit'||!el)return;
@@ -1016,18 +1018,18 @@ function selectVisualElement(el){
   $('elementInspector').hidden=false;
   $('inspectorTitle').textContent=el.dataset.cmsElementLabel||elementKey;
   $('inspectorMeta').textContent=contentSlotLabel(builderSlotByKey(slotKey)||{slot_key:slotKey})+' · '+state.builderDevice.toUpperCase();
-  inspectorNumber('inspectWidth',cfg.w??rect.width);
-  inspectorNumber('inspectHeight',cfg.h??rect.height);
-  inspectorNumber('inspectFontSize',cfg.fontSize ?? (parseFloat(cs.fontSize)||null));
-  inspectorNumber('inspectRadius',cfg.radius ?? (parseFloat(cs.borderRadius)||0));
-  $('inspectBgMode').value=cfg.bgMode||'none';
-  $('inspectBgFrom').value=cfg.bgFrom||'primary';
-  $('inspectBgTo').value=cfg.bgTo||'secondary';
-  inspectorNumber('inspectGradientAngle',cfg.gradientAngle??135);
-  $('inspectColor').value=cfg.colorToken||'primary';
-  $('inspectBorder').value=cfg.borderToken||'none';
-  inspectorNumber('inspectOpacity',cfg.opacity??100);
-  inspectorNumber('inspectPadding',cfg.padding ?? (parseFloat(cs.paddingTop)||0));
+  inspectorNumber('inspectWidth',cfg.w,rect.width);
+  inspectorNumber('inspectHeight',cfg.h,rect.height);
+  inspectorNumber('inspectFontSize',cfg.fontSize,parseFloat(cs.fontSize)||null);
+  inspectorNumber('inspectRadius',cfg.radius,parseFloat(cs.borderRadius)||0);
+  $('inspectBgMode').value=cfg.bgMode||'inherit';
+  $('inspectBgFrom').value=cfg.bgFrom||'inherit';
+  $('inspectBgTo').value=cfg.bgTo||'inherit';
+  inspectorNumber('inspectGradientAngle',cfg.gradientAngle,135);
+  $('inspectColor').value=cfg.colorToken||'inherit';
+  $('inspectBorder').value=cfg.borderToken||'inherit';
+  inspectorNumber('inspectOpacity',cfg.opacity,100);
+  inspectorNumber('inspectPadding',cfg.padding,parseFloat(cs.paddingTop)||0);
   updateInspectorVisibility();
   showElementOverlay(el);
 }
@@ -1036,17 +1038,27 @@ function restoreBuilderSelection(){
   const el=visualElement(sel.slotKey,sel.elementKey);if(el)selectVisualElement(el);
 }
 function updateInspectorVisibility(){
-  const gradient=$('inspectBgMode')?.value==='gradient';
+  const mode=$('inspectBgMode')?.value||'inherit';
+  const gradient=mode==='gradient';
   if($('inspectBgToWrap'))$('inspectBgToWrap').hidden=!gradient;
   if($('inspectAngleWrap'))$('inspectAngleWrap').hidden=!gradient;
 }
 function readInspectorConfig(){
   const n=(id)=>{const el=$(id);if(!el||String(el.value).trim()==='')return null;const x=Number(el.value);return Number.isFinite(x)?x:null};
+  const bgMode=$('inspectBgMode')?.value||'inherit';
+  const bgFrom=$('inspectBgFrom')?.value||'inherit';
+  const bgTo=$('inspectBgTo')?.value||'inherit';
+  const colorToken=$('inspectColor')?.value||'inherit';
+  const borderToken=$('inspectBorder')?.value||'inherit';
   return {
     w:n('inspectWidth'),h:n('inspectHeight'),fontSize:n('inspectFontSize'),radius:n('inspectRadius'),
-    bgMode:$('inspectBgMode')?.value||'none',bgFrom:$('inspectBgFrom')?.value||'primary',bgTo:$('inspectBgTo')?.value||'secondary',
-    gradientAngle:n('inspectGradientAngle')??135,colorToken:$('inspectColor')?.value||'primary',
-    borderToken:$('inspectBorder')?.value||'none',opacity:n('inspectOpacity')??100,padding:n('inspectPadding')??0
+    bgMode:bgMode==='inherit'?null:bgMode,
+    bgFrom:bgMode==='inherit'||bgFrom==='inherit'?null:bgFrom,
+    bgTo:bgMode!=='gradient'||bgTo==='inherit'?null:bgTo,
+    gradientAngle:bgMode==='gradient'?n('inspectGradientAngle'):null,
+    colorToken:colorToken==='inherit'?null:colorToken,
+    borderToken:borderToken==='inherit'?null:borderToken,
+    opacity:n('inspectOpacity'),padding:n('inspectPadding')
   };
 }
 function mergeInspectorConfig(){
