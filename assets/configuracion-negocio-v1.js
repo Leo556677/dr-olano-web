@@ -335,7 +335,7 @@ async function publishEditorDraft(){
   const {data,error}=await sb.rpc('publish_visual_editor',{
     p_negocio_id:state.business.id,p_branding:branding,p_slots:slotsForPublish()
   });
-  if(error)throw error;
+  if(error){updateEditorDirty();throw error;}
   state.previewLogoUrl=null;
   setEditorBaseline();
   setStatus('Cambios publicados en la web.','ok');
