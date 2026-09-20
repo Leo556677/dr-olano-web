@@ -406,6 +406,12 @@
   }
 
 
+  function safeBuilderHref(raw){
+    const href=String(raw||'').trim();
+    if(!href)return null;
+    if(/^https?:\/\//i.test(href)||/^mailto:/i.test(href)||/^tel:/i.test(href)||/^#/.test(href)||/^\/(?!\/)/.test(href))return href;
+    return null;
+  }
   function builderDevice(){
     if(['desktop','tablet','mobile'].includes(window.__OLANO_PREVIEW_DEVICE))return window.__OLANO_PREVIEW_DEVICE;
     const w=window.innerWidth||document.documentElement.clientWidth||1200;
@@ -486,10 +492,13 @@
     }
     if(el.tagName==='A'){
       if(el.dataset.builderBaseHref==null)el.dataset.builderBaseHref=el.getAttribute('href')||'';
-      if(cfg.linkHref&&!el.dataset.builderProtectedLink){el.setAttribute('href',String(cfg.linkHref));el.setAttribute('target',cfg.linkTarget||'_self');}
+      const safe=safeBuilderHref(cfg.linkHref);
+      if(safe&&!el.dataset.builderProtectedLink){el.setAttribute('href',safe);el.setAttribute('target',cfg.linkTarget||'_self');}
       else if(el.dataset.builderBaseHref!=null)el.setAttribute('href',el.dataset.builderBaseHref);
     }else if(cfg.linkHref&&!el.dataset.builderProtectedLink){
-      el.dataset.builderLink=String(cfg.linkHref);el.dataset.builderLinkTarget=cfg.linkTarget||'_self';el.style.cursor='pointer';
+      const safe=safeBuilderHref(cfg.linkHref);
+      if(safe){el.dataset.builderLink=safe;el.dataset.builderLinkTarget=cfg.linkTarget||'_self';el.style.cursor='pointer';}
+      else{delete el.dataset.builderLink;delete el.dataset.builderLinkTarget;}
     }else{
       delete el.dataset.builderLink;delete el.dataset.builderLinkTarget;
     }
