@@ -1353,16 +1353,30 @@ function applyTypographyFromInspector(){
   editorTrace('TYPOGRAPHY_CHANGE','OK',{scope,font:font,weight,color,scale,slot:slot?.slot_key||null});
 }
 function selectedElementSupportsImage(el){return el?.tagName==='IMG';}
-function scrollLeftEditorToSelection(slotKey){
+function scrollLeftEditorToSelection(slotKey,previewEl=null){
   const sidebar=document.querySelector('.visual-builder-sidebar');if(!sidebar)return;
-  const inspector=$('elementInspector'),card=$('contentEditorList')?.querySelector('[data-builder-slot="'+CSS.escape(slotKey)+'"]');
-  const target=inspector&&!inspector.hidden?inspector:card;if(!target)return;
-  const top=Math.max(0,target.offsetTop-12);
-  sidebar.scrollTo({top,behavior:'smooth'});
+  const card=$('contentEditorList')?.querySelector('[data-builder-slot="'+CSS.escape(slotKey)+'"]');
+  if(card)card.open=true;
+  let target=null;
+  if(card&&previewEl?.dataset?.cmsField){
+    target=card.querySelector('[data-content-field="'+CSS.escape(previewEl.dataset.cmsField)+'"]');
+  }
+  if(card&&previewEl?.dataset?.cmsSetting){
+    const name=previewEl.dataset.cmsSetting;
+    const faq=name.match(/^faq\.(\d+)\.(q|a)$/);
+    if(faq){
+      target=card.querySelector(faq[2]==='q'?'[data-faq-q][data-faq-index="'+faq[1]+'"]':'[data-faq-a][data-faq-index="'+faq[1]+'"]');
+    }else target=card.querySelector('[data-setting-field="'+CSS.escape(name)+'"]');
+  }
+  if(!target)target=$('elementInspector')&&!$('elementInspector').hidden?$('elementInspector'):card;
+  if(!target)return;
+  const sideRect=sidebar.getBoundingClientRect(),targetRect=target.getBoundingClientRect();
+  const top=sidebar.scrollTop+(targetRect.top-sideRect.top)-Math.max(12,(sidebar.clientHeight-targetRect.height)/3);
+  sidebar.scrollTo({top:Math.max(0,top),behavior:'smooth'});
   target.classList.remove('admin-left-flash');void target.offsetWidth;target.classList.add('admin-left-flash');
   setTimeout(()=>target.classList.remove('admin-left-flash'),1400);
 }
-function selectVisualElement(el){
+function selectVisualElement(el,scrollLeft=true){
   if(state.builderMode!=='edit'||!el)return;
   const frame=visualFrame(),api=frame?.contentWindow?.OLANO_BUILDER_API;
   const slotKey=api?.builderSlotOfElement?.(el)||el.closest('[data-cms-slot]')?.dataset.cmsSlot||el.dataset.cmsSlotOwner;
@@ -1405,12 +1419,12 @@ function selectVisualElement(el){
   $('inspectLinkTarget').value=contentCfg.linkTarget||(el.tagName==='A'&&el.target?el.target:'_self');
   updateInspectorVisibility();
   showElementOverlay(el);
-  scrollLeftEditorToSelection(slotKey);
+  if(scrollLeft)scrollLeftEditorToSelection(slotKey,el);
   editorTrace('ELEMENT_SELECT','OK',{slot:slotKey,element:elementKey,label:el.dataset.cmsElementLabel||elementKey,tag:el.tagName});
 }
 function restoreBuilderSelection(){
   const sel=state.builderSelection;if(!sel||state.builderMode!=='edit')return;
-  const el=visualElement(sel.slotKey,sel.elementKey);if(el)selectVisualElement(el);
+  const el=visualElement(sel.slotKey,sel.elementKey);if(el)selectVisualElement(el,false);
 }
 function updateInspectorVisibility(){
   const mode=$('inspectBgMode')?.value||'inherit';
