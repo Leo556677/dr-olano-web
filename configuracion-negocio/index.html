@@ -550,6 +550,31 @@
     </main>
   </div>
 
+  <div id="editorPublishBar" class="editor-publish-bar" hidden>
+    <button id="discardDraftBtn" class="button ghost" type="button">Descartar borrador</button>
+    <div class="editor-publish-copy">
+      <strong id="editorPendingCount">0 cambios pendientes</strong>
+      <small>Nada se publica hasta que pulses el botón.</small>
+    </div>
+    <button id="publishEditorBtn" class="button primary" type="button">Publicar cambios</button>
+  </div>
+
+  <div id="undoToast" class="undo-toast" hidden role="status" aria-live="polite">
+    <div><strong id="undoToastTitle">Cambio deshecho</strong><small id="undoToastCopy">Se restauró el estado anterior.</small></div>
+    <button id="redoUndoBtn" type="button">Rehacer</button>
+  </div>
+
+  <div id="builderIconBankModal" class="builder-asset-modal" hidden>
+    <div class="builder-asset-dialog" role="dialog" aria-modal="true" aria-labelledby="builderIconBankTitle">
+      <div class="card-head">
+        <div><span class="step">✦</span><h3 id="builderIconBankTitle">Banco de iconos SVG</h3></div>
+        <button id="closeIconBankBtn" class="button mini ghost" type="button">Cerrar</button>
+      </div>
+      <p class="muted">Elige un icono para insertarlo dentro del contenedor seleccionado. Su color seguirá la paleta del negocio.</p>
+      <div id="builderIconBankGrid" class="builder-icon-bank-grid"></div>
+    </div>
+  </div>
+
   <script type="module" src="/assets/configuracion-negocio-v1.js?v=20260920-10"></script>
 </body>
 </html>
