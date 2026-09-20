@@ -540,6 +540,21 @@
     markBuilderElement('site.footer','booking_button',footer?.querySelector('.footer-book'),'Botón Agendar');
     markBuilderElement('site.footer','booking_icon',footer?.querySelector('.footer-book svg'),'Icono Agendar');
     markBuilderElement('site.footer','note',footer?.querySelector('.footer-note'),'Nota');
+
+    Object.entries(slots).forEach(([slot,root])=>{
+      if(!root)return;
+      const register=(selector,prefix,label)=>{
+        let n=0;
+        root.querySelectorAll(selector).forEach(el=>{
+          if(el.dataset.cmsElement)return;
+          markBuilderElement(slot,prefix+'.'+(n++),el,label+' '+n);
+        });
+      };
+      register('button,a','action','Botón / enlace');
+      register('img','image','Imagen');
+      register('svg.icon,.route-icon,.trust-pro-icon','icon','Icono');
+      register('article,.route,.unit,details,.trust-chip,.trust > div','container','Contenedor');
+    });
   }
   function builderSlotOfElement(el){
     const root=el?.closest('[data-cms-slot]');
