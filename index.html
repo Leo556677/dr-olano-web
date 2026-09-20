@@ -1,7 +1,7 @@
 ---
 permalink: /
 ---
-{% capture ga4_head %}<head>{% include analytics-ga4.html %}{% endcapture %}
+{% capture ga4_head %}<head>{% include analytics-ga4.html %}{% include analytics-tiktok.html %}{% endcapture %}
 {% capture v28_part01 %}{% include v28/part01.html %}{% endcapture %}{{ v28_part01
   | replace: '<head>', ga4_head
   | replace: 'assets/logo-isotipo-128.png', 'assets/logo-isotipo.png'
