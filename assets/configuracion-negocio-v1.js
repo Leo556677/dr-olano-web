@@ -1147,8 +1147,17 @@ function selectVisualElement(el){
   $('inspectBorder').value=cfg.borderToken||'inherit';
   inspectorNumber('inspectOpacity',cfg.opacity,100);
   inspectorNumber('inspectPadding',cfg.padding,parseFloat(cs.paddingTop)||0);
+  $('inspectTypographyScope').value='element';
+  populateTypographyControls();
+  const textTarget=selectedTextTarget(el);
+  $('inspectTextWrap').hidden=!textTarget;
+  if(textTarget)$('inspectText').value=cfg.textOverride??String(textTarget.textContent||'').trim();
+  const imageSupported=selectedElementSupportsImage(el);
+  $('inspectImageWrap').hidden=!imageSupported;
+  if($('inspectImageFile'))$('inspectImageFile').value='';
   updateInspectorVisibility();
   showElementOverlay(el);
+  editorTrace('ELEMENT_SELECT','OK',{slot:slotKey,element:elementKey,label:el.dataset.cmsElementLabel||elementKey,tag:el.tagName});
 }
 function restoreBuilderSelection(){
   const sel=state.builderSelection;if(!sel||state.builderMode!=='edit')return;
@@ -1165,18 +1174,28 @@ function readInspectorConfig(){
   const bgMode=$('inspectBgMode')?.value||'inherit';
   const bgFrom=$('inspectBgFrom')?.value||'inherit';
   const bgTo=$('inspectBgTo')?.value||'inherit';
+  const scope=$('inspectTypographyScope')?.value||'element';
   const colorToken=$('inspectColor')?.value||'inherit';
   const borderToken=$('inspectBorder')?.value||'inherit';
-  return {
+  const font=$('inspectFontFamily')?.value||'inherit';
+  const weight=$('inspectFontWeight')?.value||'inherit';
+  const out={
     w:n('inspectWidth'),h:n('inspectHeight'),fontSize:n('inspectFontSize'),radius:n('inspectRadius'),
     bgMode:bgMode==='inherit'?null:bgMode,
     bgFrom:bgMode==='inherit'||bgFrom==='inherit'?null:bgFrom,
     bgTo:bgMode!=='gradient'||bgTo==='inherit'?null:bgTo,
     gradientAngle:bgMode==='gradient'?n('inspectGradientAngle'):null,
-    colorToken:colorToken==='inherit'?null:colorToken,
+    colorToken:scope==='element'&&colorToken!=='inherit'?colorToken:null,
     borderToken:borderToken==='inherit'?null:borderToken,
-    opacity:n('inspectOpacity'),padding:n('inspectPadding')
+    opacity:n('inspectOpacity'),padding:n('inspectPadding'),
+    fontFamily:scope==='element'&&font!=='inherit'?font:null,
+    fontWeight:scope==='element'&&weight!=='inherit'?weight:null
   };
+  if(!$('inspectTextWrap')?.hidden){
+    const value=$('inspectText').value;
+    out.textOverride=value;
+  }
+  return out;
 }
 function mergeInspectorConfig(){
   const sel=state.builderSelection;if(!sel)return null;
