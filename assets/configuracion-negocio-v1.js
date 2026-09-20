@@ -1394,7 +1394,7 @@ function selectVisualElement(el){
   const imageSupported=selectedElementSupportsImage(el);
   $('inspectImageWrap').hidden=!imageSupported;
   if($('inspectImageFile'))$('inspectImageFile').value='';
-  const protectedLink=el.dataset.builderProtectedLink==='1';
+  const protectedLink=el.dataset.builderProtectedLink==='1'||Boolean(el.closest('[data-builder-protected-link="1"]'));
   $('inspectLinkHref').disabled=protectedLink;
   $('inspectLinkTarget').disabled=protectedLink;
   $('inspectLinkHelp').textContent=protectedLink?'Este enlace está protegido por la lógica del sistema y no se reemplaza desde el editor.':'Déjalo vacío para no agregar un enlace.';
@@ -1494,7 +1494,7 @@ function resetSelectedElementStyle(){
 function setSelectedElementLinkOverride(){
   const sel=state.builderSelection;if(!sel)return;
   const el=visualElement(sel.slotKey,sel.elementKey);if(!el)return;
-  if(el.dataset.builderProtectedLink==='1'){
+  if(el.dataset.builderProtectedLink==='1'||el.closest('[data-builder-protected-link="1"]')){
     editorTrace('LINK_CHANGE_BLOCKED','ERROR',{slot:sel.slotKey,element:sel.elementKey,message:'Enlace protegido por sistema'});
     return;
   }
