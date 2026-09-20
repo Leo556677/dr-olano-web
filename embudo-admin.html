@@ -1,5 +1,99 @@
 ---
 permalink: /embudo-admin/
 ---
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer"><title>Embudo Dr. Olano</title><style>:root{--navy:#0c2740;--teal:#16a6a1;--bg:#f4f7f9;--card:#fff;--muted:#647481;--line:#dce5ea;--ok:#16794d;--warn:#976000;--shadow:0 10px 30px rgba(12,39,64,.08)}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#182733;font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}.wrap{max-width:1100px;margin:auto;padding:20px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:18px;margin-bottom:16px}.login{max-width:430px;margin:8vh auto}.top,.brand,.actions{display:flex;align-items:center;gap:12px}.top{justify-content:space-between}.brand img{width:44px;height:44px;border-radius:12px}.brand h1{margin:0;color:var(--navy);font-size:20px}.sub{color:var(--muted);font-size:13px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.metric{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}.metric strong{display:block;color:var(--navy);font-size:28px}.metric span{color:var(--muted)}.row{display:flex;gap:8px;flex-wrap:wrap}.chip{padding:7px 9px;border-radius:999px;background:#eef7f6;color:#176c66;font-weight:750;font-size:12px}button,a.btn{border:0;border-radius:11px;padding:10px 14px;font-weight:750;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}.primary{background:var(--navy);color:#fff}.ghost{background:#fff;border:1px solid var(--line);color:var(--navy)}input{width:100%;padding:11px;border:1px solid #cbd8df;border-radius:10px;margin:6px 0 10px}.hidden{display:none!important}.msg{padding:10px;border-radius:10px;margin-top:10px;background:#eef5f8}.msg.err{background:#fff0f2;color:#ad2637}@media(max-width:700px){.wrap{padding:12px}.grid{grid-template-columns:repeat(2,1fr)}.top{align-items:flex-start;flex-direction:column}.actions{width:100%}.actions>*{flex:1}}</style><script defer src="/assets/metricool-tracker-v2.js?v=20260920-1"></script>
-</head><body><div class="wrap"><section id="login" class="card login"><div class="brand"><img src="/assets/logo-isotipo-128.png" alt="Dr. Olano"><div><h1>Embudo Dr. Olano</h1><div class="sub">Acceso interno protegido</div></div></div><label>Correo</label><input id="email" type="email" autocomplete="username"><label>Contraseña</label><input id="password" type="password" autocomplete="current-password"><button id="loginBtn" class="primary" style="width:100%">Ingresar</button><div id="loginMsg" class="msg hidden"></div></section><main id="app" class="hidden"><header class="top"><div class="brand"><img src="/assets/logo-isotipo-128.png" alt="Dr. Olano"><div><h1>Embudo de conversión</h1><div id="user" class="sub">Dr. Olano · últimos 30 días</div></div></div><div class="actions"><a class="btn ghost" href="/agenda-admin/">Agenda</a><button id="refresh" class="primary">Actualizar</button><button id="logout" class="ghost">Salir</button></div></header><section class="card"><div class="grid" id="grid"></div><div class="row" id="chips" style="margin-top:12px"></div><div class="sub" style="margin-top:12px">Este embudo es propio: no almacena nombre, celular, comentarios ni el servicio médico elegido. “Atendido” aparece cuando la cita se marca como Completada en la Agenda.</div></section><section class="card"><strong style="color:var(--navy)">Cómo leerlo</strong><div class="sub" style="margin-top:6px">Visitas → servicio elegido → reserva iniciada → cita registrada → WhatsApp abierto → paciente atendido. Los clics y las citas se mantienen separados.</div></section></main></div><script type="module">import{createClient}from'https://esm.sh/@supabase/supabase-js@2';const sb=createClient('https://xnlzsgulskqyecfgzhwa.supabase.co','sb_publishable_s9YdJaMe_ll4QehPkADlKQ_KkuvWt32',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}}),$=id=>document.getElementById(id);const order=['landing_view','service_selected','booking_started','booking_registered','whatsapp_opened','attended'],labels={landing_view:'Visitas',service_selected:'Servicio elegido',booking_started:'Reserva iniciada',booking_registered:'Cita registrada',whatsapp_opened:'WhatsApp abierto',attended:'Paciente atendido'};function msg(t,e=false){$('loginMsg').textContent=t;$('loginMsg').className='msg'+(e?' err':'');$('loginMsg').classList.toggle('hidden',!t)}async function load(){const{data,error}=await sb.rpc('admin_dr_olano_funnel_resumen',{p_days:30});if(error){$('grid').innerHTML='<div class="sub">No se pudo leer el embudo.</div>';return}const totals=Object.fromEntries(['landing_view','service_selected','offer_accepted','offer_declined','booking_started','booking_registered','whatsapp_opened','attended','no_show'].map(k=>[k,0])),src={meta:0,tiktok:0,google:0,direct:0,organic:0,other:0,unknown:0};for(const r of data||[]){if(r.event_name in totals)totals[r.event_name]+=Number(r.total||0);if(r.event_name==='landing_view'&&r.source in src)src[r.source]+=Number(r.total||0)}$('grid').innerHTML=order.map(k=>`<div class="metric"><strong>${totals[k]}</strong><span>${labels[k]}</span></div>`).join('');$('chips').innerHTML=`<span class="chip">Oferta: ${totals.offer_accepted} aceptaron · ${totals.offer_declined} rechazaron</span><span class="chip">Meta ${src.meta}</span><span class="chip">TikTok ${src.tiktok}</span><span class="chip">Google ${src.google}</span><span class="chip">Directo ${src.direct}</span><span class="chip">No asistieron ${totals.no_show}</span>`}async function boot(){const{data:{session}}=await sb.auth.getSession();$('login').classList.toggle('hidden',!!session);$('app').classList.toggle('hidden',!session);if(session){$('user').textContent=`${session.user.email} · últimos 30 días`;await load()}}$('loginBtn').onclick=async()=>{msg('Ingresando…');const{error}=await sb.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){msg(error.message,true);return}msg('');boot()};$('refresh').onclick=load;$('logout').onclick=async()=>{await sb.auth.signOut();location.reload()};sb.auth.onAuthStateChange(()=>setTimeout(boot,0));boot();</script></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<title>Embudo Dr. Olano</title>
+<style>
+:root{--navy:#0c2740;--teal:#16a6a1;--bg:#f4f7f9;--card:#fff;--muted:#647481;--line:#dce5ea;--ok:#16794d;--warn:#976000;--shadow:0 10px 30px rgba(12,39,64,.08)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#182733;font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+.wrap{max-width:1240px;margin:auto;padding:20px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:18px;margin-bottom:16px}.login{max-width:430px;margin:8vh auto}
+.top,.brand,.actions,.filters{display:flex;align-items:center;gap:12px}.top{justify-content:space-between}.brand img{width:44px;height:44px;border-radius:12px}.brand h1{margin:0;color:var(--navy);font-size:20px}
+.sub{color:var(--muted);font-size:13px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.metric{border:1px solid var(--line);border-radius:14px;padding:14px;background:#fff}.metric strong{display:block;color:var(--navy);font-size:28px}.metric span{color:var(--muted)}
+.row{display:flex;gap:8px;flex-wrap:wrap}.chip{padding:7px 9px;border-radius:999px;background:#eef7f6;color:#176c66;font-weight:750;font-size:12px}
+button,a.btn,select{border:0;border-radius:11px;padding:10px 14px;font-weight:750;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.primary{background:var(--navy);color:#fff}.ghost{background:#fff;border:1px solid var(--line);color:var(--navy)}input{width:100%;padding:11px;border:1px solid #cbd8df;border-radius:10px;margin:6px 0 10px}.hidden{display:none!important}.msg{padding:10px;border-radius:10px;margin-top:10px;background:#eef5f8}.msg.err{background:#fff0f2;color:#ad2637}
+.section-title{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}.section-title h2{margin:0;color:var(--navy);font-size:17px}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}table{width:100%;border-collapse:collapse;min-width:980px}th,td{padding:11px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);background:#f8fafb;position:sticky;top:0}td strong{color:var(--navy)}td small{display:block;color:var(--muted);margin-top:2px}.num{text-align:right}.empty{text-align:center;color:var(--muted);padding:24px}
+@media(max-width:700px){.wrap{padding:12px}.grid{grid-template-columns:repeat(2,1fr)}.top{align-items:flex-start;flex-direction:column}.actions{width:100%;flex-wrap:wrap}.actions>*{flex:1}.section-title{flex-direction:column}.filters{width:100%}.filters select{flex:1}}
+</style>
+<script defer src="/assets/metricool-tracker-v2.js?v=20260920-1"></script>
+</head>
+<body>
+<div class="wrap">
+<section id="login" class="card login">
+  <div class="brand"><img src="/assets/logo-isotipo-128.png" alt="Dr. Olano"><div><h1>Embudo Dr. Olano</h1><div class="sub">Acceso interno protegido</div></div></div>
+  <label>Correo</label><input id="email" type="email" autocomplete="username">
+  <label>Contraseña</label><input id="password" type="password" autocomplete="current-password">
+  <button id="loginBtn" class="primary" style="width:100%">Ingresar</button><div id="loginMsg" class="msg hidden"></div>
+</section>
+<main id="app" class="hidden">
+<header class="top">
+  <div class="brand"><img src="/assets/logo-isotipo-128.png" alt="Dr. Olano"><div><h1>Embudo y atribución</h1><div id="user" class="sub">Dr. Olano</div></div></div>
+  <div class="actions"><a class="btn ghost" href="/agenda-admin/">Agenda</a><select id="days"><option value="7">7 días</option><option value="30" selected>30 días</option><option value="90">90 días</option></select><button id="refresh" class="primary">Actualizar</button><button id="logout" class="ghost">Salir</button></div>
+</header>
+
+<section class="card">
+  <div class="grid" id="grid"></div>
+  <div class="row" id="chips" style="margin-top:12px"></div>
+  <div class="sub" style="margin-top:12px">Embudo propio: no guarda nombre, celular, comentario ni servicio médico dentro de la tabla de analítica. La atribución conserva únicamente metadatos de marketing de campaña/anuncio. “Atendido” aparece cuando la cita se marca como Completada en la Agenda.</div>
+</section>
+
+<section class="card">
+  <div class="section-title"><div><h2>Atribución por campaña y creativo</h2><div class="sub">Se llena con UTMs y parámetros de anuncio desde nuevas visitas etiquetadas. No reconstruye campañas antiguas que llegaron sin esos parámetros.</div></div></div>
+  <div class="table-wrap"><table><thead><tr><th>Fuente</th><th>Campaña</th><th>Grupo</th><th>Anuncio / creativo</th><th class="num">Visitas</th><th class="num">Inicios</th><th class="num">Citas</th><th class="num">Atendidos</th><th class="num">Conv.</th></tr></thead><tbody id="attrBody"></tbody></table><div id="attrEmpty" class="empty hidden">Aún no hay visitas con parámetros de campaña en este periodo.</div></div>
+</section>
+
+<section class="card"><strong style="color:var(--navy)">Cómo leerlo</strong><div class="sub" style="margin-top:6px">Publicidad → visita → servicio elegido → reserva iniciada → cita registrada → WhatsApp → paciente atendido. TikTok/Metricool muestran inversión y rendimiento publicitario; este panel confirma lo que ocurrió dentro del embudo propio.</div></section>
+</main>
+</div>
+
+<script type="module">
+import{createClient}from'https://esm.sh/@supabase/supabase-js@2';
+const sb=createClient('https://xnlzsgulskqyecfgzhwa.supabase.co','sb_publishable_s9YdJaMe_ll4QehPkADlKQ_KkuvWt32',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const order=['landing_view','service_selected','booking_started','booking_registered','whatsapp_opened','attended'];
+const labels={landing_view:'Visitas',service_selected:'Servicio elegido',booking_started:'Reserva iniciada',booking_registered:'Cita registrada',whatsapp_opened:'WhatsApp abierto',attended:'Paciente atendido'};
+function msg(t,e=false){$('loginMsg').textContent=t;$('loginMsg').className='msg'+(e?' err':'');$('loginMsg').classList.toggle('hidden',!t)}
+function pct(a,b){return b?((a/b)*100).toFixed(1)+'%':'—'}
+function sourceLabel(s){return({tiktok:'TikTok',meta:'Meta',google:'Google',direct:'Directo',organic:'Orgánico',other:'Otro',unknown:'Desconocido'})[s]||s||'—'}
+async function load(){
+  const days=Number($('days').value||30);
+  $('refresh').disabled=true;
+  try{
+    const [{data,error},{data:attr,error:attrErr}]=await Promise.all([
+      sb.rpc('admin_dr_olano_funnel_resumen',{p_days:days}),
+      sb.rpc('admin_dr_olano_attribution_resumen',{p_days:days})
+    ]);
+    if(error)throw error;if(attrErr)throw attrErr;
+    const totals=Object.fromEntries(['landing_view','service_selected','offer_accepted','offer_declined','booking_started','booking_registered','whatsapp_opened','attended','no_show'].map(k=>[k,0]));
+    const src={meta:0,tiktok:0,google:0,direct:0,organic:0,other:0,unknown:0};
+    for(const r of data||[]){if(r.event_name in totals)totals[r.event_name]+=Number(r.total||0);if(r.event_name==='landing_view'&&r.source in src)src[r.source]+=Number(r.total||0)}
+    $('grid').innerHTML=order.map(k=>`<div class="metric"><strong>${totals[k]}</strong><span>${labels[k]}</span></div>`).join('');
+    $('chips').innerHTML=`<span class="chip">Oferta: ${totals.offer_accepted} aceptaron · ${totals.offer_declined} rechazaron</span><span class="chip">TikTok ${src.tiktok}</span><span class="chip">Meta ${src.meta}</span><span class="chip">Google ${src.google}</span><span class="chip">Directo ${src.direct}</span><span class="chip">No asistieron ${totals.no_show}</span>`;
+    const rows=Array.isArray(attr)?attr:[];
+    $('attrEmpty').classList.toggle('hidden',rows.length>0);
+    $('attrBody').innerHTML=rows.map(r=>{
+      const campaign=r.campaign_name||r.campaign_id||'Campaña etiquetada';
+      const group=r.adgroup_name||r.adgroup_id||'—';
+      const creative=r.ad_name||r.creative_name||r.ad_id||r.creative_id||'—';
+      const visits=Number(r.visits||0),bookings=Number(r.bookings||0);
+      return `<tr><td><strong>${esc(sourceLabel(r.source))}</strong><small>${esc(r.utm_medium||'')}</small></td><td><strong>${esc(campaign)}</strong><small>${esc(r.campaign_id||'')}</small></td><td>${esc(group)}<small>${esc(r.adgroup_id||'')}</small></td><td>${esc(creative)}<small>${esc(r.creative_id||r.ad_id||'')}${r.placement?' · '+esc(r.placement):''}</small></td><td class="num">${visits}</td><td class="num">${Number(r.booking_starts||0)}</td><td class="num"><strong>${bookings}</strong></td><td class="num">${Number(r.attended||0)}</td><td class="num">${pct(bookings,visits)}</td></tr>`
+    }).join('');
+    $('user').textContent=`${(await sb.auth.getUser()).data.user?.email||''} · últimos ${days} días`;
+  }catch(e){
+    $('grid').innerHTML='<div class="sub">No se pudo leer el embudo.</div>';
+    $('attrBody').innerHTML='';$('attrEmpty').classList.remove('hidden');
+  }finally{$('refresh').disabled=false}
+}
+async function boot(){const{data:{session}}=await sb.auth.getSession();$('login').classList.toggle('hidden',!!session);$('app').classList.toggle('hidden',!session);if(session)await load()}
+$('loginBtn').onclick=async()=>{msg('Ingresando…');const{error}=await sb.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){msg(error.message,true);return}msg('');boot()};
+$('refresh').onclick=load;$('days').onchange=load;$('logout').onclick=async()=>{await sb.auth.signOut();location.reload()};
+sb.auth.onAuthStateChange(()=>setTimeout(boot,0));boot();
+</script>
+</body></html>
