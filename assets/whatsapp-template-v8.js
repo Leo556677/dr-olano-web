@@ -36,8 +36,11 @@
       if(p.regular_price_pen==null)lines.push('🎁 Beneficio: *10% aplicado sobre el valor final evaluado*');
       if(o.proof_url)lines.push(`🔎 Verificar oferta: ${o.proof_url}`);
     }
+    let jornada=false;try{jornada=sessionStorage.getItem('olanoOrigen')==='jornada-cirugia-nov-2026'}catch{}
+    if(jornada)lines.push('🏥 *Evaluación para la Jornada de cirugía facial (18, 19 y 20 de noviembre)*');
     lines.push('> ℹ️ El valor final está sujeto a evaluación médica.','',`📅 Fecha: ${fmtDate(state.date)}`,`🕐 Hora: ${state.time||''}`);
     if(state.manageUrl)lines.push('',`🔗 Gestionar / reprogramar / cancelar: ${state.manageUrl}`);
+    if(jornada)lines.push('','💳 Para separar tu horario: envía *S/ 20* por Yape o BCP y la constancia en este chat.');
     lines.push('',`📍 Dirección: ${ADDRESS}`,`🗺️ Google Maps: ${MAP}`);
     return `https://wa.me/${phone}?text=${encodeURIComponent(lines.join('\n'))}`;
   }

@@ -1,0 +1,313 @@
+---
+---
+<!doctype html>
+<html lang="es">
+<head>
+{% include analytics-ga4.html %}{% include analytics-tiktok.html %}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Jornada de cirugía facial · 18, 19 y 20 de noviembre | Dr. Olano</title>
+<meta name="description" content="Jornada de cirugía facial con el Dr. Aldo Ronquillo en el consultorio del Dr. Olano, Carabayllo. 18, 19 y 20 de noviembre. Reserva tu evaluación previa.">
+<meta name="robots" content="noindex,follow">
+<meta name="theme-color" content="#0b2e4f">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Jornada de cirugía facial · Dr. Olano">
+<meta property="og:description" content="18, 19 y 20 de noviembre en Carabayllo. Reserva tu evaluación previa.">
+<meta property="og:image" content="https://doctorolano.pe/assets/jornada-cirugia-nov-2026.jpg">
+<meta property="og:url" content="https://doctorolano.pe/jornada">
+<link rel="icon" href="/assets/logo-isotipo-128.png">
+<link rel="preload" as="image" href="/assets/jornada-cirugia-nov-2026.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0b2e4f;--navy2:#061d33;--teal:#1aa79d;--teal2:#0f827a;--bg:#f4f7f8;--line:#dce6e9;--muted:#65737d;--white:#fff;--wa:#1e9f64;--radius:18px}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--navy2);background:var(--bg);line-height:1.55;-webkit-font-smoothing:antialiased;padding-bottom:84px}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;line-height:1.15;margin:0 0 .5em;color:var(--navy)}
+a{color:inherit}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+/* Header */
+.top{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);backdrop-filter:saturate(1.4) blur(8px);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:60px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:Fraunces,serif;font-weight:700;font-size:1.15rem;color:var(--navy)}
+.brand img{width:34px;height:34px}
+.nav .wa-mini{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-weight:600;font-size:.9rem;color:var(--wa);border:1.5px solid var(--wa);padding:7px 12px;border-radius:999px}
+/* Hero */
+.hero{padding:28px 0 8px}
+.hero-grid{display:grid;gap:28px;align-items:center}
+.eyebrow{display:inline-block;background:#e3f5f3;color:var(--teal2);font-weight:700;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;border-radius:999px;margin-bottom:12px}
+.hero h1{font-size:clamp(2rem,6vw,3.2rem)}
+.hero h1 em{font-style:normal;color:var(--teal)}
+.hero p.lead{font-size:1.06rem;color:#304453;margin:0 0 18px}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 22px;padding:0;list-style:none}
+.chips li{background:var(--white);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-weight:600;font-size:.95rem}
+.chips li b{color:var(--teal2)}
+.chips li.hot{background:var(--navy);color:#fff;border-color:var(--navy)}
+.chips li.hot b{color:#7fe3d9}
+/* Buttons */
+.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:0 22px;border-radius:14px;font-weight:700;font-size:1rem;text-decoration:none;border:0;cursor:pointer;transition:transform .12s ease,box-shadow .2s ease,opacity .2s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff;box-shadow:0 8px 22px rgba(26,167,157,.32)}
+.btn-wa{background:var(--wa);color:#fff}
+.btn-ghost{background:#fff;color:var(--navy);border:1.5px solid var(--line)}
+.btn.loading{pointer-events:none;opacity:.85}
+.btn.loading .lbl{visibility:hidden}
+.btn.loading::after{content:"";position:absolute;width:20px;height:20px;border:2.5px solid rgba(255,255,255,.55);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+.btn-ghost.loading::after{border-color:rgba(11,46,79,.25);border-top-color:var(--navy)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px}
+.note{font-size:.86rem;color:var(--muted);margin-top:10px}
+/* Media with loading effect (never a broken image) */
+.media{position:relative;border-radius:var(--radius);overflow:hidden;background:#e6eef0;box-shadow:0 18px 40px rgba(6,29,51,.14)}
+.media::before{content:"";position:absolute;inset:0;background:linear-gradient(100deg,#e6eef0 30%,#f4f9fa 50%,#e6eef0 70%);background-size:200% 100%;animation:shimmer 1.2s infinite}
+.media.ready::before{display:none}
+.media img{display:block;width:100%;height:auto;opacity:0;transition:opacity .35s ease}
+.media.ready img{opacity:1}
+.media .fallback{display:none;position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--navy);font-weight:600;text-align:center;padding:20px}
+.media.failed::before{display:none}
+.media.failed .fallback{display:flex}
+@keyframes shimmer{to{background-position:-200% 0}}
+.poster{aspect-ratio:2/3;max-width:440px;margin:0 auto;width:100%}
+/* Sections */
+section.block{padding:42px 0}
+section.block h2{font-size:clamp(1.5rem,4.2vw,2.1rem)}
+.sub{color:var(--muted);margin:-4px 0 22px}
+/* Video */
+.video-box{position:relative;max-width:420px;margin:0 auto;aspect-ratio:9/16;border-radius:var(--radius);overflow:hidden;background:var(--navy2);box-shadow:0 18px 40px rgba(6,29,51,.18)}
+.video-box video{width:100%;height:100%;object-fit:cover;display:block}
+.video-cover{position:absolute;inset:0;border:0;padding:0;cursor:pointer;background:var(--navy2)}
+.video-cover img{width:100%;height:100%;object-fit:cover;opacity:.55}
+.video-cover .play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:78px;height:78px;border-radius:50%;background:rgba(255,255,255,.95);display:grid;place-items:center;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.video-cover .play svg{margin-left:5px}
+.video-cover .cap{position:absolute;left:0;right:0;bottom:18px;color:#fff;font-weight:700;text-align:center;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+.video-cover.loading .play{animation:pulse .9s ease-in-out infinite}
+@keyframes pulse{50%{transform:translate(-50%,-50%) scale(.9)}}
+/* Steps */
+.steps{display:grid;gap:14px;counter-reset:s;padding:0;margin:0;list-style:none}
+.steps li{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px 18px 18px 70px;position:relative}
+.steps li::before{counter-increment:s;content:counter(s);position:absolute;left:18px;top:18px;width:36px;height:36px;border-radius:50%;background:var(--navy);color:#fff;font-weight:700;display:grid;place-items:center}
+.steps h3{font-family:Inter,sans-serif;font-size:1.05rem;margin:0 0 4px}
+.steps p{margin:0;color:#3b4f5e}
+/* Procedures */
+.cards{display:grid;gap:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.card .tag{display:inline-block;background:var(--navy);color:#fff;font-size:.75rem;font-weight:700;letter-spacing:.08em;padding:5px 10px;border-radius:999px;margin-bottom:10px}
+.card ul{margin:0;padding-left:18px}
+.card li{margin:4px 0}
+/* Payment */
+.pay{display:grid;gap:14px}
+.pay .card h3{font-family:Inter,sans-serif;font-size:1.05rem;margin:0 0 6px}
+.pay .num{font-size:1.15rem;font-weight:700;letter-spacing:.02em}
+.copy{margin-top:10px;min-height:40px;font-size:.9rem;padding:0 14px}
+.copy.ok{background:#e3f5f3;border-color:var(--teal);color:var(--teal2)}
+/* FAQ */
+.faq details{background:#fff;border:1px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden}
+.faq summary{list-style:none;cursor:pointer;padding:16px 48px 16px 18px;font-weight:600;position:relative}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:1.4rem;color:var(--teal2);transition:transform .2s}
+.faq details[open] summary::after{transform:translateY(-50%) rotate(45deg)}
+.faq .ans{padding:0 18px 16px;color:#3b4f5e}
+/* Final + footer */
+.final{background:var(--navy);color:#fff;border-radius:24px;padding:30px 22px;text-align:center}
+.final h2{color:#fff}
+.final p{color:#cfe0ea}
+footer{padding:30px 0 20px;color:var(--muted);font-size:.88rem;text-align:center}
+footer a{color:var(--teal2)}
+/* Sticky mobile CTA */
+.sticky{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(255,255,255,.97);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;gap:10px;box-shadow:0 -8px 24px rgba(6,29,51,.08)}
+.sticky .btn{flex:1;min-height:50px}
+.sticky .btn-wa{flex:0 0 54px;padding:0}
+@media (min-width:860px){
+  body{padding-bottom:0}
+  .sticky{display:none}
+  .hero-grid{grid-template-columns:1.1fr .9fr}
+  .cards{grid-template-columns:repeat(3,1fr)}
+  .pay{grid-template-columns:1fr 1fr}
+  .steps{grid-template-columns:repeat(3,1fr)}
+  .steps li{padding:64px 18px 18px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap nav">
+  <a class="brand" href="/"><img src="/assets/logo-isotipo-128.png" alt="" width="34" height="34"><span>Dr. Olano</span></a>
+  <a class="wa-mini js-wa" href="https://wa.me/51907108271" data-msg="Hola, tengo una consulta sobre la Jornada de cirugía facial del 18, 19 y 20 de noviembre.">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 3.5A11 11 0 0 0 3.3 17.2L2 22l4.9-1.3A11 11 0 1 0 20.5 3.5Zm-8.5 17a9 9 0 0 1-4.6-1.3l-.3-.2-2.9.8.8-2.8-.2-.3A9 9 0 1 1 12 20.5Zm5-6.7c-.3-.1-1.6-.8-1.9-.9-.3-.1-.4-.1-.6.1l-.9 1.1c-.2.2-.3.2-.6.1a7.4 7.4 0 0 1-3.6-3.2c-.3-.5.3-.4.8-1.4.1-.2 0-.3 0-.5l-.9-2c-.2-.5-.5-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.1.6.5-.1 1.6-.6 1.8-1.3.2-.6.2-1.1.2-1.3-.1-.1-.3-.2-.6-.3Z"/></svg>
+    Consultas
+  </a>
+</div></header>
+
+<main>
+<section class="hero"><div class="wrap hero-grid">
+  <div>
+    <span class="eyebrow">Jornada · Noviembre 2026</span>
+    <h1>Jornada de <em>cirugía facial</em> en Carabayllo</h1>
+    <p class="lead">Con el <b>Dr. Aldo Ronquillo</b>, médico invitado, en el consultorio del <b>Dr. Olano</b>.</p>
+    <ul class="chips">
+      <li>📅 <b>18, 19 y 20</b> de noviembre</li>
+      <li>🕘 9:00 a. m. a 7:00 p. m.</li>
+      <li class="hot">🏷️ <b>50 % de descuento</b> en la jornada</li>
+    </ul>
+    <div class="cta-row">
+      <a class="btn btn-primary js-book" href="/reserva-s?servicio=consulta"><span class="lbl">Reservar mi evaluación</span></a>
+      <a class="btn btn-ghost js-scroll" href="#como-funciona"><span class="lbl">¿Cómo funciona?</span></a>
+    </div>
+    <p class="note">Primero, una evaluación médica (S/ 70) hasta el 17 de noviembre. Solo mayores de 18 años.</p>
+  </div>
+  <div class="media poster js-media">
+    <picture>
+      <source srcset="/assets/jornada-cirugia-nov-2026.webp" type="image/webp">
+      <img src="/assets/jornada-cirugia-nov-2026.jpg" alt="Afiche: Jornada de cirugía facial con el Dr. Aldo Ronquillo y el Dr. Olano, 18, 19 y 20 de noviembre de 2026" width="1024" height="1536" fetchpriority="high">
+    </picture>
+    <div class="fallback">Jornada de cirugía facial<br>18, 19 y 20 de noviembre</div>
+  </div>
+</div></section>
+
+<!-- VIDEO: se muestra solo cuando data-video tiene archivo. No se descarga hasta tocar "play". -->
+<section class="block" id="video" data-video="" data-cover="/assets/jornada-cirugia-nov-2026.webp" hidden>
+  <div class="wrap">
+    <h2>Mira en 1 minuto cómo funciona</h2>
+    <p class="sub">Qué pasa el 18, 19 y 20, y cómo reservar tu evaluación.</p>
+    <div class="video-box">
+      <button class="video-cover js-play" type="button" aria-label="Reproducir video">
+        <img src="/assets/jornada-cirugia-nov-2026.webp" alt="" loading="lazy">
+        <span class="play"><svg width="30" height="30" viewBox="0 0 24 24" fill="#0b2e4f"><path d="M8 5v14l11-7z"/></svg></span>
+        <span class="cap">Toca para ver</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="como-funciona"><div class="wrap">
+  <h2>¿Cómo funciona?</h2>
+  <p class="sub">Tres pasos. Tu evaluación queda registrada al momento.</p>
+  <ol class="steps">
+    <li><h3>Reserva tu evaluación</h3><p>Elige día y hora aquí mismo, hasta el <b>17 de noviembre</b>. La evaluación cuesta <b>S/ 70</b>.</p></li>
+    <li><h3>Separa tu cita con S/ 20</h3><p>Yapea o transfiere <b>S/ 20</b> y envía la constancia por WhatsApp. Así tu horario queda separado para ti.</p></li>
+    <li><h3>Evaluación y fecha de cirugía</h3><p>El médico revisa tu caso y, si el procedimiento es para ti, te da tu cita para el <b>18, 19 o 20 de noviembre</b> con <b>50 % de descuento</b>.</p></li>
+  </ol>
+  <div class="cta-row" style="margin-top:22px"><a class="btn btn-primary js-book" href="/reserva-s?servicio=consulta"><span class="lbl">Reservar mi evaluación</span></a></div>
+</div></section>
+
+<section class="block" style="padding-top:10px"><div class="wrap">
+  <h2>Procedimientos de la jornada</h2>
+  <p class="sub">El procedimiento adecuado para ti se define en la evaluación médica.</p>
+  <div class="cards">
+    <div class="card"><span class="tag">MIRADA</span><ul><li>Blefaroplastia superior</li><li>Blefaroplastia inferior</li></ul></div>
+    <div class="card"><span class="tag">PERFIL</span><ul><li>Rinoplastia</li><li>Otoplastia</li><li>Lip lift de labios</li><li>Lipopapada</li></ul></div>
+    <div class="card"><span class="tag">ROSTRO</span><ul><li>Lifting facial</li><li>Bichectomía</li><li>Injerto de grasa en rostro (Microfat / Nanofat)</li></ul></div>
+  </div>
+</div></section>
+
+<!-- PAGO: completar con los datos reales de Yape y BCP antes de publicar -->
+<section class="block" id="separar" style="padding-top:10px"><div class="wrap">
+  <h2>Separa tu evaluación con S/ 20</h2>
+  <p class="sub">Después de reservar, envía la constancia por WhatsApp para confirmar tu horario.</p>
+  <div class="pay">
+    <div class="card"><h3>Yape</h3><div class="num" data-copy="981214007">981 214 007</div><div class="note">A nombre de: TITULAR_PENDIENTE</div><button class="btn btn-ghost copy js-copy" type="button"><span class="lbl">Copiar número</span></button></div>
+    <div class="card"><h3>BCP</h3><div class="num" data-copy="19190200628044">191-90200628044</div><div class="note">CCI: 00219119020062804456 · A nombre de: TITULAR_PENDIENTE</div><button class="btn btn-ghost copy js-copy" type="button"><span class="lbl">Copiar cuenta</span></button></div>
+  </div>
+</div></section>
+
+<section class="block faq" id="preguntas"><div class="wrap">
+  <h2>Preguntas frecuentes</h2>
+  <details><summary>¿Quién realiza las cirugías?</summary><div class="ans">El Dr. Aldo Ronquillo, médico invitado, en el consultorio del Dr. Olano.</div></details>
+  <details><summary>¿Por qué necesito una evaluación antes?</summary><div class="ans">Para revisar tu caso y tu salud, y confirmar si el procedimiento es adecuado para ti. En la evaluación se define el plan y el precio final con el descuento de la jornada.</div></details>
+  <details><summary>¿Cuánto cuesta?</summary><div class="ans">La evaluación cuesta S/ 70. Los procedimientos tienen 50 % de descuento durante la jornada; el precio exacto depende de tu caso y te lo damos en la evaluación.</div></details>
+  <details><summary>¿Cómo separo mi cita?</summary><div class="ans">Reserva tu evaluación aquí, yapea o transfiere S/ 20 y envía la constancia por WhatsApp al +51 907 108 271.</div></details>
+  <details><summary>¿Puedo enviar fotos antes de la evaluación?</summary><div class="ans">Sí. Envía por WhatsApp 2 fotos de tu rostro, una de frente y otra de perfil, con buena luz, sin filtros y con fondo simple. Sirven para una orientación inicial; tu caso se confirma en la evaluación presencial.</div></details>
+  <details><summary>¿Hasta cuándo puedo reservar la evaluación?</summary><div class="ans">Hasta el 17 de noviembre. La jornada es el 18, 19 y 20 de noviembre, de 9:00 a. m. a 7:00 p. m.</div></details>
+  <details><summary>¿Dónde es?</summary><div class="ans">Consultorio del Dr. Olano: Av. Pacayal 1243, Carabayllo. <a href="https://maps.app.goo.gl/avA3W5SDPHi3XNqd6" target="_blank" rel="noopener">Ver en Google Maps</a></div></details>
+  <details><summary>¿Puedo cambiar el día de mi evaluación?</summary><div class="ans">Sí. Al reservar recibes un enlace para gestionar o reprogramar tu cita.</div></details>
+  <details><summary>¿Hay edad mínima?</summary><div class="ans">Sí. Solo atendemos a mayores de 18 años.</div></details>
+  <details><summary>Tengo otra duda</summary><div class="ans">Escríbenos por WhatsApp y te respondemos. <a class="js-wa" href="https://wa.me/51907108271" data-msg="Hola, tengo una consulta sobre la Jornada de cirugía facial del 18, 19 y 20 de noviembre.">Escribir por WhatsApp</a></div></details>
+</div></section>
+
+<section class="block" style="padding-top:0"><div class="wrap">
+  <div class="final">
+    <h2>Reserva tu evaluación</h2>
+    <p>18, 19 y 20 de noviembre · 50 % de descuento en la jornada</p>
+    <a class="btn btn-primary js-book" href="/reserva-s?servicio=consulta"><span class="lbl">Elegir día y hora</span></a>
+  </div>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+  Consultorio del Dr. Olano · Av. Pacayal 1243, Carabayllo · WhatsApp +51 907 108 271<br>
+  <a href="/privacidad">Privacidad</a> · <a href="/">doctorolano.pe</a>
+</div></footer>
+
+<div class="sticky">
+  <a class="btn btn-primary js-book" href="/reserva-s?servicio=consulta"><span class="lbl">Reservar evaluación</span></a>
+  <a class="btn btn-wa js-wa" href="https://wa.me/51907108271" data-msg="Hola, tengo una consulta sobre la Jornada de cirugía facial del 18, 19 y 20 de noviembre." aria-label="Escribir por WhatsApp"><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M20.5 3.5A11 11 0 0 0 3.3 17.2L2 22l4.9-1.3A11 11 0 1 0 20.5 3.5Zm-8.5 17a9 9 0 0 1-4.6-1.3l-.3-.2-2.9.8.8-2.8-.2-.3A9 9 0 1 1 12 20.5Zm5-6.7c-.3-.1-1.6-.8-1.9-.9-.3-.1-.4-.1-.6.1l-.9 1.1c-.2.2-.3.2-.6.1a7.4 7.4 0 0 1-3.6-3.2c-.3-.5.3-.4.8-1.4.1-.2 0-.3 0-.5l-.9-2c-.2-.5-.5-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.1.6.5-.1 1.6-.6 1.8-1.3.2-.6.2-1.1.2-1.3-.1-.1-.3-.2-.6-.3Z"/></svg></a>
+</div>
+
+<script>
+(function(){
+  var ORIGEN="jornada-cirugia-nov-2026";
+  var params=new URLSearchParams(location.search);
+  try{sessionStorage.setItem("olanoOrigen",ORIGEN)}catch(e){}
+
+  // Lleva los parámetros del anuncio (utm_*) a la reserva para medir qué trajo cada cita.
+  var keep=["utm_source","utm_medium","utm_campaign","utm_content","utm_term","utm_id","fbclid"];
+  document.querySelectorAll(".js-book").forEach(function(a){
+    var url=new URL(a.getAttribute("href"),location.origin);
+    keep.forEach(function(k){if(params.has(k))url.searchParams.set(k,params.get(k))});
+    if(!url.searchParams.has("utm_campaign"))url.searchParams.set("utm_campaign",ORIGEN);
+    a.href=url.pathname+url.search;
+    a.addEventListener("click",function(){a.classList.add("loading")});
+  });
+  window.addEventListener("pageshow",function(){document.querySelectorAll(".btn.loading").forEach(function(b){b.classList.remove("loading")})});
+
+  // WhatsApp con mensaje preparado.
+  document.querySelectorAll(".js-wa").forEach(function(a){
+    var msg=a.getAttribute("data-msg");if(msg)a.href="https://wa.me/51907108271?text="+encodeURIComponent(msg);
+  });
+
+  // Imágenes con efecto de carga y sin imagen rota.
+  document.querySelectorAll(".js-media").forEach(function(box){
+    var img=box.querySelector("img");if(!img)return;
+    function ok(){box.classList.add("ready")}
+    function bad(){box.classList.add("failed")}
+    if(img.complete){img.naturalWidth?ok():bad()}else{img.addEventListener("load",ok);img.addEventListener("error",bad)}
+  });
+
+  // Video: solo aparece si hay archivo y no se descarga hasta tocar "play".
+  var vs=document.getElementById("video");
+  if(vs&&vs.dataset.video){
+    vs.hidden=false;
+    var btn=vs.querySelector(".js-play");
+    btn.addEventListener("click",function(){
+      btn.classList.add("loading");
+      var v=document.createElement("video");
+      v.src=vs.dataset.video;v.controls=true;v.playsInline=true;v.setAttribute("playsinline","");v.preload="auto";
+      v.addEventListener("playing",function(){btn.remove()},{once:true});
+      v.addEventListener("error",function(){btn.classList.remove("loading");btn.querySelector(".cap").textContent="No se pudo cargar el video. Toca para reintentar."},{once:true});
+      btn.parentNode.insertBefore(v,btn);
+      v.play().catch(function(){btn.remove()});
+    });
+  }
+
+  // Copiar datos de pago con aviso visible.
+  document.querySelectorAll(".js-copy").forEach(function(b){
+    b.addEventListener("click",function(){
+      var val=b.parentNode.querySelector("[data-copy]").getAttribute("data-copy");
+      var lbl=b.querySelector(".lbl"),old=lbl.textContent;
+      b.classList.add("loading");
+      (navigator.clipboard?navigator.clipboard.writeText(val):Promise.reject()).then(function(){
+        b.classList.remove("loading");b.classList.add("ok");lbl.textContent="¡Copiado!";
+      }).catch(function(){b.classList.remove("loading");lbl.textContent=val}).finally(function(){
+        setTimeout(function(){b.classList.remove("ok");lbl.textContent=old},1800);
+      });
+    });
+  });
+
+  // Píxel de Meta: solo PageView estándar (sin datos de salud).
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,"script","https://connect.facebook.net/en_US/fbevents.js");
+  fbq("init","2579515552504402");fbq("track","PageView");
+})();
+</script>
+</body>
+</html>
