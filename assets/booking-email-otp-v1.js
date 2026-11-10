@@ -108,7 +108,9 @@ function init() {
     </div>
     <p id="patient-email-otp-status" role="status" aria-live="polite"></p>
   `;
-  phoneField.insertAdjacentElement('afterend', section);
+  // DNI aparece antes del correo; un solo campo de nombres y apellidos.
+  const dniField = byId('clientDni')?.closest('.field');
+  (dniField || phoneField).insertAdjacentElement('afterend', section);
   const css = document.createElement('style');
   css.textContent = `
     .patient-email-otp{margin:12px 0;padding:14px;border:1px solid #d1e4e4;border-radius:16px;background:#f6fafa}
