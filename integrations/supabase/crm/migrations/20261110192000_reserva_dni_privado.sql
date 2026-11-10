@@ -21,6 +21,27 @@ alter table private.dr_olano_verified_patient_dni enable row level security;
 revoke all on private.dr_olano_verified_patient_dni from PUBLIC, anon, authenticated;
 grant select, insert on private.dr_olano_verified_patient_dni to service_role;
 
+-- Correo transaccional: una cola privada e idempotente por cita.
+create table private.dr_olano_booking_email_outbox (
+  cita_id uuid primary key references public.citas(id) on delete cascade,
+  recipient_email text not null check(
+    char_length(recipient_email) between 5 and 254 and
+    recipient_email ~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$'
+  ),
+  booking_code text not null check(char_length(booking_code) between 5 and 90),
+  status text not null default 'pending' check(status in ('pending','processing','sent','skipped')),
+  attempts integer not null default 0,
+  next_attempt_at timestamptz not null default(now()+interval '2 minutes'),
+  processed_at timestamptz,
+  last_error_code text,
+  updated_at timestamptz not null default now(),
+  created_at timestamptz not null default now()
+);
+create index dr_olano_booking_email_ready_idx on private.dr_olano_booking_email_outbox(status,next_attempt_at);
+alter table private.dr_olano_booking_email_outbox enable row level security;
+revoke all on private.dr_olano_booking_email_outbox from PUBLIC,anon,authenticated;
+grant select,insert,update on private.dr_olano_booking_email_outbox to service_role;
+
 -- Reserva antigua con DNI: todas las validaciones de v3 se mantienen.
 -- Si falla el guardado del DNI, la transacción entera se revierte.
 create function public.crear_cita_web_segura_v5(
@@ -57,7 +78,8 @@ create function public.crear_cita_web_segura_v6(
   p_negocio_id uuid, p_servicio_id uuid, p_recurso_id uuid, p_nombre text,
   p_telefono_e164 text, p_inicio timestamptz,
   p_phone_hash text, p_ip_hash text, p_device_hash text,
-  p_modalidad text, p_motivo_consulta text, p_patient_user_id uuid, p_dni text
+  p_modalidad text, p_motivo_consulta text, p_patient_user_id uuid, p_dni text,
+  p_verified_email text
 )
 returns table (cita_id uuid, codigo_web text, cupo_hora integer)
 language plpgsql security definer set search_path = ''
@@ -66,6 +88,9 @@ declare v_row record;
 begin
   if coalesce(p_dni,'') !~ '^[0-9]{8}$' then raise exception 'INVALID_DNI'; end if;
   if p_patient_user_id is null then raise exception 'VERIFIED_EMAIL_REQUIRED'; end if;
+  if char_length(btrim(coalesce(p_verified_email,''))) not between 5 and 254
+    or lower(btrim(p_verified_email)) !~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$'
+  then raise exception 'VERIFIED_EMAIL_REQUIRED'; end if;
 
   insert into private.dr_olano_verified_patient_dni(patient_user_id,dni)
     values (p_patient_user_id,p_dni)
@@ -83,14 +108,16 @@ begin
   if v_row.cita_id is null then raise exception 'BOOKING_FAILED'; end if;
   insert into private.dr_olano_booking_identity(cita_id,dni)
     values(v_row.cita_id,p_dni);
+  insert into private.dr_olano_booking_email_outbox(cita_id,recipient_email,booking_code)
+    values(v_row.cita_id,lower(btrim(p_verified_email)),v_row.codigo_web);
   return query select v_row.cita_id::uuid,v_row.codigo_web::text,v_row.cupo_hora::integer;
 end;
 $$;
 revoke all on function public.crear_cita_web_segura_v6(
-  uuid,uuid,uuid,text,text,timestamptz,text,text,text,text,text,uuid,text
+  uuid,uuid,uuid,text,text,timestamptz,text,text,text,text,text,uuid,text,text
 ) from PUBLIC, anon, authenticated;
 grant execute on function public.crear_cita_web_segura_v6(
-  uuid,uuid,uuid,text,text,timestamptz,text,text,text,text,text,uuid,text
+  uuid,uuid,uuid,text,text,timestamptz,text,text,text,text,text,uuid,text,text
 ) to service_role;
 
 comment on table private.dr_olano_booking_identity is
