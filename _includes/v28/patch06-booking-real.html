@@ -334,6 +334,10 @@
       alert("Esta es una vista previa para consultar horarios. Para reservar, te llevaremos al sitio oficial.");
       location.assign("https://doctorolano.pe/reserva-s?servicio="+encodeURIComponent(state.service.id));return;
     }
+    const otpBoot=window.OLANO_OTP_BOOTSTRAP;
+    if(otpBoot?.enabled && !otpBoot?.ready){
+      alert("Estamos preparando la verificación del correo. Revisa tu conexión o actualiza la página.");return;
+    }
     const otp=window.OLANO_PATIENT_OTP;
     const otpEnabled=otp?.isEnabled?.()===true;
     if(otpEnabled&&!otp?.isVerified?.()){alert("Antes de reservar, verifica tu correo con el código recibido.");go(3);setTimeout(()=>otp?.focusVerification?.(),30);return}
@@ -390,7 +394,10 @@
       else if(code==="INVALID_MODALITY")alert("Selecciona si deseas la Consulta NOVARE presencial o por videollamada.");
       else if(code==="INVALID_NOTE")alert("El comentario es demasiado largo.");
       else if(code==="PATIENT_PROFILE_REVIEW_REQUIRED")alert("Tu correo ya está asociado a una ficha. Para actualizar nombre o celular, comunícate con recepción antes de reservar.");
-      else if(code==="EMAIL_OTP_REQUIRED"){window.OLANO_PATIENT_OTP?.reset?.();alert("La verificación de correo venció o ya no es válida. Solicita un nuevo código.");go(3)}
+      else if(code==="EMAIL_OTP_REQUIRED"){
+        if(!otpEnabled)alert("Debes verificar tu correo antes de reservar. Actualiza la página para cargar el formulario seguro.");
+        else {window.OLANO_PATIENT_OTP?.reset?.();alert("La verificación de correo venció o ya no es válida. Solicita un nuevo código.");go(3)}
+      }
       else if(code==="TURNSTILE_FAILED"||code==="TURNSTILE_REQUIRED"||code==="TURNSTILE_HOSTNAME_MISMATCH"||code==="TURNSTILE_ACTION_MISMATCH")alert("No se pudo validar la verificación de seguridad. Intenta nuevamente.");
       else alert("No se pudo registrar la cita. Intenta nuevamente.");
       try{renderTimes()}catch{}
