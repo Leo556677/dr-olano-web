@@ -121,7 +121,8 @@ function mapManageError(message: string) {
 // en un correo ni un UUID enviados desde el navegador.
 const PATIENT_AUTH_URL = "https://pxccwrhtmwkwrzofuphj.supabase.co";
 const PATIENT_AUTH_PUBLISHABLE_KEY = "sb_publishable_kKxqpfyz6MwFPyIrDo7X6w_yWy-OkNb";
-async function verifyPatientAppToken(token: string): Promise<string | null> {
+type VerifiedPatient = { id: string; email: string };
+async function verifyPatientAppToken(token: string): Promise<VerifiedPatient | null> {
   if (!token || token.length > 4096 || !/^[A-Za-z0-9._-]+$/.test(token)) return null;
   const reply = await fetch(PATIENT_AUTH_URL + "/auth/v1/user", {
     headers: {
@@ -134,7 +135,7 @@ async function verifyPatientAppToken(token: string): Promise<string | null> {
   if (!reply.ok) return null;
   const user: any = await reply.json().catch(() => ({}));
   if (!/^[0-9a-f-]{36}$/i.test(String(user?.id || "")) || !user?.email || !user?.email_confirmed_at) return null;
-  return String(user.id);
+  return {id:String(user.id),email:String(user.email).trim().toLowerCase()};
 }
 
 export default {
@@ -303,12 +304,18 @@ export default {
       const ip = getClientIp(req);
       const turnstile = await verifyTurnstile(token, ip);
       if (!turnstile.ok) return json({ ok: false, code: turnstile.code, errors: (turnstile as any).errors || [] }, turnstile.status, origin);
-      let appPatientId: string | null = null;
-      try { appPatientId = await verifyPatientAppToken(String(body?.app_access_token || "")); }
+      let verifiedPatient: VerifiedPatient | null = null;
+      try { verifiedPatient = await verifyPatientAppToken(String(body?.app_access_token || "")); }
       catch { return json({ ok: false, code: "EMAIL_VERIFY_UNAVAILABLE" }, 503, origin); }
-      if (!appPatientId) return json({
+      if (!verifiedPatient) return json({
         ok: false, code: "EMAIL_OTP_REQUIRED", message: "Verifica el código enviado a tu correo antes de reservar."
       }, 401, origin);
+      const typedEmail=String(body?.verified_email||"").trim().toLowerCase();
+      if(!typedEmail || typedEmail !== verifiedPatient.email) return json({
+        ok:false,code:"EMAIL_MISMATCH",message:"El correo debe coincidir con el que verificaste mediante el código."
+      },409,origin);
+      const appPatientId=verifiedPatient.id;
+      const verifiedEmail=verifiedPatient.email;
       const secret = String((turnstile as any).secret);
       const service: any = await resolveService(serviceCode);
       if (!service || service.activo !== true || service.visible_web === false) return json({ ok: false, code: "INVALID_SERVICE" }, 404, origin);
@@ -332,6 +339,7 @@ export default {
         p_modalidad: service.requiere_consulta_previa === true ? modality : null, p_motivo_consulta: note || null,
          p_patient_user_id: appPatientId,
          p_dni: dni,
+         p_verified_email: verifiedEmail,
       });
       if (bookingErr) { const mapped = mapBookingError(bookingErr.message || bookingErr.details || ""); return json({ ok: false, code: mapped.code, message: mapped.message }, mapped.status, origin); }
       const row = Array.isArray(booking) ? booking[0] : booking;
