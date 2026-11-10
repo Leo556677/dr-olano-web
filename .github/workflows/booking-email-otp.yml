@@ -1,0 +1,63 @@
+name: Reserva web OTP - validación aislada
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'assets/booking-email-otp-v1.js'
+      - '_includes/v28/patch06-booking-real.html'
+      - 'integrations/supabase/crm/**'
+      - 'tests/booking-email-otp.test.mjs'
+      - 'tests/otp-crm-fixture.sql'
+      - 'tests/otp-crm-bridge-test.sql'
+      - '.github/workflows/booking-email-otp.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  otp-unit:
+    name: OTP sintaxis, aislamiento y casos falsos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Instalar Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+      - name: Pruebas sin tráfico a producción
+        run: node --test tests/booking-email-otp.test.mjs
+
+  crm-database:
+    name: CRM transacciones/identidad en Postgres efímero
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: tests_only_no_secrets
+          POSTGRES_DB: olano_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d olano_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGDATABASE: olano_test
+      PGPASSWORD: tests_only_no_secrets
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Crear CRM ficticio (NO producción)
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/otp-crm-fixture.sql
+      - name: Aplicar migración candidata únicamente en este Postgres efímero
+        run: psql -X -v ON_ERROR_STOP=1 -f integrations/supabase/crm/migrations/20261110170000_email_otp_booking_bridge.sql
+      - name: Probar 1 correo/1 paciente, transacciones, cola y revisiones
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/otp-crm-bridge-test.sql

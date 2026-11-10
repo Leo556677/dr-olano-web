@@ -4,6 +4,11 @@
   // para que los eventos de «reservó» (Meta, TikTok, GA4) alcancen a enviarse.
   window.__olanoWaGo=window.__olanoWaGo||(function(){let best="",bp=-1,timer=null;return function(url,prio){if(!url)return;if(prio>=bp){best=url;bp=prio}if(timer)return;timer=setTimeout(()=>{try{location.replace(best)}catch{location.href=best}},700)}})();
   const BOOKING_API = "https://xnlzsgulskqyecfgzhwa.supabase.co/functions/v1/dr-olano-booking";
+  // Las vistas previas solo consultan horarios. Producción conserva su reserva original.
+  const PREVIEW_MODE = /^[a-z0-9-]{5,80}\.dr-olano-web\.pages\.dev$/.test(location.hostname);
+  const AVAILABILITY_API = PREVIEW_MODE
+    ? "https://xnlzsgulskqyecfgzhwa.supabase.co/functions/v1/dr-olano-booking-otp"
+    : BOOKING_API;
   const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_s9YdJaMe_ll4QehPkADlKQ_KkuvWt32";
   const TURNSTILE_SITE_KEY = "0x4AAAAAAEquPSErt1V9EL1G";
   const TURNSTILE_ACTION = "booking";
@@ -116,7 +121,8 @@
   }
 
   async function bookingApi(body){
-    const res=await fetch(BOOKING_API,{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPABASE_PUBLISHABLE_KEY},body:JSON.stringify(body)});
+    const endpoint=body?.action==="availability"?AVAILABILITY_API:BOOKING_API;
+    const res=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPABASE_PUBLISHABLE_KEY},body:JSON.stringify(body)});
     let data={};try{data=await res.json()}catch{}
     if(!res.ok){const err=new Error(data.message||data.code||"No se pudo completar la operación");err.code=data.code||"API_ERROR";err.status=res.status;throw err}
     return data
@@ -211,7 +217,7 @@
     let first=new Date(m.getFullYear(),m.getMonth(),1),last=new Date(m.getFullYear(),m.getMonth()+1,0);for(let i=0;i<first.getDay();i++)days.insertAdjacentHTML("beforeend","<span></span>");
     const novare=isNovareService(),allowedDays=isNovareConsult()?new Set([1,3]):novare?NOVARE_DAYS:null;
     for(let d=1;d<=last.getDate();d++){const dt=new Date(m.getFullYear(),m.getMonth(),d),key=iso(dt),serviceDayBlocked=!!allowedDays&&!allowedDays.has(dt.getDay()),off=dt<today||dt>max||serviceDayBlocked;days.insertAdjacentHTML("beforeend",`<button class="day ${state.date===key?"selected":""}" data-day="${key}" ${off?"disabled":""}>${d}</button>`)}
-    $$('[data-day]').forEach(b=>b.onclick=()=>{markScheduleInteraction();state.date=b.dataset.day;state.time="";trackEvent("date_selected");renderCalendar();renderTimes();saveDraft();setTimeout(()=>$("#timesWrap").scrollIntoView({behavior:"smooth",block:"start"}),120)});
+    $$('[data-day]').forEach(b=>b.onclick=()=>{markScheduleInteraction();state.date=b.dataset.day;state.time="";trackEvent("date_selected");renderCalendar();saveDraft();setTimeout(()=>$("#timesWrap").scrollIntoView({behavior:"smooth",block:"start"}),120)});
     renderTimes();setPrimary($("#toStep3"),!!(state.date&&state.time))
   };
 
@@ -224,7 +230,19 @@
       slots.forEach(slot=>{const t=String(slot.time||"");box.insertAdjacentHTML("beforeend",`<button class="time ${state.time===t?"selected":""}" data-time="${t}">${t}</button>`)});
       $$('[data-time]').forEach(b=>b.onclick=()=>{markScheduleInteraction();state.time=b.dataset.time;trackEvent("time_selected");renderTimes();setPrimary($("#toStep3"),true);saveDraft();setTimeout(()=>$("#toStep3").scrollIntoView({behavior:"smooth",block:"center"}),120)});
       if(state.time&&!slots.some(s=>String(s.time)===state.time)){state.time="";setPrimary($("#toStep3"),false)}
-    }catch{box.innerHTML='<div style="grid-column:1/-1;padding:14px;text-align:center;color:var(--muted);font-size:.78rem">No pudimos consultar la agenda. Intenta nuevamente.</div>';state.time="";setPrimary($("#toStep3"),false)}
+    }catch(error){
+      const code=String(error?.code||"NETWORK_ERROR");
+      const friendly=code==="RESOURCE_UNAVAILABLE"||code==="AVAILABILITY_CONFIG_ERROR"
+        ?"La agenda del servicio requiere revisión. Intenta nuevamente."
+        :code==="ORIGIN_DENIED"?"No se pudo validar el acceso a la agenda."
+        :"No pudimos consultar los horarios. Comprueba tu conexión y vuelve a intentarlo.";
+      box.innerHTML='<div style="grid-column:1/-1;padding:14px;text-align:center;color:var(--muted);font-size:.78rem"></div>';
+      const note=box.firstElementChild;note.textContent=friendly;
+      const retry=document.createElement("button");retry.type="button";retry.className="btn";
+      retry.textContent="Volver a consultar";retry.style.cssText="display:block;margin:12px auto 0;min-height:40px";
+      retry.onclick=()=>{void renderTimes()};note.appendChild(retry);
+      state.time="";setPrimary($("#toStep3"),false)
+    }
   };
 
   renderSummary=function(){
@@ -282,19 +300,35 @@
     if(isNovareConsult()&&!['presencial','videollamada'].includes(state.bookingModality)){alert("Selecciona si deseas la Consulta NOVARE presencial o por videollamada.");go(2);return}
     const note=isNovareService()?String(state.bookingNote||"").trim():"";
     if(note.length>500){alert("El comentario puede tener como máximo 500 caracteres.");go(2);return}
+    if(PREVIEW_MODE){
+      alert("Esta es una vista previa para consultar horarios. Para reservar, te llevaremos al sitio oficial.");
+      location.assign("https://doctorolano.pe/reserva-s?servicio="+encodeURIComponent(state.service.id));return;
+    }
+    const otp=window.OLANO_PATIENT_OTP;
+    const otpEnabled=otp?.isEnabled?.()===true;
+    if(otpEnabled&&!otp?.isVerified?.()){alert("Antes de reservar, verifica tu correo con el código recibido.");go(3);setTimeout(()=>otp?.focusVerification?.(),30);return}
     if(!turnstileToken){renderBookingTurnstile();alert("Completa la verificación de seguridad para reservar.");return}
     const btn=$("#sendBooking"),old=btn.innerHTML;btn.disabled=true;btn.textContent="Reservando…";
     try{
-      const data=await bookingApi({action:"book",service_code:state.service.id,date:state.date,time:state.time,name:state.name,phone:state.phone,note,modality:isNovareConsult()?state.bookingModality:undefined,device_id:getDeviceId(),turnstile_token:turnstileToken});
+      const payload={action:"book",service_code:state.service.id,date:state.date,time:state.time,name:state.name,phone:state.phone,note,modality:isNovareConsult()?state.bookingModality:undefined,device_id:getDeviceId(),turnstile_token:turnstileToken};
+      // Mantener reservas/WhatsApp actuales mientras OTP aún no se ha activado.
+      const data=otpEnabled?await otp.book(payload):await bookingApi(payload);
       const b=data.booking||{};state.id=b.code||"";state.manageUrl=String(b.manage_url||"");$("#bookingCode").textContent=state.id;
       const done=document.querySelector('#booking .step[data-step="5"]');
       if(done){
         const h=done.querySelector("h2"),paragraphs=done.querySelectorAll("p");if(h)h.textContent="Cita reservada";if(paragraphs[0])paragraphs[0].textContent=`Tu cita quedó registrada para ${fmt(fromIso(state.date))} a las ${state.time}.`;if(paragraphs[1])paragraphs[1].textContent=`Código de reserva: ${state.id}`;
+        let appNotice=done.querySelector("#patientAppBookingNotice");
+        if(!appNotice){appNotice=document.createElement("p");appNotice.id="patientAppBookingNotice";appNotice.style.cssText="font-size:13px;line-height:1.5;margin-top:8px";done.querySelector(".done")?.appendChild(appNotice)}
+        if(appNotice){
+          if(otpEnabled)appNotice.textContent="Tu cita quedará disponible en la app del Dr. Olano con el mismo correo verificado. La sincronización puede tardar unos minutos.";
+          else appNotice.remove(); // No prometer sincronización antes de activarla
+        }
         let manage=done.querySelector("#manageBookingLink");
         if(state.manageUrl&&!manage){manage=document.createElement("a");manage.id="manageBookingLink";manage.href=state.manageUrl;manage.textContent="Gestionar mi cita";manage.style.cssText="display:inline-flex;margin-top:8px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;color:var(--navy);font-weight:800;text-decoration:none;background:#fff";done.querySelector(".actions")?.appendChild(manage)}
         if(manage)manage.href=state.manageUrl||"#";
       }
       const waUrl=buildWhatsAppHandoff();state.url=waUrl;const wa=$("#openWhatsApp");if(wa&&waUrl){wa.href=waUrl;wa.style.display="inline-flex";wa.innerHTML=`${icon("i-send")}Abrir WhatsApp`}
+      if(otpEnabled)window.OLANO_PATIENT_OTP?.reset?.();
       clearConfirmedUi();trackEvent("booking_confirmed");trackTikTokSchedule();go(5);
       if(waUrl){trackEvent("booking_whatsapp_handoff",{source:"auto_redirect"});window.__olanoWaGo(waUrl,1)}
     }catch(e){
@@ -305,6 +339,8 @@
       else if(code==="SERVICE_DAY_UNAVAILABLE")alert(isNovareConsult()?"La Consulta NOVARE solo está disponible lunes y miércoles.":"Los procedimientos NOVARE solo están disponibles viernes, sábado y domingo.");
       else if(code==="INVALID_MODALITY")alert("Selecciona si deseas la Consulta NOVARE presencial o por videollamada.");
       else if(code==="INVALID_NOTE")alert("El comentario es demasiado largo.");
+      else if(code==="PATIENT_PROFILE_REVIEW_REQUIRED")alert("Tu correo ya está asociado a una ficha. Para actualizar nombre o celular, comunícate con recepción antes de reservar.");
+      else if(code==="EMAIL_OTP_REQUIRED"){window.OLANO_PATIENT_OTP?.reset?.();alert("La verificación de correo venció o ya no es válida. Solicita un nuevo código.");go(3)}
       else if(code==="TURNSTILE_FAILED"||code==="TURNSTILE_REQUIRED"||code==="TURNSTILE_HOSTNAME_MISMATCH"||code==="TURNSTILE_ACTION_MISMATCH")alert("No se pudo validar la verificación de seguridad. Intenta nuevamente.");
       else alert("No se pudo registrar la cita. Intenta nuevamente.");
       try{renderTimes()}catch{}
