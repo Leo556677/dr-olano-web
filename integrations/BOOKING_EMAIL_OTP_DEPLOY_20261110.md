@@ -1,3 +1,8 @@
+## Regla de identidad aprobada el 10/11/2026
+**Opción A: un correo por paciente.** Se crea una correspondencia uno-a-uno entre el `user.id` de Auth de la aplicación y una única ficha `contactos.id` del CRM. El primer registro guarda una versión normalizada del nombre; un segundo correo que intente reclamar la misma ficha, o un mismo correo que intente reservar para otra ficha/nombre, se rechaza en una transacción. Un cambio legítimo de nombre o celular se verifica manualmente en recepción antes de modificar el vínculo. No se enlazan citas históricas por teléfono o DNI. El OTP demuestra acceso al email, no es una validación de DNI ni de identidad clínica.
+
+**Pruebas sin producción:** `tests/booking-email-otp.test.mjs` ejecuta OTP con mocks y comprueba que no se expone el bearer; `tests/otp-crm-fixture.sql` y `tests/otp-crm-bridge-test.sql` crean un Postgres efímero con identidad A/B, validan rollback, cola, revisiones y cancelación. Workflow: `Reserva web OTP - validación aislada`. Ambos jobs pasaron. No constituyen prueba de SMTP, Google Calendar ni Supabase cruzado en un entorno real.
+
 # Integración de reservas web ↔ Google Calendar ↔ App Pacientes Dr. Olano
 
 **Estado: borrador técnico, SIN DESPLEGAR.** Fecha: 10/11/2026. Código aislado de main, no altera la WABA, los pacientes ni las reservas actuales.
