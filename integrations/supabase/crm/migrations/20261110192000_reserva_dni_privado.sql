@@ -122,3 +122,77 @@ grant execute on function public.crear_cita_web_segura_v6(
 
 comment on table private.dr_olano_booking_identity is
   'DNI de 8 dígitos asociado a una cita, privado y nunca enviado a analítica. No sirve para acceder a historias clínicas.';
+
+-- Reclamación segura de correos y descuentos previamente canjeados.
+create function public.dr_olano_booking_email_claim(p_limit integer default 10)
+returns table(
+  cita_id uuid, recipient_email text, booking_code text,
+  patient_name text, service_name text, starts_at timestamptz,
+  appointment_state text, discount_pct integer
+)
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  return query
+  with picked as (
+    select q.cita_id from private.dr_olano_booking_email_outbox q
+    where q.status in ('pending','processing') and q.next_attempt_at <= now()
+    order by q.next_attempt_at
+    limit least(greatest(coalesce(p_limit,10),1),30)
+    for update skip locked
+  ), updated as (
+    update private.dr_olano_booking_email_outbox q
+      set status='processing', attempts=q.attempts+1,
+          next_attempt_at=now()+interval '5 minutes', updated_at=now()
+    from picked p where q.cita_id=p.cita_id
+    returning q.cita_id, q.recipient_email, q.booking_code
+  )
+  select
+    u.cita_id, u.recipient_email, u.booking_code,
+    left(coalesce(ct.nombre,'Paciente'),120)::text,
+    left(coalesce(s.nombre,'Consulta Dr. Olano'),120)::text,
+    c.inicio, c.estado::text,
+    (
+      select floor(claim.discount_pct)::integer
+      from public.dr_olano_offer_claims claim
+      where claim.booking_id=u.cita_id
+        and claim.status='redeemed' and claim.redeemed_at is not null
+        and claim.discount_pct between 1 and 100
+      order by claim.redeemed_at desc limit 1
+    )
+  from updated u
+  join public.citas c on c.id=u.cita_id
+  join public.contactos ct on ct.id=c.contacto_id
+  join public.servicios s on s.id=c.servicio_id;
+end;
+$$;
+revoke all on function public.dr_olano_booking_email_claim(integer)
+  from PUBLIC, anon, authenticated;
+grant execute on function public.dr_olano_booking_email_claim(integer)
+  to service_role;
+
+create function public.dr_olano_booking_email_finish(
+  p_cita_id uuid, p_ok boolean, p_skip boolean default false,
+  p_error_code text default null
+) returns boolean
+language plpgsql security definer set search_path = ''
+as $$
+declare v_count bigint := 0;
+begin
+  update private.dr_olano_booking_email_outbox
+  set status=case when p_skip then 'skipped' when p_ok then 'sent' else 'pending' end,
+      next_attempt_at=case when p_ok or p_skip then now()
+        else now()+interval '1 minute'*least(60,greatest(attempts,1)*3) end,
+      processed_at=case when p_ok or p_skip then now() else null end,
+      last_error_code=case when p_ok or p_skip then null
+        else left(coalesce(p_error_code,'MAIL_PROVIDER_UNAVAILABLE'),80) end,
+      updated_at=now()
+  where cita_id=p_cita_id and status='processing';
+  get diagnostics v_count = row_count;
+  return v_count>0;
+end;
+$$;
+revoke all on function public.dr_olano_booking_email_finish(uuid,boolean,boolean,text)
+  from PUBLIC, anon, authenticated;
+grant execute on function public.dr_olano_booking_email_finish(uuid,boolean,boolean,text)
+  to service_role;
