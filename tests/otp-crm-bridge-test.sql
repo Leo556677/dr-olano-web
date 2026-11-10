@@ -81,6 +81,23 @@ begin
   raise exception 'UNEXPECTED_BOOKING_COUNT'; end if;
 end $$;
 
+-- El trigger de producción de Google Calendar se activa en la misma transacción
+-- que crear_cita_web_segura_v4, sin tener que crear un segundo calendario.
+do $
+begin
+ if (select count(*) from private.cita_integracion_outbox
+     where tipo='google_calendar' and accion='upsert' and estado='pendiente') <> 3 then
+   raise exception 'GOOGLE_CALENDAR_CREATE_NOT_QUEUED';
+ end if;
+ if (select count(*) from private.cita_integracion_outbox
+     where tipo='aviso_negocio' and accion='upsert') <> 3 then
+   raise exception 'EXISTING_CLINIC_NOTIFICATION_NOT_QUEUED';
+ end if;
+ if (select count(*) from private.cita_integracion_outbox) <> 6 then
+   raise exception 'GOOGLE_OUTBOX_DUPLICATION';
+ end if;
+end $;
+
 -- Simular reprogramación desde recepción: incrementar versión de la cola.
 update public.citas set inicio=inicio+interval '1 hour', fin=fin+interval '1 hour'
 where id=(select cita_id from test_ids where alias='A1');
@@ -96,6 +113,18 @@ begin
   raise exception 'RESCHEDULE_CREATED_DUPLICATE_QUEUE_JOB';
  end if;
 end $$;
+
+do $
+declare v_id uuid := (select cita_id from test_ids where alias='A1');
+begin
+ if (select accion from private.cita_integracion_outbox
+      where cita_id=v_id and tipo='google_calendar') <> 'upsert' then
+   raise exception 'GOOGLE_CALENDAR_RESCHEDULE_NOT_QUEUED';
+ end if;
+ if (select count(*) from private.cita_integracion_outbox) <> 6 then
+   raise exception 'GOOGLE_RESCHEDULE_CREATED_DUPLICATE';
+ end if;
+end $;
 
 create temp table claimed as
 select * from public.dr_olano_app_bridge_claim(20);
@@ -128,4 +157,15 @@ begin
     raise exception 'CANCEL_NOT_QUEUED';
  end if;
 end $$;
-select 'PASS: CRM bridge migration and booking identity tests' as test_result;
+do $
+declare v_id uuid := (select cita_id from test_ids where alias='A1');
+begin
+ if (select accion from private.cita_integracion_outbox
+      where cita_id=v_id and tipo='google_calendar') <> 'cancel' then
+   raise exception 'GOOGLE_CALENDAR_CANCEL_NOT_QUEUED';
+ end if;
+ if (select count(*) from private.cita_integracion_outbox) <> 6 then
+   raise exception 'GOOGLE_CANCEL_CREATED_DUPLICATE';
+ end if;
+end $;
+select 'PASS: CRM bridge, identity and Google Calendar outbox tests' as test_result;
