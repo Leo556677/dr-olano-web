@@ -144,7 +144,7 @@ begin
     case when c.estado = 'completada' then 'completed'
          when c.estado in ('cancelada','no_asistio') then 'cancelled'
          else 'confirmed' end::text,
-    left(coalesce(nullif(btrim(s.nombre), ''), 'Consulta médica'), 120)::text,
+    case when char_length(btrim(coalesce(s.nombre,''))) >= 2 then left(btrim(s.nombre),120) else 'Consulta médica' end::text,
     u.revision
   from updated u
   join private.dr_olano_app_bridge_links l on l.cita_id=u.cita_id
