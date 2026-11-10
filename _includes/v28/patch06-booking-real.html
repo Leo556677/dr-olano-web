@@ -245,16 +245,27 @@
     }
   };
 
+  function getBookingDni(){return String($("#clientDni")?.value||"").replace(/\D/g,"").slice(0,8)}
+  function maskedBookingDni(){const d=getBookingDni();return /^\d{8}$/.test(d)?"****"+d.slice(-4):""}
+  function updateDniValidity(){
+    const fullName=String($("#clientName")?.value||"").trim().replace(/\s+/g," ");
+    const phone=String($("#clientPhone")?.value||"").replace(/\s+/g,"");
+    const valid=fullName.length>=3 && phone.length>=7 && /^\d{8}$/.test(getBookingDni());
+    setPrimary($("#toStep4"),valid);
+    return valid;
+  }
+
   renderSummary=function(){
     trackEvent("booking_review");
     const note=String(state.bookingNote||"").trim();
     const escHtml=value=>String(value??"").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    const dniRow=maskedBookingDni()?`<div class="summary-row"><span class="summary-key">DNI</span><b>${maskedBookingDni()}</b></div>`:"";
     const noteRow=isNovareService()&&note?`<div class="summary-row"><span class="summary-key">${icon("i-check")}Comentario</span><b>${escHtml(note)}</b></div>`:"";
     const modalityRow=isNovareConsult()?`<div class="summary-row"><span class="summary-key">${icon("i-phone")}Modalidad</span><b>${state.bookingModality==="videollamada"?"Videollamada":"Presencial"}</b></div>`:"";
     const priceRow=`<div class="summary-row"><span class="summary-key">${icon("i-check")}Valor referencial</span><b>${escHtml(state.service?.price||"")}</b></div>`;
     const priceNotice=`<div class="summary-row"><span class="summary-key">${icon("i-check")}Importante</span><b>Valor sujeto a evaluación médica.</b></div>`;
     const novareCredit=isNovareConsult()?`<div class="summary-row"><span class="summary-key">${icon("i-check")}Consulta NOVARE</span><b>Si luego realizas un procedimiento NOVARE, este importe se considera dentro del servicio y no se cobra adicionalmente.</b></div>`:"";
-    $("#summary").innerHTML=`<div class="summary-row"><span class="summary-key">${icon("i-service")}Servicio</span><b>${escHtml(state.service.name)}</b></div>${priceRow}${priceNotice}${modalityRow}${novareCredit}${noteRow}<div class="summary-row"><span class="summary-key">${icon("i-user")}Nombre</span><b>${escHtml(state.name)}</b></div><div class="summary-row"><span class="summary-key">${icon("i-calendar")}Fecha</span><b>${fmt(fromIso(state.date))}</b></div><div class="summary-row"><span class="summary-key">${icon("i-clock")}Hora</span><b>${state.time}</b></div><div class="summary-row"><span class="summary-key">${icon("i-check")}Estado</span><b>Se registrará al reservar</b></div>`
+    $("#summary").innerHTML=`<div class="summary-row"><span class="summary-key">${icon("i-service")}Servicio</span><b>${escHtml(state.service.name)}</b></div>${priceRow}${priceNotice}${modalityRow}${novareCredit}${noteRow}<div class="summary-row"><span class="summary-key">${icon("i-user")}Nombres y apellidos</span><b>${escHtml(state.name)}</b></div>${dniRow}<div class="summary-row"><span class="summary-key">${icon("i-calendar")}Fecha</span><b>${fmt(fromIso(state.date))}</b></div><div class="summary-row"><span class="summary-key">${icon("i-clock")}Hora</span><b>${state.time}</b></div><div class="summary-row"><span class="summary-key">${icon("i-check")}Estado</span><b>Se registrará al reservar</b></div>`
   };
 
   function buildWhatsAppHandoff(){
@@ -267,6 +278,7 @@
       `📋 Código: ${state.id}`,
       `👤 Paciente: ${state.name}`,
       `📱 Celular: ${state.phone}`,
+      maskedBookingDni()?`🪪 DNI: ${maskedBookingDni()}`:"",
       `🩺 Servicio: ${serviceName}`,
       value?`💰 Valor referencial: ${value}`:"",
       "ℹ️ El valor final está sujeto a evaluación médica."
@@ -296,6 +308,8 @@
 
   async function sendRealBooking(){
     state.name=$("#clientName").value.trim();state.phone=$("#clientPhone").value.replace(/\s+/g,"");
+    const dni=getBookingDni();
+    if(!/^\d{8}$/.test(dni)){alert("Ingresa tu DNI de 8 dígitos.");go(3);$("#clientDni")?.focus();updateDniValidity();return}
     if(!state.service||!state.date||!state.time||state.name.length<3||state.phone.length<7)return;
     if(isNovareConsult()&&!['presencial','videollamada'].includes(state.bookingModality)){alert("Selecciona si deseas la Consulta NOVARE presencial o por videollamada.");go(2);return}
     const note=isNovareService()?String(state.bookingNote||"").trim():"";
@@ -310,7 +324,7 @@
     if(!turnstileToken){renderBookingTurnstile();alert("Completa la verificación de seguridad para reservar.");return}
     const btn=$("#sendBooking"),old=btn.innerHTML;btn.disabled=true;btn.textContent="Reservando…";
     try{
-      const payload={action:"book",service_code:state.service.id,date:state.date,time:state.time,name:state.name,phone:state.phone,note,modality:isNovareConsult()?state.bookingModality:undefined,device_id:getDeviceId(),turnstile_token:turnstileToken};
+      const payload={action:"book",service_code:state.service.id,date:state.date,time:state.time,name:state.name,phone:state.phone,dni,note,modality:isNovareConsult()?state.bookingModality:undefined,device_id:getDeviceId(),turnstile_token:turnstileToken};
       // Mantener reservas/WhatsApp actuales mientras OTP aún no se ha activado.
       const data=otpEnabled?await otp.book(payload):await bookingApi(payload);
       const b=data.booking||{};state.id=b.code||"";state.manageUrl=String(b.manage_url||"");$("#bookingCode").textContent=state.id;
@@ -347,6 +361,20 @@
     }finally{btn.disabled=false;btn.innerHTML=old}
   }
 
+  // El nombre se mantiene en un único campo; DNI y teléfono son datos de la reserva.
+  // No guardar DNI en localStorage ni enviar a píxeles publicitarios.
+  const dniField=$("#clientDni");
+  if(dniField){
+    dniField.addEventListener("input",()=>{
+      dniField.value=dniField.value.replace(/\D/g,"").slice(0,8);
+      updateDniValidity();
+    });
+    ["clientName","clientPhone"].forEach(id=>$("#"+id)?.addEventListener("input",updateDniValidity));
+    $("#toStep4")?.addEventListener("click",e=>{
+      if(!updateDniValidity()){e.preventDefault();e.stopImmediatePropagation();dniField.focus()}
+    },true);
+    updateDniValidity();
+  }
   const dataNote=document.querySelector(".data-note");if(dataNote)dataNote.textContent="Tus datos se utilizan para registrar y gestionar tu cita. Al reservar, te enviaremos automáticamente al WhatsApp oficial del centro con el reporte preparado.";
   ensureNovareNoteUi();ensureNovareModalityUi();loadBookingTurnstile();
   const toStep2=$("#toStep2");if(toStep2)toStep2.onclick=()=>{if(!state.service)return;state.date="";state.time="";if(!isNovareService())state.bookingNote="";if(!isNovareConsult())state.bookingModality="";go(2);ensureNovareNoteUi();ensureNovareModalityUi();renderCalendar()};
