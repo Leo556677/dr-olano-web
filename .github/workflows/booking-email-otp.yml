@@ -1,0 +1,29 @@
+name: Reserva web OTP - validación aislada
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'assets/booking-email-otp-v1.js'
+      - '_includes/v28/patch06-booking-real.html'
+      - 'integrations/supabase/crm/**'
+      - 'tests/booking-email-otp.test.mjs'
+      - '.github/workflows/booking-email-otp.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  otp-unit:
+    name: OTP sintaxis, aislamiento y casos falsos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Instalar Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+      - name: Pruebas sin tráfico a producción
+        run: node --test tests/booking-email-otp.test.mjs
