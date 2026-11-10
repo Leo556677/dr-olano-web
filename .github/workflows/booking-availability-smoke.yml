@@ -1,0 +1,27 @@
+name: Disponibilidad real, solo lectura
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '_includes/v28/patch06-booking-real.html'
+      - 'integrations/supabase/crm/functions/dr-olano-booking-otp/**'
+      - 'tests/live-availability-smoke.mjs'
+      - '.github/workflows/booking-availability-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  availability:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Consultar disponibilidad (sin reservas ni datos de pacientes)
+        run: node --test tests/live-availability-smoke.mjs
