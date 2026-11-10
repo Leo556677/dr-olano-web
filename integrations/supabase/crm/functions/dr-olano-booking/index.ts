@@ -76,6 +76,11 @@ async function verifyTurnstile(token: string, ip: string) {
 }
 function mapBookingError(message: string) {
   const m = String(message || "");
+  if (m.includes("PATIENT_IDENTITY_CHANGE_REQUIRES_REVIEW")) return {
+    status: 409,
+    code: "PATIENT_PROFILE_REVIEW_REQUIRED",
+    message: "Este correo ya tiene una ficha asociada. Contacta al consultorio para validar cualquier cambio en tus datos.",
+  };
   if (m.includes("RATE_LIMIT_1H")) return { status: 429, code: "RATE_LIMIT_1H", message: "Ya se registró una cita desde este celular, red o dispositivo. Intenta nuevamente en 1 hora." };
   if (m.includes("HOUR_FULL")) return { status: 409, code: "HOUR_FULL", message: "Esa hora acaba de completar sus 3 cupos. Elige otro horario." };
   if (m.includes("BLOCKED_SLOT")) return { status: 409, code: "BLOCKED_SLOT", message: "Ese horario ya no está disponible." };
