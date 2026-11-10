@@ -61,7 +61,8 @@
     }
   }
   const booking=document.querySelector('#booking');
-  if(booking)new MutationObserver(()=>queueMicrotask(()=>apply(true))).observe(booking,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
+  // Tras registrar cita NO se fuerza el salto a WhatsApp: canal opcional.
+  if(booking)new MutationObserver(()=>queueMicrotask(()=>apply(false))).observe(booking,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
   document.addEventListener('click',e=>{
     const a=e.target.closest('#openWhatsApp');if(!a)return;
     apply(false);
