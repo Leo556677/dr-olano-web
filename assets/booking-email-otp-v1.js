@@ -3,6 +3,8 @@
 // El servidor de reservas DEBE revalidar el access token contra /auth/v1/user.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.117.0';
 
+const BOOKING_API = 'https://xnlzsgulskqyecfgzhwa.supabase.co/functions/v1/dr-olano-booking';
+const BOOKING_PUBLISHABLE_KEY = 'sb_publishable_s9YdJaMe_ll4QehPkADlKQ_KkuvWt32';
 const AUTH_URL = 'https://pxccwrhtmwkwrzofuphj.supabase.co';
 const AUTH_PUBLISHABLE_KEY = 'sb_publishable_kKxqpfyz6MwFPyIrDo7X6w_yWy-OkNb';
 const patientAuth = createClient(AUTH_URL, AUTH_PUBLISHABLE_KEY, {
@@ -31,6 +33,8 @@ function updateState(message, isError = false) {
   status.textContent = message;
   status.style.color = isError ? '#8e2835' : '#155d57';
 }
+// No exportar credenciales a otros scripts de la web (analytics, publicidad, etc).
+// El token solo entra en la solicitud HTTPS al backend al confirmar la reserva.
 function getVerifiedIdentity() {
   if (!verified || normalized(byId('patient-booking-email')?.value) !== verified.email) return null;
   if (Date.now() >= verified.expiresAt - 60000) {
@@ -38,7 +42,26 @@ function getVerifiedIdentity() {
     updateState('La verificación venció. Solicita un código nuevo.', true);
     return null;
   }
-  return { accessToken: verified.accessToken, email: verified.email };
+  return verified;
+}
+
+async function book(body) {
+  const identity = getVerifiedIdentity();
+  if (!identity) throw new Error('EMAIL_OTP_REQUIRED');
+  if (!body || body.action !== 'book') throw new Error('INVALID_BOOKING_ACTION');
+  const res = await fetch(BOOKING_API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', apikey: BOOKING_PUBLISHABLE_KEY },
+    body: JSON.stringify({ ...body, app_access_token: identity.accessToken }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const error = new Error(data.message || data.code || 'No se pudo completar la operación');
+    error.code = data.code || 'API_ERROR';
+    error.status = res.status;
+    throw error;
+  }
+  return data;
 }
 function focusVerification() {
   byId('patient-booking-email')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -49,7 +72,12 @@ function reset() {
   requestedEmail = '';
   updateState('');
 }
-window.OLANO_PATIENT_OTP = { getVerifiedIdentity, focusVerification, reset };
+window.OLANO_PATIENT_OTP = {
+  isVerified: () => Boolean(getVerifiedIdentity()),
+  book,
+  focusVerification,
+  reset,
+};
 
 function init() {
   const phone = byId('clientPhone');
