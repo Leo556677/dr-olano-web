@@ -1,3 +1,11 @@
+## Despliegue parcial verificado · 10/11/2026
+
+**Aplicado en Supabase CRM producción:** migración `email_otp_booking_bridge`, versión `20261110183919`. Se crearon tablas privadas, vínculo por paciente, procedimientos de uso exclusivo service_role y cola de sincronización. Se verificó que `anon` y `authenticated` no pueden ejecutar la reserva privilegiada. La reserva histórica existente no fue modificada.
+
+**Funciones instaladas:** `dr-olano-app-bridge-worker` v1 y `dr-olano-booking-otp` v1. El endpoint OTP tiene bloqueo por defecto (`DR_OLANO_OTP_BOOKING_ENABLED` debe valer `true` para poder reservar). La función de reservas anterior `dr-olano-booking` v16 y el worker de Google Calendar v13 permanecen intactos.
+
+**No habilitado:** secreto compartido CRM↔APP, cron del nuevo worker, configuración real SMTP/OTP, pruebas E2E y despliegue de `main`/dominio `doctorolano.pe`. La PR sigue en borrador y su sitio está disponible únicamente como vista previa Cloudflare Pages. No afirmar disponibilidad en producción del nuevo flujo.
+
 ## Contrato obligatorio de WhatsApp, ratificado por el usuario
 
 La redirección automática a WhatsApp después de registrar la reserva **NO se elimina ni convierte en opcional**. Debe mantenerse idéntica a la web original:
