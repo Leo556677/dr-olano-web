@@ -146,7 +146,14 @@ export default {
       return new Response(null, { status: 204, headers: cors(origin) });
     }
     if (!validOrigin(origin)) return json({ ok: false, code: "ORIGIN_DENIED" }, 403, origin);
-    if (req.method === "GET") return json({ ok: true, service: "dr-olano-booking-otp", version: "1.5.0", site_key: TURNSTILE_SITE_KEY, turnstile_configured: Boolean(Deno.env.get("TURNSTILE_SECRET_KEY")), patient_note_supported: true, self_manage_supported: true }, 200, origin);
+    if (req.method === "GET") {
+      const { data: enabled, error: gateError } = await ctx.supabaseAdmin.rpc("dr_olano_otp_booking_enabled");
+      return json({ ok: true, service: "dr-olano-booking-otp", version: "1.6.0",
+        site_key: TURNSTILE_SITE_KEY,
+        otp_enabled: !gateError && enabled === true,
+        patient_note_supported: true, self_manage_supported: true
+      }, 200, origin);
+    }
     if (req.method !== "POST") return json({ ok: false, code: "METHOD_NOT_ALLOWED" }, 405, origin);
 
     let body: any;
@@ -276,11 +283,12 @@ export default {
     }
 
     if (action === "book") {
-      // Despliegue progresivo: NO registrar reservas OTP hasta configurar SMTP,
-      // secreto CRM↔APP y prueba de sincronización integral.
-      // Por defecto bloqueado; habilitar exclusivamente con verificación operativa.
-      if (Deno.env.get("DR_OLANO_OTP_BOOKING_ENABLED") !== "true") {
-        return json({ ok: false, code: "OTP_BOOKING_NOT_READY", message: "La reserva verificada todavía no está disponible. Utiliza el formulario habitual." }, 503, origin);
+      // Feature flag privada: activar solo tras SMTP, worker email y prueba E2E.
+      const { data: otpEnabled, error: gateError } = await ctx.supabaseAdmin.rpc("dr_olano_otp_booking_enabled");
+      if (gateError || otpEnabled !== true) {
+        return json({ ok:false, code:"OTP_BOOKING_NOT_READY",
+          message:"La reserva verificada todavía no está disponible. Utiliza el formulario habitual."
+        },503,origin);
       }
       const serviceCode = String(body?.service_code || "").trim();
       const dateIso = String(body?.date || "").trim();
