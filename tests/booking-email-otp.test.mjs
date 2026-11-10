@@ -6,7 +6,7 @@ import vm from 'node:vm';
 const source = readFileSync(new URL('../assets/booking-email-otp-v1.js', import.meta.url), 'utf8')
   .replace(/^import \{ createClient \} from .*;\r?\n/m, '');
 const bookingPatch = readFileSync(new URL('../_includes/v28/patch06-booking-real.html', import.meta.url), 'utf8');
-const server = readFileSync(new URL('../integrations/supabase/crm/functions/dr-olano-booking/index.ts', import.meta.url), 'utf8');
+const server = readFileSync(new URL('../integrations/supabase/crm/functions/dr-olano-booking-otp/index.ts', import.meta.url), 'utf8');
 const whatsAppTemplate = readFileSync(new URL('../assets/whatsapp-template-v8.js', import.meta.url), 'utf8');
 
 function element(value = '') {
@@ -109,7 +109,7 @@ test('Nunca valida por escribir email; exige OTP de Auth de la APP', async () =>
   await h.identity.book({ action: 'book', service_code: 'consulta' });
   assert.equal(h.fetchCalls.length, 1);
   assert.equal(h.fetchCalls[0].url,
-    'https://xnlzsgulskqyecfgzhwa.supabase.co/functions/v1/dr-olano-booking');
+    'https://xnlzsgulskqyecfgzhwa.supabase.co/functions/v1/dr-olano-booking-otp');
   assert.equal(JSON.parse(h.fetchCalls[0].init.body).app_access_token, 'test-bearer-not-secret');
   assert.equal(h.code.value, '', 'No conserva el código OTP tras comprobarlo');
 });
