@@ -57,7 +57,7 @@
     state.url=url;
     if(autoRedirect&&state.id&&redirectedCode!==state.id){
       redirectedCode=state.id;
-      queueMicrotask(()=>location.replace(url));
+      if(window.__olanoWaGo)window.__olanoWaGo(url,3);else queueMicrotask(()=>location.replace(url));
     }
   }
   const booking=document.querySelector('#booking');

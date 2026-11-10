@@ -271,7 +271,7 @@
     try{
       const u=new URL(a.href);let text=u.searchParams.get('text')||'';
       if(hasBenefit){const p=prices(o);text+=`\n\n🎁 *Beneficio: ${discountText()} de descuento*`;text+=o.claim.regular_price_pen==null?`\n💰 ${discountText()} sobre el valor final determinado tras evaluación.`:`\n💰 Precio referencial: ${p.old} → *${p.now}*`;text+=`\n📌 Tipo de cita: ${o.claim.appointment_type}`;text+=`\n🔎 Verificar beneficio: ${o.proof_url}`}
-      text+=`\n\n📍 Dirección: ${ADDRESS}\n🗺️ Google Maps: ${MAP}`;u.searchParams.set('text',text);a.href=u.toString();state.url=a.href;queueMicrotask(()=>location.replace(a.href));
+      text+=`\n\n📍 Dirección: ${ADDRESS}\n🗺️ Google Maps: ${MAP}`;u.searchParams.set('text',text);a.href=u.toString();state.url=a.href;if(window.__olanoWaGo)window.__olanoWaGo(a.href,2);else queueMicrotask(()=>location.replace(a.href));
     }catch(e){console.warn('wa enhance',e)}
     try{const k=`olanoMetaSchedule:${state.id}`;if(typeof fbq==='function'&&sessionStorage.getItem(k)!=='1'){fbq('track','Schedule');sessionStorage.setItem(k,'1')}}catch{}
   }

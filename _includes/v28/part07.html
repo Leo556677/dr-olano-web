@@ -31,6 +31,7 @@ const BOOKING_ENTRY_MODE=BOOKING_PATH==="/reserva"?"featured":((BOOKING_PATH==="
 if(LEGACY_DIRECT_BOOKING&&BOOKING_PATH!=="/reserva-s"){
   LEGACY_BOOKING_PARAMS.delete("reserva");
   LEGACY_BOOKING_PARAMS.delete("v");
+  if(Array.isArray(window.__olanoUrlAllow))[...LEGACY_BOOKING_PARAMS.keys()].forEach(k=>{if(!window.__olanoUrlAllow.includes(k))LEGACY_BOOKING_PARAMS.delete(k)});
   const remainingQuery=LEGACY_BOOKING_PARAMS.toString();
   const fullTarget=`/reserva-s${remainingQuery?`?${remainingQuery}`:""}`;
   // Si el píxel de TikTok está ocultando la URL, se muestra primero la versión segura
@@ -118,10 +119,11 @@ function startLandingExperience(){
 </script>
 <script src="/assets/business-config-v1.js?v=20260920-8"></script>
 <link rel="stylesheet" href="/assets/offer10-v28.css?v=20260911-6">
-<script src="/assets/offer10-v28.js?v=20261110-1"></script>
+<script src="/assets/offer10-v28.js?v=20261110-2"></script>
 <script src="/assets/offer10-colorfix-v7.js?v=20260911-1"></script>
 <script src="/assets/conversion-funnel-v8.js?v=20260920-9"></script>
-<script src="/assets/whatsapp-template-v8.js?v=20260911-3"></script>
+<script src="/assets/whatsapp-template-v8.js?v=20261110-1"></script>
+<script src="/assets/meta-reserva-v1.js?v=20261110-1"></script>
 <script src="/assets/jornada-pago-v1.js?v=20261110-1"></script>
 
 </body>

@@ -1,5 +1,8 @@
 // V2.8 PATCH06 · REAL BOOKING BACKEND · NOVARE DIRECT BOOKING + PATIENT NOTE + SELF MANAGE + AUTO WHATSAPP
 (() => {
+  // Una sola salida a WhatsApp tras reservar: gana el mensaje más completo y se espera 700 ms
+  // para que los eventos de «reservó» (Meta, TikTok, GA4) alcancen a enviarse.
+  window.__olanoWaGo=window.__olanoWaGo||(function(){let best="",bp=-1,timer=null;return function(url,prio){if(!url)return;if(prio>=bp){best=url;bp=prio}if(timer)return;timer=setTimeout(()=>{try{location.replace(best)}catch{location.href=best}},700)}})();
   const BOOKING_API = "https://xnlzsgulskqyecfgzhwa.supabase.co/functions/v1/dr-olano-booking";
   const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_s9YdJaMe_ll4QehPkADlKQ_KkuvWt32";
   const TURNSTILE_SITE_KEY = "0x4AAAAAAEquPSErt1V9EL1G";
@@ -293,7 +296,7 @@
       }
       const waUrl=buildWhatsAppHandoff();state.url=waUrl;const wa=$("#openWhatsApp");if(wa&&waUrl){wa.href=waUrl;wa.style.display="inline-flex";wa.innerHTML=`${icon("i-send")}Abrir WhatsApp`}
       clearConfirmedUi();trackEvent("booking_confirmed");trackTikTokSchedule();go(5);
-      if(waUrl){trackEvent("booking_whatsapp_handoff",{source:"auto_redirect"});requestAnimationFrame(()=>window.location.assign(waUrl))}
+      if(waUrl){trackEvent("booking_whatsapp_handoff",{source:"auto_redirect"});window.__olanoWaGo(waUrl,1)}
     }catch(e){
       turnstileToken="";if(turnstileWidgetId!==null&&window.turnstile){try{window.turnstile.reset(turnstileWidgetId)}catch{}}
       const code=e?.code||"";

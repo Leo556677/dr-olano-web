@@ -1,0 +1,34 @@
+<!-- Píxel de Meta «DR OLANO | WEB». Va después del de TikTok.
+     1) Deja la URL solo con datos de campaña (quita servicio, tokens y cualquier dato médico) y la mantiene así.
+     2) Sin coincidencia automática: Meta no recibe el texto de los botones ni de los formularios.
+     3) Solo eventos con nombres neutros y sin parámetros (window.olanoMeta). -->
+<script>
+(function(w,d){
+  var ID="2579515552504402";
+  var ALLOW=["utm_source","utm_medium","utm_campaign","utm_content","utm_term","utm_id","fbclid","ttclid"];
+  w.__olanoUrlAllow=ALLOW;
+  try{
+    // La URL original ya la guardó el píxel de TikTok; si no, se guarda aquí para el resto de scripts.
+    var orig=typeof w.__olanoAttributionQuery==="string"?w.__olanoAttributionQuery:w.location.search;
+    w.__olanoAttributionQuery=orig||"";
+    var src=new URLSearchParams(orig||""),safe=new URLSearchParams();
+    ALLOW.forEach(function(k){if(src.has(k))safe.set(k,src.get(k))});
+    var qs=safe.toString(),target=w.location.pathname+(qs?"?"+qs:"")+w.location.hash;
+    if(w.location.pathname+w.location.search+w.location.hash!==target)history.replaceState(history.state,"",target);
+  }catch(e){}
+
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(w,d,"script","https://connect.facebook.net/en_US/fbevents.js");
+  fbq("set","autoConfig",false,ID);
+  fbq("init",ID);
+  fbq("track","PageView");
+
+  // Evento a Meta sin parámetros. standard=true para eventos estándar (Contact, ViewContent).
+  // once=true lo envía una sola vez por visita.
+  w.olanoMeta=function(name,standard,once){
+    try{
+      if(once){var k="olanoMetaOnce:"+name;if(sessionStorage.getItem(k)==="1")return;sessionStorage.setItem(k,"1")}
+      fbq(standard?"track":"trackCustom",name);
+    }catch(e){}
+  };
+})(window,document);
+</script>

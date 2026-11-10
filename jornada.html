@@ -3,7 +3,7 @@
 <!doctype html>
 <html lang="es">
 <head>
-{% include analytics-ga4.html %}{% include analytics-tiktok.html %}
+{% include analytics-ga4.html %}{% include analytics-tiktok.html %}{% include analytics-meta.html %}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Jornada de cirugía facial · 18, 19 y 20 de noviembre | Dr. Olano</title>
@@ -889,9 +889,62 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
     $$("details").forEach(function(d){d.addEventListener("toggle",fabApply)});
   }else if(fab){fab.classList.add("show")}
 
-  // Píxel de Meta: solo PageView estándar (sin datos de salud).
-  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,"script","https://connect.facebook.net/en_US/fbevents.js");
-  fbq("init","2579515552504402");fbq("track","PageView");
+  // ---------- Medición: qué toca y hasta dónde llega (GA4 + Meta, nombres neutros) ----------
+  // Meta recibe solo el nombre del evento, sin parámetros. GA4 recibe además dónde ocurrió.
+  function track(ga,meta,params,metaStd,once){
+    try{if(typeof window.gtag==="function")window.gtag("event",ga,params||{})}catch(e){}
+    try{if(meta&&typeof window.olanoMeta==="function")window.olanoMeta(meta,!!metaStd,!!once)}catch(e){}
+  }
+  window.__jtrack=track;
+  $$(".js-book").forEach(function(a){a.addEventListener("click",function(){
+    var lugar=a.id==="fab"?(a.classList.contains("dock")?"cierre":"flotante"):"portada";
+    track("clic_reservar","ClicReservar",{lugar:lugar});
+  })});
+  $$(".js-wa").forEach(function(a){a.addEventListener("click",function(){
+    var lugar=a.closest(".top")?"encabezado":a.closest(".faq")?"preguntas":a.closest(".end")?"cierre":"otro";
+    track("clic_whatsapp","Contact",{lugar:lugar},true);
+  })});
+  $$(".js-copy").forEach(function(b){b.addEventListener("click",function(){
+    var v=($("[data-copy]",b.parentNode)||{}).getAttribute?$("[data-copy]",b.parentNode).getAttribute("data-copy"):"";
+    var medio=v.length===9?"yape":v.length>16?"cci":"bcp";
+    track("copiar_pago","CopiarPago",{medio:medio});
+  })});
+  $$(".faq details").forEach(function(dt,i){dt.addEventListener("toggle",function(){
+    if(dt.open)track("abrir_pregunta","AbrioPregunta",{pregunta:i+1});
+  })});
+  (function(){var b=$(".js-afiche");if(b)b.addEventListener("click",function(){track("ver_afiche","VerAfiche")})})();
+  $$(".tab").forEach(function(t,i){t.addEventListener("click",function(){
+    track("carrusel_zona","CarruselManual",{zona:["mirada","perfil","rostro"][i]||""});
+  })});
+  // Video: inicio, mitad y final (el video se crea al tocar «play»).
+  (function(){
+    var box=$("#video .video-box");if(!box||!("MutationObserver" in window))return;
+    new MutationObserver(function(){
+      var v=$("video",box);if(!v||v.__jt)return;v.__jt=1;
+      var half=false;
+      v.addEventListener("play",function(){track("video_inicio","VideoInicio",{},false,true)});
+      v.addEventListener("timeupdate",function(){if(!half&&v.duration&&v.currentTime/v.duration>=.5){half=true;track("video_50","Video50",{},false,true)}});
+      v.addEventListener("ended",function(){track("video_completo","VideoCompleto",{},false,true)});
+    }).observe(box,{childList:true});
+  })();
+  // Lectura: hasta dónde baja (50 % y 90 % de la página).
+  (function(){
+    var hit={};
+    function chk(){
+      var h=document.documentElement.scrollHeight-window.innerHeight;if(h<=0)return;
+      var pct=window.scrollY/h*100;
+      [50,90].forEach(function(p){if(pct>=p&&!hit[p]){hit[p]=1;track("lectura","Lectura"+p,{porcentaje:p},false,true)}});
+    }
+    var tk=false;window.addEventListener("scroll",function(){if(tk)return;tk=true;setTimeout(function(){tk=false;chk()},300)},{passive:true});
+  })();
+  // Permanencia: 30 y 60 segundos con la página visible.
+  (function(){
+    var seen=0,last=Date.now(),sent={};
+    setInterval(function(){
+      var now=Date.now();if(document.visibilityState==="visible")seen+=now-last;last=now;
+      [30,60].forEach(function(t){if(seen>=t*1000&&!sent[t]){sent[t]=1;track("permanencia","Permanencia"+t,{segundos:t},false,true)}});
+    },1000);
+  })();
 })();
 </script>
 </body>

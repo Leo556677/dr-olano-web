@@ -1,7 +1,7 @@
 ---
 permalink: /
 ---
-{% capture ga4_head %}<head>{% include analytics-ga4.html %}{% include analytics-tiktok.html %}{% endcapture %}
+{% capture ga4_head %}<head>{% include analytics-ga4.html %}{% include analytics-tiktok.html %}{% include analytics-meta.html %}{% endcapture %}
 {% capture v28_part01 %}{% include v28/part01.html %}{% endcapture %}{{ v28_part01
   | replace: '<head>', ga4_head
   | replace: 'assets/logo-isotipo-128.png', 'assets/logo-isotipo.png'
@@ -63,7 +63,6 @@ permalink: /
   | replace: '<p>El cupo se bloqueará definitivamente cuando el negocio lo confirme.</p>', '<p>La sincronización con la agenda del Dr. Olano se realiza automáticamente.</p>'
   | replace: '<span>Cita<br>pendiente</span>', '<span>Reserva<br>en curso</span>'
   | replace: '</main>', '<section class="block" id="perfil-medico"><div class="wrap"><div class="section-head"><h2>Conoce al Dr. Olano</h2><p>Información sobre su atención médica y las áreas disponibles en Carabayllo.</p></div><a class="route" href="/doctor-olano"><span class="route-icon"><svg class="icon"><use href="#i-check"/></svg></span><div><b>Perfil médico</b><small>Conoce el enfoque de atención de Dr. Olano.</small></div><svg class="icon route-arrow"><use href="#i-arrow"/></svg></a></div></section><section class="block" id="areas-medicas"><div class="wrap"><div class="section-head"><h2>Conoce nuestras áreas de atención</h2><p>Información médica y opciones de consulta en Carabayllo.</p></div><div class="routes"><a class="route" href="/medicina-estetica-carabayllo"><span class="route-icon"><svg class="icon"><use href="#i-service"/></svg></span><div><b>Medicina estética</b><small>Evaluación facial y opciones según cada caso.</small></div><svg class="icon route-arrow"><use href="#i-arrow"/></svg></a><a class="route" href="/manejo-del-dolor-carabayllo"><span class="route-icon"><svg class="icon"><use href="#i-service"/></svg></span><div><b>Manejo del dolor</b><small>Evaluación médica e intervencionismo ecoguiado.</small></div><svg class="icon route-arrow"><use href="#i-arrow"/></svg></a><a class="route" href="/metabolismo-obesidad-carabayllo"><span class="route-icon"><svg class="icon"><use href="#i-service"/></svg></span><div><b>Metabolismo y obesidad</b><small>Evaluación y acompañamiento individual.</small></div><svg class="icon route-arrow"><use href="#i-arrow"/></svg></a><a class="route" href="/medicina-regenerativa-carabayllo"><span class="route-icon"><svg class="icon"><use href="#i-service"/></svg></span><div><b>Medicina regenerativa</b><small>Información y evaluación médica personalizada.</small></div><svg class="icon route-arrow"><use href="#i-arrow"/></svg></a></div></div></section></main>'
-  | replace: 'metaPixelId:""', 'metaPixelId:"2579515552504402"'
 }}
 {% capture v28_part05 %}{% include v28/part05.html %}{% endcapture %}{{ v28_part05
   | replace: 'if(typeof window.fbq==="function")window.fbq("trackCustom",event,clean);', '/* Meta custom events disabled for health/wellness compliance. Standard PageView remains enabled in initTracking(). */'
