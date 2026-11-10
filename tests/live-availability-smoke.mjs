@@ -56,3 +56,24 @@ test('Una vista previa no puede modificar ni crear reservas',async()=>{
   assert.equal(response.status,403);
   assert.equal(data.code,'PREVIEW_READ_ONLY');
 });
+
+
+test('El flujo OTP permanece desactivado hasta configurar un correo real', async () => {
+  const response=await fetch(`${API}/dr-olano-booking-otp`,{
+    method:'GET',headers:{Origin:official,apikey:PUBLISHABLE},signal:AbortSignal.timeout(12000)
+  });
+  const data=await response.json();
+  assert.equal(response.status,200);
+  assert.equal(data.otp_enabled,false);
+});
+test('El endpoint OTP no crea una cita si el proveedor no está habilitado', async () => {
+  const response=await fetch(`${API}/dr-olano-booking-otp`,{
+    method:'POST',
+    headers:{Origin:official,'Content-Type':'application/json',apikey:PUBLISHABLE},
+    body:JSON.stringify({action:'book',service_code:'botox',date:'2026-11-13',time:'09:00'}),
+    signal:AbortSignal.timeout(12000)
+  });
+  const data=await response.json();
+  assert.equal(response.status,503);
+  assert.equal(data.code,'OTP_BOOKING_NOT_READY');
+});

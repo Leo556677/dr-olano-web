@@ -87,6 +87,10 @@ async function verifyTurnstile(token: string, ip: string) {
 }
 function mapBookingError(message: string) {
   const m = String(message || "");
+  if (m.includes("PATIENT_DNI_CHANGE_REQUIRES_REVIEW")) return {
+    status:409, code:"PATIENT_DNI_REVIEW_REQUIRED",
+    message:"Este correo ya está vinculado a otro DNI. Comunícate con recepción."
+  };
   if (m.includes("PATIENT_IDENTITY_CHANGE_REQUIRES_REVIEW")) return {
     status: 409,
     code: "PATIENT_PROFILE_REVIEW_REQUIRED",
@@ -117,7 +121,8 @@ function mapManageError(message: string) {
 // en un correo ni un UUID enviados desde el navegador.
 const PATIENT_AUTH_URL = "https://pxccwrhtmwkwrzofuphj.supabase.co";
 const PATIENT_AUTH_PUBLISHABLE_KEY = "sb_publishable_kKxqpfyz6MwFPyIrDo7X6w_yWy-OkNb";
-async function verifyPatientAppToken(token: string): Promise<string | null> {
+type VerifiedPatient = { id: string; email: string };
+async function verifyPatientAppToken(token: string): Promise<VerifiedPatient | null> {
   if (!token || token.length > 4096 || !/^[A-Za-z0-9._-]+$/.test(token)) return null;
   const reply = await fetch(PATIENT_AUTH_URL + "/auth/v1/user", {
     headers: {
@@ -130,7 +135,7 @@ async function verifyPatientAppToken(token: string): Promise<string | null> {
   if (!reply.ok) return null;
   const user: any = await reply.json().catch(() => ({}));
   if (!/^[0-9a-f-]{36}$/i.test(String(user?.id || "")) || !user?.email || !user?.email_confirmed_at) return null;
-  return String(user.id);
+  return {id:String(user.id),email:String(user.email).trim().toLowerCase()};
 }
 
 export default {
@@ -141,7 +146,14 @@ export default {
       return new Response(null, { status: 204, headers: cors(origin) });
     }
     if (!validOrigin(origin)) return json({ ok: false, code: "ORIGIN_DENIED" }, 403, origin);
-    if (req.method === "GET") return json({ ok: true, service: "dr-olano-booking-otp", version: "1.5.0", site_key: TURNSTILE_SITE_KEY, turnstile_configured: Boolean(Deno.env.get("TURNSTILE_SECRET_KEY")), patient_note_supported: true, self_manage_supported: true }, 200, origin);
+    if (req.method === "GET") {
+      const { data: enabled, error: gateError } = await ctx.supabaseAdmin.rpc("dr_olano_otp_booking_enabled");
+      return json({ ok: true, service: "dr-olano-booking-otp", version: "1.6.0",
+        site_key: TURNSTILE_SITE_KEY,
+        otp_enabled: !gateError && enabled === true,
+        patient_note_supported: true, self_manage_supported: true
+      }, 200, origin);
+    }
     if (req.method !== "POST") return json({ ok: false, code: "METHOD_NOT_ALLOWED" }, 405, origin);
 
     let body: any;
@@ -271,17 +283,22 @@ export default {
     }
 
     if (action === "book") {
-      // Despliegue progresivo: NO registrar reservas OTP hasta configurar SMTP,
-      // secreto CRM↔APP y prueba de sincronización integral.
-      // Por defecto bloqueado; habilitar exclusivamente con verificación operativa.
-      if (Deno.env.get("DR_OLANO_OTP_BOOKING_ENABLED") !== "true") {
-        return json({ ok: false, code: "OTP_BOOKING_NOT_READY", message: "La reserva verificada todavía no está disponible. Utiliza el formulario habitual." }, 503, origin);
+      // Feature flag privada: activar solo tras SMTP, worker email y prueba E2E.
+      const { data: otpEnabled, error: gateError } = await ctx.supabaseAdmin.rpc("dr_olano_otp_booking_enabled");
+      if (gateError || otpEnabled !== true) {
+        return json({ ok:false, code:"OTP_BOOKING_NOT_READY",
+          message:"La reserva verificada todavía no está disponible. Utiliza el formulario habitual."
+        },503,origin);
       }
       const serviceCode = String(body?.service_code || "").trim();
       const dateIso = String(body?.date || "").trim();
       const time = String(body?.time || "").trim();
       const name = String(body?.name || "").trim().replace(/\s+/g, " ");
       const phone = normalizePhone(String(body?.phone || ""));
+      const dni = String(body?.dni || "").trim();
+      if (!/^[0-9]{8}$/.test(dni)) return json({
+        ok:false, code:"INVALID_DNI", message:"Ingresa un DNI válido de 8 dígitos."
+      },400,origin);
       const token = String(body?.turnstile_token || "");
       const deviceId = String(body?.device_id || "").trim();
       const modality = String(body?.modality || "").trim().toLowerCase();
@@ -295,12 +312,18 @@ export default {
       const ip = getClientIp(req);
       const turnstile = await verifyTurnstile(token, ip);
       if (!turnstile.ok) return json({ ok: false, code: turnstile.code, errors: (turnstile as any).errors || [] }, turnstile.status, origin);
-      let appPatientId: string | null = null;
-      try { appPatientId = await verifyPatientAppToken(String(body?.app_access_token || "")); }
+      let verifiedPatient: VerifiedPatient | null = null;
+      try { verifiedPatient = await verifyPatientAppToken(String(body?.app_access_token || "")); }
       catch { return json({ ok: false, code: "EMAIL_VERIFY_UNAVAILABLE" }, 503, origin); }
-      if (!appPatientId) return json({
+      if (!verifiedPatient) return json({
         ok: false, code: "EMAIL_OTP_REQUIRED", message: "Verifica el código enviado a tu correo antes de reservar."
       }, 401, origin);
+      const typedEmail=String(body?.verified_email||"").trim().toLowerCase();
+      if(!typedEmail || typedEmail !== verifiedPatient.email) return json({
+        ok:false,code:"EMAIL_MISMATCH",message:"El correo debe coincidir con el que verificaste mediante el código."
+      },409,origin);
+      const appPatientId=verifiedPatient.id;
+      const verifiedEmail=verifiedPatient.email;
       const secret = String((turnstile as any).secret);
       const service: any = await resolveService(serviceCode);
       if (!service || service.activo !== true || service.visible_web === false) return json({ ok: false, code: "INVALID_SERVICE" }, 404, origin);
@@ -318,11 +341,13 @@ export default {
       const phoneHash = await hmacHex(secret, `phone|${phone}`);
       const ipHash = await hmacHex(secret, `ip|${ip || "unavailable"}`);
       const deviceHash = await hmacHex(secret, `device|${deviceId}|${ua}|${lang}`);
-      const { data: booking, error: bookingErr } = await ctx.supabaseAdmin.rpc("crear_cita_web_segura_v4", {
+      const { data: booking, error: bookingErr } = await ctx.supabaseAdmin.rpc("crear_cita_web_segura_v6", {
         p_negocio_id: negocio.id, p_servicio_id: service.id, p_recurso_id: resource.id, p_nombre: name, p_telefono_e164: phone,
         p_inicio: localStart.toUTC().toISO(), p_phone_hash: phoneHash, p_ip_hash: ipHash, p_device_hash: deviceHash,
         p_modalidad: service.requiere_consulta_previa === true ? modality : null, p_motivo_consulta: note || null,
          p_patient_user_id: appPatientId,
+         p_dni: dni,
+         p_verified_email: verifiedEmail,
       });
       if (bookingErr) { const mapped = mapBookingError(bookingErr.message || bookingErr.details || ""); return json({ ok: false, code: mapped.code, message: mapped.message }, mapped.status, origin); }
       const row = Array.isArray(booking) ? booking[0] : booking;

@@ -114,8 +114,9 @@
 
 <section class="step" data-step="3">
   <div class="step-title"><svg class="icon"><use href="#i-user"/></svg><h2>Tus datos</h2></div>
-  <div class="field"><label for="clientName"><svg class="icon"><use href="#i-user"/></svg>Nombre y apellido</label><input id="clientName" autocomplete="name" placeholder="Ej. Juan Pérez"></div>
+  <div class="field"><label for="clientName"><svg class="icon"><use href="#i-user"/></svg>Nombres y apellidos</label><input id="clientName" autocomplete="name" maxlength="120" placeholder="Ej. Juan Pérez" required></div>
   <div class="field"><label for="clientPhone"><svg class="icon"><use href="#i-phone"/></svg>Celular</label><input id="clientPhone" inputmode="tel" autocomplete="tel" placeholder="Ej. 999 999 999"></div>
+  <div class="field"><label for="clientDni"><svg class="icon"><use href="#i-user"/></svg>DNI</label><input id="clientDni" type="text" inputmode="numeric" pattern="[0-9]{8}" maxlength="8" autocomplete="off" spellcheck="false" placeholder="8 dígitos" aria-describedby="dniHelper" required><p id="dniHelper" style="margin:5px 0 0;font-size:.7rem;line-height:1.5;color:var(--muted)">Se utiliza para identificar tu reserva. No reemplaza la verificación de correo para ingresar a la app.</p></div>
   <p class="data-note">Tus datos se utilizan para preparar y gestionar esta solicitud y se envían al centro mediante WhatsApp cuando tú presionas “Enviar a WhatsApp”.</p>
   <div class="actions"><button class="back-btn" id="backTo2"><svg class="icon"><use href="#i-left"/></svg></button><button class="btn btn-primary primary" id="toStep4" disabled><svg class="icon"><use href="#i-service"/></svg>Revisar cita</button></div>
 </section>

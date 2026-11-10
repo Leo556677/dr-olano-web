@@ -52,7 +52,11 @@ async function book(body) {
   const res = await fetch(BOOKING_API, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', apikey: BOOKING_PUBLISHABLE_KEY },
-    body: JSON.stringify({ ...body, app_access_token: identity.accessToken }),
+    body: JSON.stringify({
+      ...body,
+      app_access_token: identity.accessToken,
+      verified_email: identity.email,
+    }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -97,14 +101,16 @@ function init() {
       <button id="patient-email-otp-send" type="button">Enviar código</button>
     </div>
     <div class="patient-otp-verify">
-      <input id="patient-email-otp-code" inputmode="numeric" pattern="[0-9]{8}"
-        autocomplete="one-time-code" maxlength="8" placeholder="Código de 8 dígitos"
+      <input id="patient-email-otp-code" inputmode="numeric" pattern="[0-9]{6,10}"
+        autocomplete="one-time-code" maxlength="10" placeholder="Código recibido"
         aria-label="Código de verificación">
       <button id="patient-email-otp-verify" type="button">Verificar</button>
     </div>
     <p id="patient-email-otp-status" role="status" aria-live="polite"></p>
   `;
-  phoneField.insertAdjacentElement('afterend', section);
+  // DNI aparece antes del correo; un solo campo de nombres y apellidos.
+  const dniField = byId('clientDni')?.closest('.field');
+  (dniField || phoneField).insertAdjacentElement('afterend', section);
   const css = document.createElement('style');
   css.textContent = `
     .patient-email-otp{margin:12px 0;padding:14px;border:1px solid #d1e4e4;border-radius:16px;background:#f6fafa}
@@ -147,7 +153,7 @@ function init() {
       if (error) throw error;
       requestedEmail = email;
       nextRequestAt = Date.now() + 60000;
-      updateState('Revisa tu correo e ingresa el código de 8 dígitos.');
+      updateState('Revisa tu correo e ingresa el código recibido.');
       codeInput.focus();
     } catch {
       updateState('No pudimos enviar el código. Vuelve a intentarlo.', true);
@@ -161,8 +167,8 @@ function init() {
   check.addEventListener('click', async () => {
     const email = normalized(emailInput.value);
     const token = codeInput.value.trim().replace(/\s/g, '');
-    if (!requestedEmail || email !== requestedEmail || !/^\d{8}$/.test(token)) {
-      updateState('Solicita primero el código y escribe sus 8 dígitos.', true);
+    if (!requestedEmail || email !== requestedEmail || !/^\d{6,10}$/.test(token)) {
+      updateState('Solicita primero el código y escribe los dígitos recibidos.', true);
       return;
     }
     if (busy) return;
