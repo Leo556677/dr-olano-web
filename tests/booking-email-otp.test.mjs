@@ -157,10 +157,17 @@ test('El backend exige identidad validada antes de ejecutar la reserva transacci
 });
 
 
-test('un paciente puede terminar reserva sin abrir WhatsApp ni esperar su WABA', () => {
+test('tras registrar una cita web se abre automáticamente WhatsApp con el resumen', () => {
   new vm.Script(whatsAppTemplate);
-  assert.doesNotMatch(bookingPatch, /window\.__olanoWaGo\(waUrl,1\)/);
-  assert.doesNotMatch(whatsAppTemplate, /apply\(true\)/);
-  assert.match(whatsAppTemplate, /apply\(false\)/);
+  assert.match(bookingPatch, /window\.__olanoWaGo\(waUrl,1\)/);
+  assert.match(bookingPatch, /booking_whatsapp_handoff/);
+  assert.match(whatsAppTemplate, /queueMicrotask\(\(\)=>apply\(true\)\)/);
+  assert.match(whatsAppTemplate, /window\.__olanoWaGo\(url,3\)/);
+  assert.match(whatsAppTemplate, /location\.replace\(url\)/);
+  assert.match(bookingPatch, /'https:\/\/wa\.me\/'|https:\/\/wa\.me\/\$\{businessPhone\}/);
+  for (const marker of ['Código:', 'Paciente:', 'Celular:', 'Servicio:', 'Fecha:', 'Hora:', 'Gestionar \/ reprogramar \/ cancelar:']) {
+    assert.ok(bookingPatch.includes(marker), `Falta campo del resumen: ${marker}`);
+  }
+  assert.match(bookingPatch, /if\(state\.manageUrl\)/);
   assert.match(whatsAppTemplate, /document\.addEventListener\('click'/);
 });
