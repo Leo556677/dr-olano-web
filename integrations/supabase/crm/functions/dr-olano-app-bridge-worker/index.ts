@@ -1,4 +1,4 @@
-// STAGING SOURCE ONLY: receptor cron del CRM. Sin WABA y sin secretos en el cliente.
+// Worker servidor-servidor protegido por cron Vault; secreto de puente sólo en Vault.
 // Programar cada minuto tras configurar secretos en ambos proyectos y probar seguridad.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
@@ -23,17 +23,18 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return json({ error: 'METHOD_NOT_ALLOWED' }, 405);
   const url = Deno.env.get('SUPABASE_URL');
   const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  const bridgeSecret = Deno.env.get('DR_OLANO_APP_BRIDGE_SECRET');
   const cronSecret = req.headers.get('x-dr-olano-cron') ?? '';
-  if (!url || !key || !bridgeSecret || bridgeSecret.length < 32 || !cronSecret) {
-    return json({ error: 'NOT_CONFIGURED' }, 503);
-  }
+  if (!url || !key || !cronSecret) return json({ error: 'NOT_CONFIGURED' }, 503);
   const admin = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
   const { data: allowed, error: authError } = await admin.rpc('validar_dr_olano_integrations_cron', {
     p_secret: cronSecret,
   });
   if (authError || allowed !== true) return json({ error: 'UNAUTHORIZED' }, 401);
-
+  // The credential is never sent to the browser or included in source code.
+  const { data: bridgeSecret, error: secretError } = await admin.rpc('dr_olano_app_bridge_secret');
+  if (secretError || typeof bridgeSecret !== 'string' || bridgeSecret.length < 64) {
+    return json({ error: 'BRIDGE_SECRET_UNAVAILABLE' }, 503);
+  }
   const { data: jobs, error: claimError } = await admin.rpc('dr_olano_app_bridge_claim', { p_limit: 20 });
   if (claimError) return json({ error: 'QUEUE_CLAIM_FAILED' }, 500);
   let processed = 0;
