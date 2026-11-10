@@ -1,4 +1,7 @@
 // STAGING SOURCE ONLY: desplegar con slug NUEVO dr-olano-booking-otp después de la migración.
+// Requiere verify_jwt=false, igual que el endpoint de reservas existente.
+// La función verifica el token Auth de OTRO proyecto (app), no el JWT del CRM,
+// y exige Turnstile para crear reservas; sin ello el gateway rechazaría solicitudes válidas.
 // Se preservan todos los controles de disponibilidad, Turnstile y antispam de la versión 16.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "jsr:@supabase/server@^1";
