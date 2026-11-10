@@ -292,6 +292,9 @@
       const done=document.querySelector('#booking .step[data-step="5"]');
       if(done){
         const h=done.querySelector("h2"),paragraphs=done.querySelectorAll("p");if(h)h.textContent="Cita reservada";if(paragraphs[0])paragraphs[0].textContent=`Tu cita quedó registrada para ${fmt(fromIso(state.date))} a las ${state.time}.`;if(paragraphs[1])paragraphs[1].textContent=`Código de reserva: ${state.id}`;
+        let appNotice=done.querySelector("#patientAppBookingNotice");
+        if(!appNotice){appNotice=document.createElement("p");appNotice.id="patientAppBookingNotice";appNotice.style.cssText="font-size:13px;line-height:1.5;margin-top:8px";done.querySelector(".done")?.appendChild(appNotice)}
+        if(appNotice)appNotice.textContent="Tu cita quedará disponible en la app del Dr. Olano con el mismo correo verificado. La sincronización puede tardar unos minutos.";
         let manage=done.querySelector("#manageBookingLink");
         if(state.manageUrl&&!manage){manage=document.createElement("a");manage.id="manageBookingLink";manage.href=state.manageUrl;manage.textContent="Gestionar mi cita";manage.style.cssText="display:inline-flex;margin-top:8px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;color:var(--navy);font-weight:800;text-decoration:none;background:#fff";done.querySelector(".actions")?.appendChild(manage)}
         if(manage)manage.href=state.manageUrl||"#";
