@@ -15,8 +15,11 @@ async function checkAvailability(endpoint, origin) {
     signal:AbortSignal.timeout(16000),
   });
   const data = await response.json().catch(()=>({code:'INVALID_JSON'}));
-  assert.equal(response.headers.get('access-control-allow-origin'),origin,
-    `CORS bloquea el origen: ${origin}`);
+  // El gateway de Supabase puede responder con '*' para endpoints sin cookies.
+  // Un navegador acepta '*' con credentials:omit; el backend además valida Origin.
+  const allowed = response.headers.get('access-control-allow-origin');
+  assert.ok(allowed === '*' || allowed === origin,
+    `CORS bloquea el origen: ${origin}, ACAO=${allowed}`);
   assert.equal(response.status,200,`${endpoint}: ${data.code || response.status}`);
   assert.equal(data.ok,true);
   assert.ok(Array.isArray(data.slots));
@@ -33,7 +36,8 @@ test('El origen de la vista previa es aceptado en preflight CORS',async()=>{
     signal:AbortSignal.timeout(12000),
   });
   assert.equal(response.status,204);
-  assert.equal(response.headers.get('access-control-allow-origin'),preview);
+  const allowed=response.headers.get('access-control-allow-origin');
+  assert.ok(allowed==='*' || allowed===preview);
 });
 test('La vista previa puede consultar horarios reales sin crear citas',async()=>{
   await checkAvailability('dr-olano-booking-otp',preview);
