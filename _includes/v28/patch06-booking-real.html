@@ -200,6 +200,10 @@
   renderCalendar=function(){
     ensureNovareNoteUi();ensureNovareModalityUi();
     let m=state.month,days=$("#calendarDays"),today=new Date();today.setHours(0,0,0,0);let max=new Date(today);max.setDate(max.getDate()+CONFIG.maxDays);
+    // Jornada de cirugía facial: quien llega desde /jornada solo puede elegir evaluación hasta el 17/11/2026.
+    let jornadaOrigen=false;try{jornadaOrigen=sessionStorage.getItem("olanoOrigen")==="jornada-cirugia-nov-2026"}catch{}
+    if(jornadaOrigen){const jMax=new Date(2026,10,17);if(jMax<max)max=jMax;let note=$("#jornadaFechaNote");if(!note){note=document.createElement("p");note.id="jornadaFechaNote";note.style.cssText="margin:0 0 10px;padding:9px 12px;border-radius:12px;background:#eef9f7;border:1px solid #cfe6e3;color:var(--navy);font-size:.78rem;line-height:1.35;font-weight:600";$(".calendar-head")?.insertAdjacentElement("beforebegin",note)}note.textContent=today>jMax?"La reserva de evaluaciones para la jornada cerró el 17 de noviembre. Escríbenos por WhatsApp.":"Jornada de cirugía facial: elige tu evaluación hasta el 17 de noviembre.";}
+    
     $("#monthTitle").textContent=new Intl.DateTimeFormat("es-PE",{month:"long",year:"numeric"}).format(m);days.innerHTML="";
     let first=new Date(m.getFullYear(),m.getMonth(),1),last=new Date(m.getFullYear(),m.getMonth()+1,0);for(let i=0;i<first.getDay();i++)days.insertAdjacentHTML("beforeend","<span></span>");
     const novare=isNovareService(),allowedDays=isNovareConsult()?new Set([1,3]):novare?NOVARE_DAYS:null;

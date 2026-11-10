@@ -11,7 +11,9 @@
   let wait=null,tickTimer=null,lastWa='';
   const livePromo=()=>window.OLANO_BUSINESS_CONFIG?.promotion||null;
   const promoLoaded=()=>Object.prototype.hasOwnProperty.call(window,'OLANO_BUSINESS_CONFIG');
-  const promoActive=()=>!promoLoaded()||!!livePromo();
+  // Quien llega desde /jornada ya tiene su precio (S/ 70, separa con S/ 20): no se le ofrece el 10 %.
+  const fromJornada=()=>{try{return sessionStorage.getItem('olanoOrigen')==='jornada-cirugia-nov-2026'}catch{return false}};
+  const promoActive=()=>!fromJornada()&&(!promoLoaded()||!!livePromo());
   const discountPct=()=>Math.max(0,Math.min(100,Number(livePromo()?.discount_pct??10)));
   const discountText=()=>String(discountPct()).replace(/\.0+$/,'')+'%';
   const promoTitle=()=>String(livePromo()?.title||'Oferta especial');
