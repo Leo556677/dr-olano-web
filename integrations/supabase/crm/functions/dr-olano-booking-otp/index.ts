@@ -259,6 +259,12 @@ export default {
     }
 
     if (action === "book") {
+      // Despliegue progresivo: NO registrar reservas OTP hasta configurar SMTP,
+      // secreto CRM↔APP y prueba de sincronización integral.
+      // Por defecto bloqueado; habilitar exclusivamente con verificación operativa.
+      if (Deno.env.get("DR_OLANO_OTP_BOOKING_ENABLED") !== "true") {
+        return json({ ok: false, code: "OTP_BOOKING_NOT_READY", message: "La reserva verificada todavía no está disponible. Utiliza el formulario habitual." }, 503, origin);
+      }
       const serviceCode = String(body?.service_code || "").trim();
       const dateIso = String(body?.date || "").trim();
       const time = String(body?.time || "").trim();
