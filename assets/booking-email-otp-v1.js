@@ -3,7 +3,7 @@
 // El servidor de reservas DEBE revalidar el access token contra /auth/v1/user.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.117.0';
 
-const BOOKING_API = 'https://xnlzsgulskqyecfgzhwa.supabase.co/functions/v1/dr-olano-booking';
+const BOOKING_API = 'https://xnlzsgulskqyecfgzhwa.supabase.co/functions/v1/dr-olano-booking-otp';
 const BOOKING_PUBLISHABLE_KEY = 'sb_publishable_s9YdJaMe_ll4QehPkADlKQ_KkuvWt32';
 const AUTH_URL = 'https://pxccwrhtmwkwrzofuphj.supabase.co';
 const AUTH_PUBLISHABLE_KEY = 'sb_publishable_kKxqpfyz6MwFPyIrDo7X6w_yWy-OkNb';
