@@ -33,7 +33,7 @@
 3. Aplicar **primero** la migración de la app y desplegar `dr-olano-web-bridge` con `verify_jwt=false` (solo recibe mensajes con secreto servidor-servidor).
 4. Aplicar migración del CRM, desplegar **después** el código nuevo `dr-olano-booking`. Su token viene del Auth de la app y lo revalida en el servidor.
 5. Desplegar el worker `dr-olano-app-bridge-worker` en el CRM y programar cron cada minuto usando el mismo control `x-dr-olano-cron` que ya valida el worker Google. No exponer el cron secret ni el service role a cliente.
-6. Publicar web OTP y verificar que **todas** las rutas de reserva real apunten a `/reserva-s`: el backend nuevo rechaza reservas sin OTP (`EMAIL_OTP_REQUIRED`). Revisar `reserva.html`, entradas directas y páginas antiguas para evitar que los pacientes queden bloqueados.
+6. Publicar web OTP en **`/`, `/reserva` y `/reserva-s`** (todas ya cargan el módulo en esta rama). Comprobar si alguna ruta antigua externa aún llama la API de reservas sin OTP: el backend nuevo rechaza esas solicitudes (`EMAIL_OTP_REQUIRED`).
 7. Publicar la app solo después de que exista la tabla `web_appointments` con políticas correctas. No fusionar la PR 0.2.1 de asistencia por accidente.
 8. Confirmar el calendario real de la clínica; `last_success_at` de octubre **no demuestra** entrega en noviembre. Probar creación, edición y cancelación end-to-end.
 9. Aclarar titularidad del correo: **un correo por paciente** en la primera versión. Una familia que comparte correo necesita cuentas de tutores/dependientes y permisos adicionales, no un simple `email = email`.
