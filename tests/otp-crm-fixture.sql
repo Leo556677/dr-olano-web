@@ -50,7 +50,7 @@ create table private.cita_integracion_outbox (
 create or replace function private.enqueue_dr_olano_integrations()
 returns trigger language plpgsql security definer
 set search_path to 'pg_catalog','public','private'
-as $
+as $calendar_trigger$
 declare
   v_is_dr_olano boolean;
   v_action text;
@@ -86,7 +86,7 @@ begin
       disponible_at=now(),ultimo_error=null,procesado_at=null,updated_at=now();
   return new;
 end;
-$;
+$calendar_trigger$;
 
 create trigger trg_dr_olano_cita_integrations
 after insert or update on public.citas
