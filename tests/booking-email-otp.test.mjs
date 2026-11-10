@@ -148,7 +148,8 @@ test('El backend exige identidad validada antes de ejecutar la reserva transacci
   assert.match(server, /"\/auth\/v1\/user"/);
   assert.match(server, /user\?\.email_confirmed_at/);
   assert.match(server, /"EMAIL_OTP_REQUIRED"/);
-  assert.match(server, /"crear_cita_web_segura_v4"/);
+  assert.match(server, /"crear_cita_web_segura_v6"/);
+  assert.match(server, /p_verified_email: verifiedEmail/);
   assert.match(bookingPatch, /otpEnabled\?await otp\.book\(payload\):await bookingApi\(payload\)/);
   assert.doesNotMatch(bookingPatch, /app_access_token:/, 'El token no sale del módulo OTP');
   assert.doesNotMatch(source, /OLANO_PATIENT_OTP = \{ getVerifiedIdentity/,
