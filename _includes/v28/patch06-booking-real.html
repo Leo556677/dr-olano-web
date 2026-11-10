@@ -306,6 +306,22 @@
     }catch{}
   }
 
+  function bookingPromoPreview(){
+    // Solo aviso previo: los descuentos se validan en el servidor.
+    try{
+      const o=JSON.parse(sessionStorage.getItem("olanoOffer10V2")||"null");
+      const c=o?.claim||{};
+      const percent=Number(c.discount_pct);
+      const expires=Date.parse(String(c.expires_at||""));
+      if(c.service_code===state.service?.id && (o?.accepted===true || o?.redeemed===true) &&
+         Number.isInteger(percent) && percent>0 && percent<=100 &&
+         (o.redeemed===true || (Number.isFinite(expires)&&expires>Date.now()))){
+        return {percent,kind:"pending"};
+      }
+    }catch{}
+    return null;
+  }
+
   async function sendRealBooking(){
     state.name=$("#clientName").value.trim();state.phone=$("#clientPhone").value.replace(/\s+/g,"");
     const dni=getBookingDni();
@@ -321,6 +337,26 @@
     const otp=window.OLANO_PATIENT_OTP;
     const otpEnabled=otp?.isEnabled?.()===true;
     if(otpEnabled&&!otp?.isVerified?.()){alert("Antes de reservar, verifica tu correo con el código recibido.");go(3);setTimeout(()=>otp?.focusVerification?.(),30);return}
+    if(otpEnabled){
+      const emailField=document.getElementById("patient-booking-email");
+      const confirm=window.OLANO_EMAIL_CONFIRM?.confirmEmail;
+      if(!emailField||typeof confirm!=="function"){
+        alert("No pudimos preparar la confirmación del correo. Recarga la página.");return;
+      }
+      const confirmed=await confirm(emailField.value,bookingPromoPreview());
+      if(confirmed.changed){
+        // Nuevo correo: invalidar OTP anterior; nunca reutilizar una identidad verificada.
+        emailField.value=confirmed.email;
+        emailField.dispatchEvent(new Event("input",{bubbles:true}));
+        otp.reset?.();
+        go(3);
+        setTimeout(()=>otp.focusVerification?.(),40);
+        alert("Verifica el nuevo correo con otro código antes de completar tu reserva.");
+        return;
+      }
+      if(!confirmed.confirmed)return;
+      if(!otp.isVerified()){alert("La verificación venció. Solicita un código nuevo.");go(3);return}
+    }
     if(!turnstileToken){renderBookingTurnstile();alert("Completa la verificación de seguridad para reservar.");return}
     const btn=$("#sendBooking"),old=btn.innerHTML;btn.disabled=true;btn.textContent="Reservando…";
     try{
