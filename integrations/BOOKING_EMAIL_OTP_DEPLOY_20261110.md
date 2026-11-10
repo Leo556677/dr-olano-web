@@ -1,3 +1,14 @@
+## Contrato obligatorio de WhatsApp, ratificado por el usuario
+
+La redirección automática a WhatsApp después de registrar la reserva **NO se elimina ni convierte en opcional**. Debe mantenerse idéntica a la web original:
+
+1. Validar correo con OTP y confirmar la reserva en el CRM.
+2. Obtener el código de reserva, paciente, celular, servicio, fecha, hora y enlace privado para gestionar la cita.
+3. Abrir WhatsApp automáticamente mediante el comportamiento original `__olanoWaGo` / `apply(true)`, con el resumen prellenado. El paciente debe pulsar **Enviar**: abrir el chat no prueba que lo haya enviado.
+4. La confirmación se sincroniza, independientemente del envío del mensaje, con el Google Calendar existente y con la cuenta autenticada correspondiente en la app.
+
+No confundir la restricción de WhatsApp Business API (WABA) con la posibilidad de abrir WhatsApp usando `wa.me`. Ambos comportamientos son independientes. El código original de `assets/whatsapp-template-v8.js` se restauró exactamente como `main`; `_includes/v28/patch06-booking-real.html` recuperó el autoredireccionamiento después de reservar, conservando la validación OTP.
+
 ## Regla de identidad aprobada el 10/11/2026
 **Opción A: un correo por paciente.** Se crea una correspondencia uno-a-uno entre el `user.id` de Auth de la aplicación y una única ficha `contactos.id` del CRM. El primer registro guarda una versión normalizada del nombre; un segundo correo que intente reclamar la misma ficha, o un mismo correo que intente reservar para otra ficha/nombre, se rechaza en una transacción. Un cambio legítimo de nombre o celular se verifica manualmente en recepción antes de modificar el vínculo. No se enlazan citas históricas por teléfono o DNI. El OTP demuestra acceso al email, no es una validación de DNI ni de identidad clínica.
 
