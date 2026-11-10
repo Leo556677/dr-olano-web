@@ -7,6 +7,7 @@ const source = readFileSync(new URL('../assets/booking-email-otp-v1.js', import.
   .replace(/^import \{ createClient \} from .*;\r?\n/m, '');
 const bookingPatch = readFileSync(new URL('../_includes/v28/patch06-booking-real.html', import.meta.url), 'utf8');
 const server = readFileSync(new URL('../integrations/supabase/crm/functions/dr-olano-booking/index.ts', import.meta.url), 'utf8');
+const whatsAppTemplate = readFileSync(new URL('../assets/whatsapp-template-v8.js', import.meta.url), 'utf8');
 
 function element(value = '') {
   const events = new Map();
@@ -153,4 +154,13 @@ test('El backend exige identidad validada antes de ejecutar la reserva transacci
   assert.doesNotMatch(source, /OLANO_PATIENT_OTP = \{ getVerifiedIdentity/,
     'La API global no permite extraer el token');
     assert.doesNotMatch(bookingPatch, /localStorage\.setItem\([^\n]*app_access_token/);
+});
+
+
+test('un paciente puede terminar reserva sin abrir WhatsApp ni esperar su WABA', () => {
+  new vm.Script(whatsAppTemplate);
+  assert.doesNotMatch(bookingPatch, /window\.__olanoWaGo\(waUrl,1\)/);
+  assert.doesNotMatch(whatsAppTemplate, /apply\(true\)/);
+  assert.match(whatsAppTemplate, /apply\(false\)/);
+  assert.match(whatsAppTemplate, /document\.addEventListener\('click'/);
 });
