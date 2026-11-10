@@ -230,6 +230,13 @@ export default {
     }
 
     if (action === "book") {
+      // Reject legacy bookings when secure OTP is activated, including stale cached browsers.
+      const {data:otpEnabled,error:gateError}=await ctx.supabaseAdmin.rpc('dr_olano_otp_booking_enabled');
+      if (gateError) return json({ok:false,code:"BOOKING_MODE_UNAVAILABLE"},503,origin);
+      if (otpEnabled===true) return json({
+        ok:false,code:"EMAIL_OTP_REQUIRED",
+        message:"Actualiza la página para verificar tu correo y registrar la cita."
+      },409,origin);
       const serviceCode = String(body?.service_code || "").trim();
       const dateIso = String(body?.date || "").trim();
       const time = String(body?.time || "").trim();
