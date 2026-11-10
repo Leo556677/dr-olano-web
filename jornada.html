@@ -142,16 +142,21 @@ svg{display:block}
 
 /* Ruta: cómo funciona */
 .route{position:relative;margin-top:30px}
+#como-funciona{overflow-x:clip}
+@supports not (overflow-x:clip){#como-funciona{overflow-x:hidden}}
 .route-svg{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none}
 .r-base{fill:none;stroke:#b9cdd3;stroke-width:2;stroke-dasharray:1 8;stroke-linecap:round}
 .r-prog{fill:none;stroke:var(--teal);stroke-width:3;stroke-linecap:round}
 .r-dot{fill:var(--teal);stroke:#fff;stroke-width:2.5;opacity:0}
-.steps{position:relative;list-style:none;margin:0;padding:0;display:grid;gap:58px}
+.steps{position:relative;list-style:none;margin:0;padding:0;display:grid;gap:96px}
 .step{display:grid;grid-template-columns:64px minmax(0,1fr);gap:16px;align-items:start;align-content:start;min-height:112px}
 .step.alt{grid-template-columns:minmax(0,1fr) 64px}
 .step.alt .node{order:2}
 .node{position:relative;z-index:1;width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:#fff;border:2px solid #b9cdd3;color:#7f97a1;transition:background .4s,border-color .4s,color .4s,transform .5s var(--ease),box-shadow .5s}
 .node .ico{width:27px;height:27px}
+.node::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--teal);opacity:0;pointer-events:none}
+.on>.node::after{animation:burst 1s ease-out .05s}
+@keyframes burst{0%{opacity:.85;transform:scale(1)}100%{opacity:0;transform:scale(1.75)}}
 .node b{position:absolute;top:-7px;right:-7px;width:25px;height:25px;border-radius:50%;background:var(--teal2);color:#fff;font:700 .8rem/25px Inter,sans-serif;text-align:center}
 .on>.node,.node.on{background:var(--navy);border-color:var(--navy);color:var(--aqua);transform:scale(1.07);box-shadow:0 0 0 7px rgba(26,167,157,.16),0 12px 22px rgba(6,29,51,.22)}
 .st h3{margin-top:3px;font-size:1.32rem}
@@ -174,6 +179,20 @@ svg{display:block}
 .dest b{display:block;font:600 1.3rem/1.2 Fraunces,serif}
 .dest span{display:block;margin-top:4px;font-size:.95rem;color:#cfe3ee}
 .dest i{position:absolute;left:32px;top:0;width:0;height:0}
+
+
+/* Ruta: el ícono se dibuja de adentro hacia afuera y el texto entra cuando la línea llega */
+.js .node .draw{transform:scale(.35);opacity:0;transition:transform .75s var(--ease),opacity .25s ease}
+.on>.node .draw{transform:none;opacity:1}
+.js .node .draw>*{stroke-dasharray:1 1;stroke-dashoffset:1;transition:stroke-dashoffset .85s var(--ease);transition-delay:calc(.12s + var(--i,0) * .13s)}
+.on>.node .draw>*{stroke-dashoffset:0}
+.js .step .st{opacity:0;transform:translateX(22px);transition:opacity .55s ease .18s,transform .75s var(--ease) .18s}
+.js .step.alt .st{transform:translateX(-22px)}
+.js .step.on .st{opacity:1;transform:none}
+.js .dest{opacity:0;transition:opacity .5s ease}
+.js .dest>div{transform:translateX(18px);transition:transform .7s var(--ease) .1s}
+.js .dest.on{opacity:1}
+.js .dest.on>div{transform:none}
 
 /* Video */
 .video-sec .wrap{display:grid;gap:22px}
@@ -478,7 +497,7 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
     <svg class="route-svg" aria-hidden="true"><path class="r-base"/><path class="r-prog"/><circle class="r-dot" r="6"/></svg>
     <ol class="steps">
       <li class="step">
-        <span class="node"><svg class="ico"><use href="#i-cal"/></svg><b>1</b></span>
+        <span class="node"><svg class="ico draw" viewBox="0 0 24 24" aria-hidden="true"><path pathLength="1" style="--i:0" d="M3 10h18"/><path pathLength="1" style="--i:1" d="M8 2v4"/><path pathLength="1" style="--i:1" d="M16 2v4"/><rect pathLength="1" style="--i:2" x="3" y="4" width="18" height="18" rx="3"/></svg><b>1</b></span>
         <div class="st">
           <h3>Reserva tu evaluación</h3>
           <p>Elige día y hora aquí mismo, hasta el 17 de noviembre.</p>
@@ -486,7 +505,7 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
         </div>
       </li>
       <li class="step alt">
-        <span class="node"><svg class="ico"><use href="#i-wallet"/></svg><b>2</b></span>
+        <span class="node"><svg class="ico draw" viewBox="0 0 24 24" aria-hidden="true"><path pathLength="1" style="--i:0" d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path pathLength="1" style="--i:1" d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg><b>2</b></span>
         <div class="st">
           <h3>Separa tu cita con S/&nbsp;20</h3>
           <p>Por Yape o BCP. Los datos para pagar te aparecen al reservar.</p>
@@ -496,7 +515,7 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
         </div>
       </li>
       <li class="step">
-        <span class="node"><svg class="ico"><use href="#i-steth"/></svg><b>3</b></span>
+        <span class="node"><svg class="ico draw" viewBox="0 0 24 24" aria-hidden="true"><circle pathLength="1" style="--i:0" cx="20" cy="10" r="2"/><path pathLength="1" style="--i:1" d="M8 15a6 6 0 0 0 12 0v-3"/><path pathLength="1" style="--i:2" d="M11 2v2M5 2v2M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1"/></svg><b>3</b></span>
         <div class="st">
           <h3>Ven a tu evaluación</h3>
           <p>El médico revisa tu caso y te dice si el procedimiento es para ti.</p>
@@ -692,70 +711,72 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
   })();
 
   // ---------- Ruta: la línea avanza con el desplazamiento ----------
+  // Celular: tramos rectos unidos por curvas del mismo radio (como una ruta de metro).
+  // La línea crece con el scroll; al llegar a cada círculo se enciende, se dibuja su ícono y entra su texto.
   (function(){
     var route=$("#route");if(!route)return;
     var svg=$(".route-svg",route),base=$(".r-base",route),prog=$(".r-prog",route),dot=$(".r-dot",route);
     var steps=$$(".step",route),nodes=$$(".node",route),anchor=$(".dest .anchor",route),dest=$(".dest",route);
-    var total=0,marks=[],rowMode=false,done=false;
+    var total=0,marks=[],ys=[],rowMode=false,done=false,R=40;
+    function f(n){return n.toFixed(1)}
+    function arc(r,x,y,sw){return " A"+f(r)+","+f(r)+" 0 0 "+sw+" "+f(x)+","+f(y)}
     function layout(){
       var box=route.getBoundingClientRect();
       var pts=nodes.map(function(n){var r=n.getBoundingClientRect();return {x:r.left+r.width/2-box.left,y:r.top+r.height/2-box.top}});
       rowMode=Math.abs(pts[0].y-pts[1].y)<12;
-      var a=anchor.getBoundingClientRect(),dr=dest.getBoundingClientRect();
-      if(!rowMode)pts.push({x:a.left-box.left,y:a.top-box.top});
-      var d="M"+pts[0].x.toFixed(1)+","+pts[0].y.toFixed(1),i,p,q;
-      for(i=1;i<pts.length;i++){
-        p=pts[i-1];q=pts[i];
-        if(Math.abs(q.x-p.x)<12||Math.abs(q.y-p.y)<12){
-          d+=" L"+q.x.toFixed(1)+","+q.y.toFixed(1);
-        }else{
-          var sb=steps[i-1]?steps[i-1].getBoundingClientRect().bottom-box.top:p.y;
-          var nt=steps[i]?steps[i].getBoundingClientRect().top-box.top:q.y-40;
-          var y1=Math.max(p.y,sb-6),y2=Math.min(q.y,nt+6),g=(y2-y1)*.85;
-          d+=" L"+p.x.toFixed(1)+","+y1.toFixed(1)+" C"+p.x.toFixed(1)+","+(y1+g).toFixed(1)+" "+q.x.toFixed(1)+","+(y2-g).toFixed(1)+" "+q.x.toFixed(1)+","+y2.toFixed(1)+" L"+q.x.toFixed(1)+","+q.y.toFixed(1);
+      var d="M"+f(pts[0].x)+","+f(pts[0].y),i,p,q;
+      if(rowMode){
+        for(i=1;i<pts.length;i++)d+=" L"+f(pts[i].x)+","+f(pts[i].y);
+        var last=pts[pts.length-1],dr=dest.getBoundingClientRect(),rx=box.width-4,ty=dr.top+dr.height/2-box.top,tx=dr.right-box.left+11,rr=26;
+        d+=" L"+f(rx-rr)+","+f(last.y)+arc(rr,rx,last.y+rr,1)+" L"+f(rx)+","+f(ty-rr)+arc(rr,rx-rr,ty,1)+" L"+f(tx)+","+f(ty);
+        pts.push({x:tx,y:ty});
+      }else{
+        var a=anchor.getBoundingClientRect();pts.push({x:a.left-box.left,y:a.top-box.top});
+        var blocks=steps.concat([dest]);
+        for(i=1;i<pts.length;i++){
+          p=pts[i-1];q=pts[i];
+          var dx=q.x-p.x;
+          if(Math.abs(dx)<3){d+=" L"+f(q.x)+","+f(q.y);continue}
+          var pb=blocks[i-1].getBoundingClientRect().bottom-box.top,nt=blocks[i].getBoundingClientRect().top-box.top;
+          var ym=(pb+nt)/2,sg=dx>0?1:-1,r=Math.max(4,Math.min(R,Math.abs(dx)/2,ym-p.y,q.y-ym,(nt-pb)/2));
+          d+=" L"+f(p.x)+","+f(ym-r)+arc(r,p.x+sg*r,ym,sg>0?0:1)+" L"+f(q.x-sg*r)+","+f(ym)+arc(r,q.x,ym+r,sg>0?1:0)+" L"+f(q.x)+","+f(q.y);
         }
       }
-      if(rowMode){
-        var last=pts[pts.length-1],rx=box.width-4,ty=dr.top+dr.height/2-box.top,tx=dr.right-box.left+11,rr=26;
-        d+=" L"+(rx-rr).toFixed(1)+","+last.y.toFixed(1)+" Q"+rx.toFixed(1)+","+last.y.toFixed(1)+" "+rx.toFixed(1)+","+(last.y+rr).toFixed(1)+" L"+rx.toFixed(1)+","+(ty-rr).toFixed(1)+" Q"+rx.toFixed(1)+","+ty.toFixed(1)+" "+(rx-rr).toFixed(1)+","+ty.toFixed(1)+" L"+tx.toFixed(1)+","+ty.toFixed(1);
-        pts.push({x:tx,y:ty});
-      }
-      svg.setAttribute("viewBox","0 0 "+box.width.toFixed(1)+" "+box.height.toFixed(1));
+      svg.setAttribute("viewBox","0 0 "+f(box.width)+" "+f(box.height));
       base.setAttribute("d",d);prog.setAttribute("d",d);
       total=prog.getTotalLength();
       prog.style.strokeDasharray=total;
+      ys=pts.map(function(pt){return pt.y});
       marks=pts.map(function(pt){return lengthAt(pt)});
+      marks[0]=0;marks[marks.length-1]=total;
       draw();
     }
     function lengthAt(pt){ // longitud del trazo más cercana a un punto
-      var best=0,bd=1e9,n=80,i,p,dd;
+      var best=0,bd=1e9,n=240,i,p,dd;
       for(i=0;i<=n;i++){p=prog.getPointAtLength(total*i/n);dd=(p.x-pt.x)*(p.x-pt.x)+(p.y-pt.y)*(p.y-pt.y);if(dd<bd){bd=dd;best=total*i/n}}
       return best;
     }
-    function lengthForY(y){ // el trazo baja siempre, así que se busca por altura
-      var lo=0,hi=total,i,m;
-      for(i=0;i<14;i++){m=(lo+hi)/2;if(prog.getPointAtLength(m).y<y)lo=m;else hi=m}
-      return lo;
-    }
-    function paint(len){
+    function paint(len,trig){
       prog.style.strokeDashoffset=Math.max(0,total-len);
-      var p=prog.getPointAtLength(len);
+      var p=prog.getPointAtLength(Math.max(0,Math.min(total,len)));
       dot.setAttribute("cx",p.x);dot.setAttribute("cy",p.y);
       dot.style.opacity=len>4&&len<total-4?1:0;
-      steps.forEach(function(s,i){s.classList.toggle("on",len>=marks[i]-2)});
-      dest.classList.toggle("on",len>=total-6);
+      steps.forEach(function(s,i){s.classList.toggle("on",trig!=null?trig>=ys[i]-4:len>=marks[i]-2)});
+      dest.classList.toggle("on",trig!=null?trig>=ys[ys.length-1]-36:len>=total-6);
     }
     function draw(){
       if(!total)return;
       if(reduce){paint(total);return}
       if(rowMode){if(done)paint(total);return}
-      var box=route.getBoundingClientRect();
-      paint(lengthForY(Math.max(0,window.innerHeight*.62-box.top)));
+      var box=route.getBoundingClientRect(),t=window.innerHeight*.6-box.top,len=0,i,last=ys.length-1;
+      if(t>=ys[last])len=total;
+      else for(i=0;i<last;i++){if(t>=ys[i]&&t<ys[i+1]){len=marks[i]+(marks[i+1]-marks[i])*(t-ys[i])/(ys[i+1]-ys[i]);break}}
+      paint(len,t);
     }
     function animateRow(){ // en PC la ruta es horizontal: se dibuja una vez al llegar
       if(done||!rowMode||reduce)return;done=true;
       var t0=null;
-      requestAnimationFrame(function step(t){if(!t0)t0=t;var k=Math.min(1,(t-t0)/1800);paint(total*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(step)});
+      requestAnimationFrame(function step(t){if(!t0)t0=t;var k=Math.min(1,(t-t0)/2200);paint(total*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(step)});
     }
     var tick=false;
     window.addEventListener("scroll",function(){if(tick)return;tick=true;requestAnimationFrame(function(){tick=false;draw()})},{passive:true});
