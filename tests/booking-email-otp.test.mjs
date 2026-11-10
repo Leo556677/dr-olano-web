@@ -48,6 +48,11 @@ function harness({ userEmail = 'paciente@ejemplo.pe', rejected = false } = {}) {
   const windowEvents = new Map();
   const window = { addEventListener: (name, callback) => windowEvents.set(name, callback) };
   const otpCalls = [];
+  const fetchCalls = [];
+  const fakeFetch = async (url, init) => {
+    fetchCalls.push({ url, init });
+    return { ok: true, status: 201, json: async () => ({ ok: true, booking: { id: 'test-reserva' } }) };
+  };
   const auth = {
     signInWithOtp: async args => {
       otpCalls.push({ action: 'request', args });
@@ -72,9 +77,10 @@ function harness({ userEmail = 'paciente@ejemplo.pe', rejected = false } = {}) {
     document, window, console,
     setTimeout, clearTimeout,
     createClient: () => ({ auth }),
+    fetch: fakeFetch,
   }, { filename: 'booking-email-otp-v1.js', timeout: 1000 });
 
-  return { email, code, send, verify, status, otpCalls, window,
+  return { email, code, send, verify, status, otpCalls, fetchCalls, window,
     windowEvents, identity: window.OLANO_PATIENT_OTP };
 }
 
@@ -85,7 +91,7 @@ test('El módulo OTP y el parche de reserva son JS sintácticamente válidos', (
 
 test('Nunca valida por escribir email; exige OTP de Auth de la APP', async () => {
   const h = harness();
-  assert.equal(h.identity.getVerifiedIdentity(), null);
+  assert.equal(h.identity.isVerified(), false);
   await h.send.events.get('click')();
   assert.equal(h.otpCalls.length, 1);
   assert.equal(h.otpCalls[0].args.email, 'paciente@ejemplo.pe');
@@ -93,12 +99,17 @@ test('Nunca valida por escribir email; exige OTP de Auth de la APP', async () =>
   h.code.value = '123';
   await h.verify.events.get('click')();
   assert.equal(h.otpCalls.length, 1, 'Nunca llama verifyOtp con código inválido');
-  assert.equal(h.identity.getVerifiedIdentity(), null);
+  assert.equal(h.identity.isVerified(), false);
   h.code.value = '12345678';
   await h.verify.events.get('click')();
   assert.equal(h.otpCalls[1].args.type, 'email');
-  assert.equal(h.identity.getVerifiedIdentity()?.email, 'paciente@ejemplo.pe');
-  assert.equal(h.identity.getVerifiedIdentity()?.accessToken, 'test-bearer-not-secret');
+  assert.equal(h.identity.isVerified(), true);
+  assert.equal(Object.hasOwn(h.identity, 'getVerifiedIdentity'), false, 'Nunca exportar bearer a analytics');
+  await h.identity.book({ action: 'book', service_code: 'consulta' });
+  assert.equal(h.fetchCalls.length, 1);
+  assert.equal(h.fetchCalls[0].url,
+    'https://xnlzsgulskqyecfgzhwa.supabase.co/functions/v1/dr-olano-booking');
+  assert.equal(JSON.parse(h.fetchCalls[0].init.body).app_access_token, 'test-bearer-not-secret');
   assert.equal(h.code.value, '', 'No conserva el código OTP tras comprobarlo');
 });
 
@@ -107,7 +118,7 @@ test('El OTP no puede verificar otro correo distinto', async () => {
   await h.send.events.get('click')();
   h.code.value = '12345678';
   await h.verify.events.get('click')();
-  assert.equal(h.identity.getVerifiedIdentity(), null);
+  assert.equal(h.identity.isVerified(), false);
 });
 
 test('La verificación se invalida al cambiar el correo y al cerrar la página', async () => {
@@ -115,12 +126,12 @@ test('La verificación se invalida al cambiar el correo y al cerrar la página',
   await h.send.events.get('click')();
   h.code.value = '12345678';
   await h.verify.events.get('click')();
-  assert.notEqual(h.identity.getVerifiedIdentity(), null);
+  assert.equal(h.identity.isVerified(), true);
   h.email.value = 'nuevo@ejemplo.pe';
   h.email.events.get('input')();
-  assert.equal(h.identity.getVerifiedIdentity(), null);
+  assert.equal(h.identity.isVerified(), false);
   h.windowEvents.get('pagehide')();
-  assert.equal(h.identity.getVerifiedIdentity(), null);
+  assert.equal(h.identity.isVerified(), false);
 });
 
 test('Un error de proveedor no puede autorizar una reserva', async () => {
@@ -128,7 +139,7 @@ test('Un error de proveedor no puede autorizar una reserva', async () => {
   await h.send.events.get('click')();
   h.code.value = '12345678';
   await h.verify.events.get('click')();
-  assert.equal(h.identity.getVerifiedIdentity(), null);
+  assert.equal(h.identity.isVerified(), false);
 });
 
 test('El backend exige identidad validada antes de ejecutar la reserva transaccional', () => {
@@ -137,6 +148,9 @@ test('El backend exige identidad validada antes de ejecutar la reserva transacci
   assert.match(server, /user\?\.email_confirmed_at/);
   assert.match(server, /"EMAIL_OTP_REQUIRED"/);
   assert.match(server, /"crear_cita_web_segura_v4"/);
-  assert.match(bookingPatch, /app_access_token:identity\.accessToken/);
-  assert.doesNotMatch(bookingPatch, /localStorage\.setItem\([^\n]*app_access_token/);
+  assert.match(bookingPatch, /otp\.book\(\{action:"book"/);
+  assert.doesNotMatch(bookingPatch, /app_access_token:/, 'El token no sale del módulo OTP');
+  assert.doesNotMatch(source, /OLANO_PATIENT_OTP = \{ getVerifiedIdentity/,
+    'La API global no permite extraer el token');
+    assert.doesNotMatch(bookingPatch, /localStorage\.setItem\([^\n]*app_access_token/);
 });
