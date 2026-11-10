@@ -87,6 +87,10 @@ async function verifyTurnstile(token: string, ip: string) {
 }
 function mapBookingError(message: string) {
   const m = String(message || "");
+  if (m.includes("PATIENT_DNI_CHANGE_REQUIRES_REVIEW")) return {
+    status:409, code:"PATIENT_DNI_REVIEW_REQUIRED",
+    message:"Este correo ya está vinculado a otro DNI. Comunícate con recepción."
+  };
   if (m.includes("PATIENT_IDENTITY_CHANGE_REQUIRES_REVIEW")) return {
     status: 409,
     code: "PATIENT_PROFILE_REVIEW_REQUIRED",
@@ -282,6 +286,10 @@ export default {
       const time = String(body?.time || "").trim();
       const name = String(body?.name || "").trim().replace(/\s+/g, " ");
       const phone = normalizePhone(String(body?.phone || ""));
+      const dni = String(body?.dni || "").trim();
+      if (!/^[0-9]{8}$/.test(dni)) return json({
+        ok:false, code:"INVALID_DNI", message:"Ingresa un DNI válido de 8 dígitos."
+      },400,origin);
       const token = String(body?.turnstile_token || "");
       const deviceId = String(body?.device_id || "").trim();
       const modality = String(body?.modality || "").trim().toLowerCase();
@@ -318,11 +326,12 @@ export default {
       const phoneHash = await hmacHex(secret, `phone|${phone}`);
       const ipHash = await hmacHex(secret, `ip|${ip || "unavailable"}`);
       const deviceHash = await hmacHex(secret, `device|${deviceId}|${ua}|${lang}`);
-      const { data: booking, error: bookingErr } = await ctx.supabaseAdmin.rpc("crear_cita_web_segura_v4", {
+      const { data: booking, error: bookingErr } = await ctx.supabaseAdmin.rpc("crear_cita_web_segura_v6", {
         p_negocio_id: negocio.id, p_servicio_id: service.id, p_recurso_id: resource.id, p_nombre: name, p_telefono_e164: phone,
         p_inicio: localStart.toUTC().toISO(), p_phone_hash: phoneHash, p_ip_hash: ipHash, p_device_hash: deviceHash,
         p_modalidad: service.requiere_consulta_previa === true ? modality : null, p_motivo_consulta: note || null,
          p_patient_user_id: appPatientId,
+         p_dni: dni,
       });
       if (bookingErr) { const mapped = mapBookingError(bookingErr.message || bookingErr.details || ""); return json({ ok: false, code: mapped.code, message: mapped.message }, mapped.status, origin); }
       const row = Array.isArray(booking) ? booking[0] : booking;
