@@ -73,6 +73,7 @@ function reset() {
   updateState('');
 }
 window.OLANO_PATIENT_OTP = {
+  isEnabled: () => true, // Solo se carga cuando el flujo OTP está listo.
   isVerified: () => Boolean(getVerifiedIdentity()),
   book,
   focusVerification,
