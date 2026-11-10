@@ -23,7 +23,7 @@
 :root{--navy:#0b2e4f;--navy2:#061d33;--teal:#1aa79d;--teal2:#0f827a;--bg:#f4f7f8;--line:#dce6e9;--muted:#65737d;--white:#fff;--wa:#1e9f64;--radius:18px}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--navy2);background:var(--bg);line-height:1.55;-webkit-font-smoothing:antialiased;padding-bottom:84px}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--navy2);background:var(--bg);line-height:1.55;-webkit-font-smoothing:antialiased;padding-bottom:0}
 h1,h2,h3{font-family:Fraunces,Georgia,serif;line-height:1.15;margin:0 0 .5em;color:var(--navy)}
 a{color:inherit}
 .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
@@ -32,7 +32,7 @@ a{color:inherit}
 .nav{display:flex;align-items:center;justify-content:space-between;height:60px}
 .brand{display:flex;align-items:center;gap:10px;text-decoration:none;font-family:Fraunces,serif;font-weight:700;font-size:1.15rem;color:var(--navy)}
 .brand img{width:34px;height:34px}
-.nav .wa-mini{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-weight:600;font-size:.9rem;color:var(--wa);border:1.5px solid var(--wa);padding:7px 12px;border-radius:999px}
+.nav .wa-mini{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-weight:600;font-size:.9rem;color:var(--teal2);border:1.5px solid var(--teal2);padding:7px 12px;border-radius:999px}
 /* Hero */
 .hero{padding:28px 0 8px}
 .hero-grid{display:grid;gap:28px;align-items:center}
@@ -50,7 +50,7 @@ a{color:inherit}
 .btn:active{transform:scale(.98)}
 .btn-primary{background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff;box-shadow:0 8px 22px rgba(26,167,157,.32)}
 .btn-wa{background:var(--wa);color:#fff}
-.btn-ghost{background:#fff;color:var(--navy);border:1.5px solid var(--line)}
+.btn-ghost{background:#fff;color:var(--navy);border:1.5px solid var(--teal2)}
 .btn.loading{pointer-events:none;opacity:.85}
 .btn.loading .lbl{visibility:hidden}
 .btn.loading::after{content:"";position:absolute;width:20px;height:20px;border:2.5px solid rgba(255,255,255,.55);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
@@ -84,7 +84,7 @@ section.block h2{font-size:clamp(1.5rem,4.2vw,2.1rem)}
 .video-cover.loading .play{animation:pulse .9s ease-in-out infinite}
 @keyframes pulse{50%{transform:translate(-50%,-50%) scale(.9)}}
 /* Steps */
-.steps{display:grid;gap:14px;counter-reset:s;padding:0;margin:0;list-style:none}
+.steps{display:grid;gap:26px;counter-reset:s;padding:0;margin:0;list-style:none}
 .steps li{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:18px 18px 18px 70px;position:relative}
 .steps li::before{counter-increment:s;content:counter(s);position:absolute;left:18px;top:18px;width:36px;height:36px;border-radius:50%;background:var(--navy);color:#fff;font-weight:700;display:grid;place-items:center}
 .steps h3{font-family:Inter,sans-serif;font-size:1.05rem;margin:0 0 4px}
@@ -105,7 +105,7 @@ section.block h2{font-size:clamp(1.5rem,4.2vw,2.1rem)}
 .faq details{background:#fff;border:1px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden}
 .faq summary{list-style:none;cursor:pointer;padding:16px 48px 16px 18px;font-weight:600;position:relative}
 .faq summary::-webkit-details-marker{display:none}
-.faq summary::after{content:"+";position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:1.4rem;color:var(--teal2);transition:transform .2s}
+.faq summary::after{content:"+";position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:1.7rem;line-height:1;color:var(--teal2);transition:transform .2s}
 .faq details[open] summary::after{transform:translateY(-50%) rotate(45deg)}
 .faq .ans{padding:0 18px 16px;color:#3b4f5e}
 /* Final + footer */
@@ -114,19 +114,43 @@ section.block h2{font-size:clamp(1.5rem,4.2vw,2.1rem)}
 .final p{color:#cfe0ea}
 footer{padding:30px 0 20px;color:var(--muted);font-size:.88rem;text-align:center}
 footer a{color:var(--teal2)}
-/* Sticky mobile CTA */
-.sticky{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(255,255,255,.97);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;gap:10px;box-shadow:0 -8px 24px rgba(6,29,51,.08)}
-.sticky .btn{flex:1;min-height:50px}
-.sticky .btn-wa{flex:0 0 54px;padding:0}
+/* Botón flotante */
 @media (min-width:860px){
   body{padding-bottom:0}
-  .sticky{display:none}
   .hero-grid{grid-template-columns:1.1fr .9fr}
   .cards{grid-template-columns:repeat(3,1fr)}
   .pay{grid-template-columns:1fr 1fr}
   .steps{grid-template-columns:repeat(3,1fr)}
   .steps li{padding:64px 18px 18px}
 }
+/* Movimiento y guía (10/11) */
+.guide{display:inline-flex;align-items:center;gap:8px;margin-top:16px;color:var(--teal2);font-weight:700;text-decoration:none;font-size:.92rem}
+.guide .arr{display:inline-block;animation:bob 1.6s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(5px)}}
+html.js .reveal{opacity:0;transform:translateY(26px);transition:opacity .6s ease,transform .6s cubic-bezier(.2,.8,.2,1)}
+html.js .reveal-l{transform:translateX(-36px)}
+html.js .reveal-r{transform:translateX(36px)}
+html.js .reveal.in{opacity:1;transform:none}
+.steps li:not(:last-child)::after{content:"↓";position:absolute;left:31px;bottom:-24px;color:var(--teal2);font-weight:700;font-size:1.1rem;line-height:1}
+.swipe-hint{display:none;color:var(--teal2);font-weight:700;font-size:.88rem;margin:-6px 0 14px}
+.final-up{display:inline-block;margin-top:16px;color:#7fe3d9;font-weight:700;text-decoration:none;border-bottom:2px solid currentColor;padding-bottom:2px}
+.fab{position:fixed;left:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:30;--fx:0px;display:inline-flex;align-items:center;gap:10px;height:56px;padding:0 22px 0 14px;border-radius:999px;background:linear-gradient(135deg,var(--navy),var(--teal2));color:#fff;font-weight:700;font-size:.98rem;text-decoration:none;box-shadow:0 14px 30px rgba(6,29,51,.35);transform:translateX(var(--fx));transition:transform .5s cubic-bezier(.2,.8,.2,1),opacity .3s ease,padding .3s ease}
+.fab.right{--fx:calc(100vw - 100% - 32px)}
+.fab:not(.on){opacity:0;pointer-events:none;transform:translateX(var(--fx)) translateY(150%)}
+.fab::before{content:"";position:absolute;inset:-6px;border-radius:999px;border:2px solid var(--teal);opacity:0;animation:ring 3.6s ease-out 1.5s infinite}
+@keyframes ring{0%{opacity:.7;transform:scale(.92)}70%,100%{opacity:0;transform:scale(1.12)}}
+.fab-ico{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.16);animation:nudge 3.6s ease-in-out 1.5s infinite}
+@keyframes nudge{0%,100%{transform:translateY(0)}12%{transform:translateY(-6px)}24%{transform:translateY(0)}}
+.fab.compact{width:56px;padding:0;justify-content:center;gap:0}
+.fab.compact .fab-lbl{display:none}
+.fab.loading{opacity:.85;pointer-events:none}
+@media (max-width:859px){
+  .cards.swipe{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:14px;margin:0 -20px;padding:4px 20px 10px;scrollbar-width:none}
+  .cards.swipe::-webkit-scrollbar{display:none}
+  .cards.swipe .card{flex:0 0 82%;scroll-snap-align:center}
+  .swipe-hint{display:block}
+}
+@media (min-width:860px){ .fab{display:none} }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -140,7 +164,7 @@ footer a{color:var(--teal2)}
 </div></header>
 
 <main>
-<section class="hero"><div class="wrap hero-grid">
+<section class="hero" id="inicio"><div class="wrap hero-grid">
   <div>
     <span class="eyebrow">Jornada · Noviembre 2026</span>
     <h1>Jornada de <em>cirugía facial</em> en Carabayllo</h1>
@@ -155,6 +179,7 @@ footer a{color:var(--teal2)}
       <a class="btn btn-ghost js-scroll" href="#como-funciona"><span class="lbl">¿Cómo funciona?</span></a>
     </div>
     <p class="note">Primero, una evaluación médica (S/&nbsp;70) hasta el 17 de noviembre. Solo mayores de 18 años.</p>
+    <a class="guide js-scroll" href="#como-funciona">Desliza para ver cómo funciona <span class="arr" aria-hidden="true">↓</span></a>
   </div>
   <div class="media poster js-media">
     <picture>
@@ -166,7 +191,7 @@ footer a{color:var(--teal2)}
 </div></section>
 
 <!-- VIDEO: se muestra solo cuando data-video tiene archivo. No se descarga hasta tocar "play". -->
-<section class="block" id="video" data-video="/assets/jornada-rinoplastia-v1.mp4" data-cover="/assets/jornada-rinoplastia-v1-portada.jpg" hidden>
+<section class="block" id="video" data-fab="left" data-video="/assets/jornada-rinoplastia-v1.mp4" data-cover="/assets/jornada-rinoplastia-v1-portada.jpg" hidden>
   <div class="wrap">
     <h2>Rinoplastia: lo que se revisa antes de operar</h2>
     <p class="sub">Y cómo participar en la jornada del 18, 19 y 20 de noviembre (50 segundos).</p>
@@ -184,20 +209,20 @@ footer a{color:var(--teal2)}
   <h2>¿Cómo funciona?</h2>
   <p class="sub">Tres pasos. Tu evaluación queda registrada al momento.</p>
   <ol class="steps">
-    <li><h3>Reserva tu evaluación</h3><p>Elige día y hora aquí mismo, hasta el <b>17 de noviembre</b>. La evaluación cuesta <b>S/&nbsp;70</b>.</p></li>
-    <li><h3>Separa tu cita con S/&nbsp;20</h3><p>Yapea o transfiere <b>S/&nbsp;20</b> y envía la constancia por WhatsApp. Se descuentan de tu evaluación: ese día pagas solo <b>S/&nbsp;50</b>.</p></li>
-    <li><h3>Evaluación y fecha de cirugía</h3><p>El médico revisa tu caso y, si el procedimiento es para ti, te da tu cita para el <b>18, 19 o 20 de noviembre</b> con <b>50&nbsp;% de descuento</b>.</p></li>
+    <li class="reveal reveal-l"><h3>Reserva tu evaluación</h3><p>Elige día y hora aquí mismo, hasta el <b>17 de noviembre</b>. La evaluación cuesta <b>S/&nbsp;70</b>.</p></li>
+    <li class="reveal reveal-r"><h3>Separa tu cita con S/&nbsp;20</h3><p>Yapea o transfiere <b>S/&nbsp;20</b> y envía la constancia por WhatsApp. Se descuentan de tu evaluación: ese día pagas solo <b>S/&nbsp;50</b>.</p></li>
+    <li class="reveal reveal-l"><h3>Evaluación y fecha de cirugía</h3><p>El médico revisa tu caso y, si el procedimiento es para ti, te da tu cita para el <b>18, 19 o 20 de noviembre</b> con <b>50&nbsp;% de descuento</b>.</p></li>
   </ol>
-  <div class="cta-row" style="margin-top:22px"><a class="btn btn-primary js-book" href="/reserva-s?servicio=consulta"><span class="lbl">Reservar mi evaluación</span></a></div>
 </div></section>
 
 <section class="block" style="padding-top:10px"><div class="wrap">
   <h2>Procedimientos de la jornada</h2>
   <p class="sub">El procedimiento adecuado para ti se define en la evaluación médica.</p>
-  <div class="cards">
-    <div class="card"><span class="tag">MIRADA</span><ul><li>Blefaroplastia superior</li><li>Blefaroplastia inferior</li></ul></div>
-    <div class="card"><span class="tag">PERFIL</span><ul><li>Rinoplastia</li><li>Otoplastia</li><li>Lip lift de labios</li><li>Lipopapada</li></ul></div>
-    <div class="card"><span class="tag">ROSTRO</span><ul><li>Lifting facial</li><li>Bichectomía</li><li>Injerto de grasa en rostro (Microfat / Nanofat)</li></ul></div>
+  <p class="swipe-hint">Desliza para ver los 3 grupos →</p>
+  <div class="cards swipe">
+    <div class="card reveal reveal-l"><span class="tag">MIRADA</span><ul><li>Blefaroplastia superior</li><li>Blefaroplastia inferior</li></ul></div>
+    <div class="card reveal reveal-r"><span class="tag">PERFIL</span><ul><li>Rinoplastia</li><li>Otoplastia</li><li>Lip lift de labios</li><li>Lipopapada</li></ul></div>
+    <div class="card reveal reveal-l"><span class="tag">ROSTRO</span><ul><li>Lifting facial</li><li>Bichectomía</li><li>Injerto de grasa en rostro (Microfat / Nanofat)</li></ul></div>
   </div>
 </div></section>
 
@@ -206,8 +231,8 @@ footer a{color:var(--teal2)}
   <h2>Separa tu evaluación con S/&nbsp;20</h2>
   <p class="sub">Se descuentan de los S/&nbsp;70 de la evaluación. Después de reservar, envía la constancia por WhatsApp para confirmar tu horario.</p>
   <div class="pay">
-    <div class="card"><h3>Yape</h3><div class="num" data-copy="981214007">981 214 007</div><div class="note">A nombre de: Kamo Martin Olano Paredes</div><button class="btn btn-ghost copy js-copy" type="button"><span class="lbl">Copiar número</span></button></div>
-    <div class="card"><h3>BCP</h3><div class="num" data-copy="19190200628044">191-90200628044</div><div class="note">CCI: 00219119020062804456 · A nombre de: Kamo Martin Olano Paredes</div><button class="btn btn-ghost copy js-copy" type="button"><span class="lbl">Copiar cuenta</span></button></div>
+    <div class="card reveal reveal-l"><h3>Yape</h3><div class="num" data-copy="981214007">981 214 007</div><div class="note">A nombre de: Kamo Martin Olano Paredes</div><button class="btn btn-ghost copy js-copy" type="button"><span class="lbl">Copiar número</span></button></div>
+    <div class="card reveal reveal-r"><h3>BCP</h3><div class="num" data-copy="19190200628044">191-90200628044</div><div class="note">CCI: 00219119020062804456 · A nombre de: Kamo Martin Olano Paredes</div><button class="btn btn-ghost copy js-copy" type="button"><span class="lbl">Copiar cuenta</span></button></div>
   </div>
 </div></section>
 
@@ -226,10 +251,10 @@ footer a{color:var(--teal2)}
 </div></section>
 
 <section class="block" style="padding-top:0"><div class="wrap">
-  <div class="final">
+  <div class="final reveal" data-fab="hide">
     <h2>Reserva tu evaluación</h2>
     <p>18, 19 y 20 de noviembre · 50&nbsp;% de descuento en la jornada</p>
-    <a class="btn btn-primary js-book" href="/reserva-s?servicio=consulta"><span class="lbl">Elegir día y hora</span></a>
+    <a class="final-up" href="#inicio">Volver arriba para reservar ↑</a>
   </div>
 </div></section>
 </main>
@@ -239,10 +264,10 @@ footer a{color:var(--teal2)}
   <a href="/privacidad">Privacidad</a> · <a href="/">doctorolano.pe</a>
 </div></footer>
 
-<div class="sticky">
-  <a class="btn btn-primary js-book" href="/reserva-s?servicio=consulta"><span class="lbl">Reservar evaluación</span></a>
-  <a class="btn btn-wa js-wa" href="https://wa.me/51907108271" data-msg="Hola, tengo una consulta sobre la Jornada de cirugía facial del 18, 19 y 20 de noviembre." aria-label="Escribir por WhatsApp"><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M20.5 3.5A11 11 0 0 0 3.3 17.2L2 22l4.9-1.3A11 11 0 1 0 20.5 3.5Zm-8.5 17a9 9 0 0 1-4.6-1.3l-.3-.2-2.9.8.8-2.8-.2-.3A9 9 0 1 1 12 20.5Zm5-6.7c-.3-.1-1.6-.8-1.9-.9-.3-.1-.4-.1-.6.1l-.9 1.1c-.2.2-.3.2-.6.1a7.4 7.4 0 0 1-3.6-3.2c-.3-.5.3-.4.8-1.4.1-.2 0-.3 0-.5l-.9-2c-.2-.5-.5-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.1.6.5-.1 1.6-.6 1.8-1.3.2-.6.2-1.1.2-1.3-.1-.1-.3-.2-.6-.3Z"/></svg></a>
-</div>
+<a class="fab js-book" id="fab" href="/reserva-s?servicio=consulta" aria-label="Reservar evaluación">
+  <span class="fab-ico" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 10h18M8 2v4M16 2v4"/></svg></span>
+  <span class="fab-lbl">Reservar evaluación</span>
+</a>
 
 <script>
 (function(){
@@ -309,6 +334,45 @@ footer a{color:var(--teal2)}
   // Píxel de Meta: solo PageView estándar (sin datos de salud).
   !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,"script","https://connect.facebook.net/en_US/fbevents.js");
   fbq("init","2579515552504402");fbq("track","PageView");
+})();
+</script>
+<script>
+(function(){
+  document.documentElement.classList.add("js");
+
+  // Entradas al bajar: izquierda o derecha según la tarjeta.
+  var rev=document.querySelectorAll(".reveal");
+  if("IntersectionObserver" in window){
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}})},{threshold:.15});
+    rev.forEach(function(el){io.observe(el)});
+  }else{rev.forEach(function(el){el.classList.add("in")})}
+
+  // Botón flotante: se mueve a la derecha o izquierda según lo que tenga debajo; se oculta en el cierre; se encoge al bajar.
+  var fab=document.getElementById("fab");
+  if(!fab)return;
+  var lastY=window.scrollY, idle=null, compact=false, ticking=false;
+  function render(){
+    var y=window.scrollY, line=window.innerHeight-90, side="right", hide=false;
+    document.querySelectorAll("[data-fab]").forEach(function(t){
+      var r=t.getBoundingClientRect();
+      if(r.top<line&&r.bottom>line){
+        var v=t.getAttribute("data-fab");
+        if(v==="hide")hide=true; else side=v;
+      }
+    });
+    fab.classList.toggle("right",side==="right");
+    fab.classList.toggle("on",y>300&&!hide);
+    fab.classList.toggle("compact",compact);
+  }
+  window.addEventListener("scroll",function(){
+    var y=window.scrollY;
+    if(y>lastY+6)compact=true; else if(y<lastY-6)compact=false;
+    lastY=y;
+    clearTimeout(idle);
+    idle=setTimeout(function(){compact=false;render()},900);
+    if(!ticking){ticking=true;requestAnimationFrame(function(){ticking=false;render()})}
+  },{passive:true});
+  render();
 })();
 </script>
 </body>
