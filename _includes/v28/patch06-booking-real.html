@@ -302,9 +302,7 @@
       const waUrl=buildWhatsAppHandoff();state.url=waUrl;const wa=$("#openWhatsApp");if(wa&&waUrl){wa.href=waUrl;wa.style.display="inline-flex";wa.innerHTML=`${icon("i-send")}Abrir WhatsApp`}
       window.OLANO_PATIENT_OTP?.reset?.();
       clearConfirmedUi();trackEvent("booking_confirmed");trackTikTokSchedule();go(5);
-      // La cita ya está registrada: NO enviar al paciente automáticamente a WhatsApp.
-      // Si necesita comunicarse, puede abrir el enlace de manera voluntaria.
-      if(waUrl)trackEvent("booking_contact_available",{source:"optional_whatsapp"});
+      if(waUrl){trackEvent("booking_whatsapp_handoff",{source:"auto_redirect"});window.__olanoWaGo(waUrl,1)}
     }catch(e){
       turnstileToken="";if(turnstileWidgetId!==null&&window.turnstile){try{window.turnstile.reset(turnstileWidgetId)}catch{}}
       const code=e?.code||"";
