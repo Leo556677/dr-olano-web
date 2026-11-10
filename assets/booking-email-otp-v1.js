@@ -52,7 +52,11 @@ async function book(body) {
   const res = await fetch(BOOKING_API, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', apikey: BOOKING_PUBLISHABLE_KEY },
-    body: JSON.stringify({ ...body, app_access_token: identity.accessToken }),
+    body: JSON.stringify({
+      ...body,
+      app_access_token: identity.accessToken,
+      verified_email: identity.email,
+    }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
