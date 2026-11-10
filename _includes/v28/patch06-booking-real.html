@@ -4,6 +4,10 @@
   // para que los eventos de «reservó» (Meta, TikTok, GA4) alcancen a enviarse.
   window.__olanoWaGo=window.__olanoWaGo||(function(){let best="",bp=-1,timer=null;return function(url,prio){if(!url)return;if(prio>=bp){best=url;bp=prio}if(timer)return;timer=setTimeout(()=>{try{location.replace(best)}catch{location.href=best}},700)}})();
   const BOOKING_API = "https://xnlzsgulskqyecfgzhwa.supabase.co/functions/v1/dr-olano-booking";
+  // Las vistas previas solo consultan horarios. Producción conserva su reserva original.
+  const AVAILABILITY_API = /^[a-z0-9-]{5,80}\.dr-olano-web\.pages\.dev$/.test(location.hostname)
+    ? "https://xnlzsgulskqyecfgzhwa.supabase.co/functions/v1/dr-olano-booking-otp"
+    : BOOKING_API;
   const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_s9YdJaMe_ll4QehPkADlKQ_KkuvWt32";
   const TURNSTILE_SITE_KEY = "0x4AAAAAAEquPSErt1V9EL1G";
   const TURNSTILE_ACTION = "booking";
@@ -116,7 +120,8 @@
   }
 
   async function bookingApi(body){
-    const res=await fetch(BOOKING_API,{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPABASE_PUBLISHABLE_KEY},body:JSON.stringify(body)});
+    const endpoint=body?.action==="availability"?AVAILABILITY_API:BOOKING_API;
+    const res=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPABASE_PUBLISHABLE_KEY},body:JSON.stringify(body)});
     let data={};try{data=await res.json()}catch{}
     if(!res.ok){const err=new Error(data.message||data.code||"No se pudo completar la operación");err.code=data.code||"API_ERROR";err.status=res.status;throw err}
     return data
@@ -211,7 +216,7 @@
     let first=new Date(m.getFullYear(),m.getMonth(),1),last=new Date(m.getFullYear(),m.getMonth()+1,0);for(let i=0;i<first.getDay();i++)days.insertAdjacentHTML("beforeend","<span></span>");
     const novare=isNovareService(),allowedDays=isNovareConsult()?new Set([1,3]):novare?NOVARE_DAYS:null;
     for(let d=1;d<=last.getDate();d++){const dt=new Date(m.getFullYear(),m.getMonth(),d),key=iso(dt),serviceDayBlocked=!!allowedDays&&!allowedDays.has(dt.getDay()),off=dt<today||dt>max||serviceDayBlocked;days.insertAdjacentHTML("beforeend",`<button class="day ${state.date===key?"selected":""}" data-day="${key}" ${off?"disabled":""}>${d}</button>`)}
-    $$('[data-day]').forEach(b=>b.onclick=()=>{markScheduleInteraction();state.date=b.dataset.day;state.time="";trackEvent("date_selected");renderCalendar();renderTimes();saveDraft();setTimeout(()=>$("#timesWrap").scrollIntoView({behavior:"smooth",block:"start"}),120)});
+    $$('[data-day]').forEach(b=>b.onclick=()=>{markScheduleInteraction();state.date=b.dataset.day;state.time="";trackEvent("date_selected");renderCalendar();saveDraft();setTimeout(()=>$("#timesWrap").scrollIntoView({behavior:"smooth",block:"start"}),120)});
     renderTimes();setPrimary($("#toStep3"),!!(state.date&&state.time))
   };
 
@@ -224,7 +229,19 @@
       slots.forEach(slot=>{const t=String(slot.time||"");box.insertAdjacentHTML("beforeend",`<button class="time ${state.time===t?"selected":""}" data-time="${t}">${t}</button>`)});
       $$('[data-time]').forEach(b=>b.onclick=()=>{markScheduleInteraction();state.time=b.dataset.time;trackEvent("time_selected");renderTimes();setPrimary($("#toStep3"),true);saveDraft();setTimeout(()=>$("#toStep3").scrollIntoView({behavior:"smooth",block:"center"}),120)});
       if(state.time&&!slots.some(s=>String(s.time)===state.time)){state.time="";setPrimary($("#toStep3"),false)}
-    }catch{box.innerHTML='<div style="grid-column:1/-1;padding:14px;text-align:center;color:var(--muted);font-size:.78rem">No pudimos consultar la agenda. Intenta nuevamente.</div>';state.time="";setPrimary($("#toStep3"),false)}
+    }catch(error){
+      const code=String(error?.code||"NETWORK_ERROR");
+      const friendly=code==="RESOURCE_UNAVAILABLE"||code==="AVAILABILITY_CONFIG_ERROR"
+        ?"La agenda del servicio requiere revisión. Intenta nuevamente."
+        :code==="ORIGIN_DENIED"?"No se pudo validar el acceso a la agenda."
+        :"No pudimos consultar los horarios. Comprueba tu conexión y vuelve a intentarlo.";
+      box.innerHTML='<div style="grid-column:1/-1;padding:14px;text-align:center;color:var(--muted);font-size:.78rem"></div>';
+      const note=box.firstElementChild;note.textContent=friendly;
+      const retry=document.createElement("button");retry.type="button";retry.className="btn";
+      retry.textContent="Volver a consultar";retry.style.cssText="display:block;margin:12px auto 0;min-height:40px";
+      retry.onclick=()=>{void renderTimes()};note.appendChild(retry);
+      state.time="";setPrimary($("#toStep3"),false)
+    }
   };
 
   renderSummary=function(){
