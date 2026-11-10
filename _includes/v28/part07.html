@@ -14,7 +14,10 @@ function renderVerifiedBusinessFields(){
 }
 
 const BOOKING_PATH=window.location.pathname.replace(/\/+$/,"");
-const LEGACY_BOOKING_PARAMS=new URLSearchParams(window.location.search);
+// El píxel de TikTok borra por un momento los parámetros de la URL (privacidad);
+// leemos la URL original que guarda en __olanoAttributionQuery.
+const LEGACY_ORIGINAL_QUERY=typeof window.__olanoAttributionQuery==="string"?window.__olanoAttributionQuery:window.location.search;
+const LEGACY_BOOKING_PARAMS=new URLSearchParams(LEGACY_ORIGINAL_QUERY);
 const LEGACY_DIRECT_BOOKING=LEGACY_BOOKING_PARAMS.get("reserva")==="1";
 
 // Modos de entrada limpia:
@@ -29,7 +32,21 @@ if(LEGACY_DIRECT_BOOKING&&BOOKING_PATH!=="/reserva-s"){
   LEGACY_BOOKING_PARAMS.delete("reserva");
   LEGACY_BOOKING_PARAMS.delete("v");
   const remainingQuery=LEGACY_BOOKING_PARAMS.toString();
-  history.replaceState(null,"",`/reserva-s${remainingQuery?`?${remainingQuery}`:""}`);
+  const fullTarget=`/reserva-s${remainingQuery?`?${remainingQuery}`:""}`;
+  // Si el píxel de TikTok está ocultando la URL, se muestra primero la versión segura
+  // (solo los parámetros que el píxel permite) y luego la completa, igual que hace el píxel.
+  const tiktokHidingQuery=window.location.search!==LEGACY_ORIGINAL_QUERY;
+  if(tiktokHidingQuery){
+    const safeParams=new URLSearchParams();
+    ["utm_source","utm_medium","utm_id","ttclid"].forEach(k=>{if(LEGACY_BOOKING_PARAMS.has(k))safeParams.set(k,LEGACY_BOOKING_PARAMS.get(k))});
+    const safeSearch=safeParams.toString()?`?${safeParams.toString()}`:"";
+    history.replaceState(null,"",`/reserva-s${safeSearch}`);
+    setTimeout(()=>{
+      try{if(window.location.pathname==="/reserva-s"&&window.location.search===safeSearch)history.replaceState(null,"",fullTarget)}catch{}
+    },2600);
+  }else{
+    history.replaceState(null,"",fullTarget);
+  }
 }
 
 const DIRECT_BOOKING=BOOKING_ENTRY_MODE!=="";

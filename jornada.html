@@ -247,7 +247,9 @@ footer a{color:var(--teal2)}
 <script>
 (function(){
   var ORIGEN="jornada-cirugia-nov-2026";
-  var params=new URLSearchParams(location.search);
+  // El píxel de TikTok borra por un momento los parámetros de la URL (privacidad);
+  // leemos la URL original que guarda en __olanoAttributionQuery.
+  var params=new URLSearchParams(typeof window.__olanoAttributionQuery==="string"?window.__olanoAttributionQuery:location.search);
   try{sessionStorage.setItem("olanoOrigen",ORIGEN)}catch(e){}
 
   // Lleva los parámetros del anuncio (utm_*) a la reserva para medir qué trajo cada cita.
