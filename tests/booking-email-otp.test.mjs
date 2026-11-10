@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const source = readFileSync(new URL('../assets/booking-email-otp-v1.js', import.meta.url), 'utf8')
-  .replace(/^import \{ createClient \} from .*;\r?\n/, '');
+  .replace(/^import \{ createClient \} from .*;\r?\n/m, '');
 const bookingPatch = readFileSync(new URL('../_includes/v28/patch06-booking-real.html', import.meta.url), 'utf8');
 const server = readFileSync(new URL('../integrations/supabase/crm/functions/dr-olano-booking/index.ts', import.meta.url), 'utf8');
 
