@@ -2,6 +2,18 @@
 -- La reserva web se confirma y queda ligada a un usuario Auth VERIFICADO de la app
 -- dentro de la misma transacción. Sin DNI ni teléfonos como claves de acceso.
 
+-- Un email verificado corresponde a UN usuario Auth y a UNA ficha de paciente.
+-- Se vincula al contacto del CRM en el primer registro y no se reasigna desde la web.
+create table private.dr_olano_app_patient_identities (
+  patient_user_id uuid primary key,
+  contacto_id uuid not null unique references public.contactos(id) on delete restrict,
+  normalized_patient_name text not null
+    check (char_length(normalized_patient_name) between 3 and 120),
+  created_at timestamptz not null default now()
+);
+alter table private.dr_olano_app_patient_identities enable row level security;
+revoke all on private.dr_olano_app_patient_identities from PUBLIC, anon, authenticated;
+
 create table private.dr_olano_app_bridge_links (
   cita_id uuid primary key references public.citas(id) on delete restrict,
   patient_user_id uuid not null,
@@ -50,6 +62,8 @@ set search_path = ''
 as $$
 declare
   v_row record;
+  v_contacto_id uuid;
+  v_name text;
 begin
   if p_patient_user_id is null then raise exception 'VERIFIED_EMAIL_REQUIRED'; end if;
 
@@ -58,6 +72,30 @@ begin
     p_phone_hash, p_ip_hash, p_device_hash, p_modalidad, p_motivo_consulta
   );
   if v_row.cita_id is null then raise exception 'BOOKING_FAILED'; end if;
+
+  -- Se ejecuta dentro de la misma transacción que la reserva v3.
+  -- Cambiar de celular o de nombre legal requiere validación de recepción;
+  -- nunca fusionar historias clínicas por coincidencias de texto.
+  select c.contacto_id into v_contacto_id
+  from public.citas c where c.id = v_row.cita_id;
+  v_name := lower(btrim(regexp_replace(coalesce(p_nombre,''), '[[:space:]]+', ' ', 'g')));
+  if v_contacto_id is null or char_length(v_name) not between 3 and 120 then
+    raise exception 'INVALID_PATIENT_IDENTITY';
+  end if;
+
+  insert into private.dr_olano_app_patient_identities(
+    patient_user_id, contacto_id, normalized_patient_name
+  ) values (p_patient_user_id, v_contacto_id, v_name)
+  on conflict (patient_user_id) do nothing;
+
+  if not exists (
+    select 1 from private.dr_olano_app_patient_identities i
+    where i.patient_user_id = p_patient_user_id
+      and i.contacto_id = v_contacto_id
+      and i.normalized_patient_name = v_name
+  ) then
+    raise exception 'PATIENT_IDENTITY_CHANGE_REQUIRES_REVIEW';
+  end if;
 
   insert into private.dr_olano_app_bridge_links (cita_id, patient_user_id)
   values (v_row.cita_id, p_patient_user_id);
