@@ -10,10 +10,18 @@ import { DateTime } from "npm:luxon@3.5.0";
 const BUSINESS_SLUG = "dr-olano";
 const EXPECTED_HOSTNAME = "doctorolano.pe";
 const TURNSTILE_SITE_KEY = "0x4AAAAAAEquPSErt1V9EL1G";
-const ALLOWED_ORIGINS = new Set(["https://doctorolano.pe"]);
+const ALLOWED_ORIGINS = new Set(["https://doctorolano.pe", "https://www.doctorolano.pe"]);
+// Cloudflare Pages previews: solo consulta pública de disponibilidad, no reservas.
+const PREVIEW_ORIGIN = /^https:\/\/[a-z0-9-]{5,80}\.dr-olano-web\.pages\.dev$/;
+function isPreviewOrigin(origin: string | null): boolean {
+  return !!origin && PREVIEW_ORIGIN.test(origin);
+}
+function isAllowedOrigin(origin: string | null): boolean {
+  return !origin || ALLOWED_ORIGINS.has(origin) || isPreviewOrigin(origin);
+}
 
 function cors(origin: string | null) {
-  const allow = origin && ALLOWED_ORIGINS.has(origin) ? origin : "https://doctorolano.pe";
+  const allow = origin && isAllowedOrigin(origin) ? origin : "https://doctorolano.pe";
   return {
     "Access-Control-Allow-Origin": allow,
     "Access-Control-Allow-Headers": "content-type, apikey",
@@ -24,7 +32,7 @@ function cors(origin: string | null) {
 function json(body: Record<string, unknown>, status = 200, origin: string | null = null) {
   return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json; charset=utf-8", ...cors(origin) } });
 }
-function validOrigin(origin: string | null) { return !origin || ALLOWED_ORIGINS.has(origin); }
+function validOrigin(origin: string | null) { return isAllowedOrigin(origin); }
 function normalizePhone(raw: string) {
   const digits = String(raw || "").replace(/\D/g, "");
   if (/^9\d{8}$/.test(digits)) return `+51${digits}`;
@@ -139,6 +147,10 @@ export default {
     let body: any;
     try { body = await req.json(); } catch { return json({ ok: false, code: "INVALID_JSON" }, 400, origin); }
     const action = String(body?.action || "").trim();
+    // Páginas de vista previa no pueden cancelar, reprogramar ni crear citas reales.
+    if (isPreviewOrigin(origin) && action !== "availability") {
+      return json({ ok: false, code: "PREVIEW_READ_ONLY" }, 403, origin);
+    }
 
     const { data: negocio } = await ctx.supabaseAdmin.from("negocios").select("id,zona_horaria,activo").eq("slug", BUSINESS_SLUG).maybeSingle();
     if (!negocio || negocio.activo !== true) return json({ ok: false, code: "BUSINESS_UNAVAILABLE" }, 503, origin);
