@@ -282,10 +282,12 @@
     if(isNovareConsult()&&!['presencial','videollamada'].includes(state.bookingModality)){alert("Selecciona si deseas la Consulta NOVARE presencial o por videollamada.");go(2);return}
     const note=isNovareService()?String(state.bookingNote||"").trim():"";
     if(note.length>500){alert("El comentario puede tener como máximo 500 caracteres.");go(2);return}
+    const identity=window.OLANO_PATIENT_OTP?.getVerifiedIdentity?.();
+    if(!identity){alert("Antes de reservar, verifica tu correo con el código recibido.");go(3);setTimeout(()=>window.OLANO_PATIENT_OTP?.focusVerification?.(),30);return}
     if(!turnstileToken){renderBookingTurnstile();alert("Completa la verificación de seguridad para reservar.");return}
     const btn=$("#sendBooking"),old=btn.innerHTML;btn.disabled=true;btn.textContent="Reservando…";
     try{
-      const data=await bookingApi({action:"book",service_code:state.service.id,date:state.date,time:state.time,name:state.name,phone:state.phone,note,modality:isNovareConsult()?state.bookingModality:undefined,device_id:getDeviceId(),turnstile_token:turnstileToken});
+      const data=await bookingApi({action:"book",service_code:state.service.id,date:state.date,time:state.time,name:state.name,phone:state.phone,note,modality:isNovareConsult()?state.bookingModality:undefined,device_id:getDeviceId(),turnstile_token:turnstileToken,app_access_token:identity.accessToken});
       const b=data.booking||{};state.id=b.code||"";state.manageUrl=String(b.manage_url||"");$("#bookingCode").textContent=state.id;
       const done=document.querySelector('#booking .step[data-step="5"]');
       if(done){
@@ -295,6 +297,7 @@
         if(manage)manage.href=state.manageUrl||"#";
       }
       const waUrl=buildWhatsAppHandoff();state.url=waUrl;const wa=$("#openWhatsApp");if(wa&&waUrl){wa.href=waUrl;wa.style.display="inline-flex";wa.innerHTML=`${icon("i-send")}Abrir WhatsApp`}
+      window.OLANO_PATIENT_OTP?.reset?.();
       clearConfirmedUi();trackEvent("booking_confirmed");trackTikTokSchedule();go(5);
       if(waUrl){trackEvent("booking_whatsapp_handoff",{source:"auto_redirect"});window.__olanoWaGo(waUrl,1)}
     }catch(e){
