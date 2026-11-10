@@ -48,7 +48,7 @@
   function build(id,foot){
     const box=document.createElement('div');
     box.className='jpago';box.id=id;
-    box.innerHTML=`<div class="jpago-h"><span class="jpago-ic">${ICON_WALLET}</span><div><b>Separa tu cita con S/&nbsp;20</b><small>Se descuentan de tu evaluación: ese día pagas S/&nbsp;50.</small></div></div>`+
+    box.innerHTML=`<div class="jpago-h"><span class="jpago-ic">${ICON_WALLET}</span><div><b>Separa con S/&nbsp;20 y asegura tu 50&nbsp;%</b><small>Se descuentan de tu evaluación: ese día pagas S/&nbsp;50. El procedimiento lo define el médico.</small></div></div>`+
       `<ul class="jpago-l">${DATA.map(d=>`<li><div><small>${d.label}</small><b${d.show.length>16?' class="long"':''}>${d.show}</b></div><button type="button" class="jpago-c" data-jcopy="${d.value}">${ICON_COPY}<span>Copiar</span></button></li>`).join('')}</ul>`+
       `<p class="jpago-f">A nombre de Kamo Martin Olano Paredes. ${foot}</p>`;
     return box;

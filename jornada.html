@@ -292,6 +292,28 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
 .go .seal{animation:stamp .7s cubic-bezier(.2,1.5,.4,1) 1.2s both}
 @keyframes stamp{0%{opacity:0;transform:scale(2.3) rotate(-42deg)}55%{opacity:1}100%{opacity:1;transform:rotate(-12deg)}}
 
+
+/* Ventana «Asegura tu 50 %» */
+.offer{border:0;padding:0;margin:auto auto 0;width:100%;max-width:440px;max-height:100dvh;background:transparent;overflow:visible}
+.offer::backdrop{background:rgba(6,29,51,.62);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.offer-in{position:relative;margin:0 10px calc(10px + env(safe-area-inset-bottom));padding:26px 22px 20px;border-radius:26px;background:radial-gradient(90% 70% at 100% 0%,rgba(26,167,157,.38),transparent 70%),var(--navy);color:#fff;box-shadow:0 30px 60px rgba(3,14,26,.5);animation:sheetUp .55s var(--ease) both}
+@keyframes sheetUp{from{transform:translateY(110%)}to{transform:none}}
+.offer-in:focus{outline:none}
+.offer-x{position:absolute;top:12px;right:12px;width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;display:grid;place-items:center;cursor:pointer}
+.offer-seal{width:92px;height:92px;margin:-62px 0 6px;transform:rotate(-12deg);filter:drop-shadow(0 10px 18px rgba(0,0,0,.4));animation:stamp .7s cubic-bezier(.2,1.5,.4,1) .35s both}
+.offer-seal svg{width:100%;height:100%;overflow:visible}
+.offer h2{color:#fff;font-size:1.65rem;padding-right:40px}
+.offer p{margin-top:8px;color:#cfe3ee;font-size:.98rem}
+.offer p b{color:#fff}
+.offer-pts{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:8px;font-size:.93rem}
+.offer-pts li{display:flex;gap:9px;align-items:flex-start}
+.offer-pts .ico{color:var(--aqua);margin-top:1px}
+.offer-go{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:10px;height:56px;margin-top:18px;border-radius:999px;background:linear-gradient(135deg,#9af3ea,#45cdc1);color:var(--ink);font-weight:700;font-size:1.05rem;text-decoration:none}
+.offer-go::after{content:"";position:absolute;top:0;bottom:0;left:0;width:38%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.7),transparent);transform:translateX(-160%) skewX(-18deg);animation:shine 3.5s ease-in-out 1s infinite}
+.offer-later{display:block;width:100%;min-height:44px;margin-top:6px;border:0;background:none;color:#bcd0dc;font-weight:600;cursor:pointer}
+.offer small{display:block;margin-top:4px;text-align:center;font-size:.76rem;color:#9fb6c4}
+@media (min-width:600px){.offer{margin:auto}.offer-in{margin:0 16px}}
+
 /* Tablet y PC */
 @media (min-width:560px){
   .hero-in{padding-top:22px}
@@ -332,6 +354,7 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
 
 <!-- Íconos (trazo, estilo único) -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="seal-shape" viewBox="0 0 120 120"><defs><linearGradient id="sg2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#25bdb0"/><stop offset="1" stop-color="#0a6a63"/></linearGradient></defs><path fill="url(#sg2)" d="M60.00,4.80A6.79,6.79 0 0 1 73.21,6.40A6.79,6.79 0 0 1 85.65,11.12A6.79,6.79 0 0 1 96.60,18.68A6.79,6.79 0 0 1 105.43,28.64A6.79,6.79 0 0 1 111.61,40.43A6.79,6.79 0 0 1 114.80,53.35A6.79,6.79 0 0 1 114.80,66.65A6.79,6.79 0 0 1 111.61,79.57A6.79,6.79 0 0 1 105.43,91.36A6.79,6.79 0 0 1 96.60,101.32A6.79,6.79 0 0 1 85.65,108.88A6.79,6.79 0 0 1 73.21,113.60A6.79,6.79 0 0 1 60.00,115.20A6.79,6.79 0 0 1 46.79,113.60A6.79,6.79 0 0 1 34.35,108.88A6.79,6.79 0 0 1 23.40,101.32A6.79,6.79 0 0 1 14.57,91.36A6.79,6.79 0 0 1 8.39,79.57A6.79,6.79 0 0 1 5.20,66.65A6.79,6.79 0 0 1 5.20,53.35A6.79,6.79 0 0 1 8.39,40.43A6.79,6.79 0 0 1 14.57,28.64A6.79,6.79 0 0 1 23.40,18.68A6.79,6.79 0 0 1 34.35,11.12A6.79,6.79 0 0 1 46.79,6.40A6.79,6.79 0 0 1 60.00,4.80Z"/><circle cx="60" cy="60" r="50" fill="none" stroke="#fff" stroke-opacity=".4" stroke-width=".7"/><circle cx="60" cy="60" r="31" fill="#fff" fill-opacity=".1"/><text x="58" y="72" text-anchor="middle" font-family="Fraunces,Georgia,serif" font-weight="700" font-size="35" fill="#fff">50<tspan font-size="19" dx="1.5" dy="-9">%</tspan></text></symbol>
   <symbol id="i-cal" viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 10h18"/><rect x="3" y="4" width="18" height="18" rx="3"/></symbol>
   <symbol id="i-calok" viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 10h18"/><rect x="3" y="4" width="18" height="18" rx="3"/><path d="m9 16 2 2 4-4"/></symbol>
   <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 6.5V12l3.5 2"/></symbol>
@@ -508,7 +531,7 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
         <span class="node"><svg class="ico draw" viewBox="0 0 24 24" aria-hidden="true"><path pathLength="1" style="--i:0" d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path pathLength="1" style="--i:1" d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg><b>2</b></span>
         <div class="st">
           <h3>Separa tu cita con S/&nbsp;20</h3>
-          <p>Por Yape o BCP. Los datos para pagar te aparecen al reservar.</p>
+          <p>Por Yape o BCP: aseguras tu 50&nbsp;% de la jornada. Los datos para pagar te aparecen al reservar.</p>
           <div class="split" role="img" aria-label="De los S/ 70 de la evaluación pagas S/ 20 al separar y S/ 50 el día de tu evaluación">
             <span class="a"><b>S/&nbsp;20</b>al separar</span><span class="b"><b>S/&nbsp;50</b>el día de tu evaluación</span>
           </div>
@@ -552,7 +575,7 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
     <details><summary>¿Quién realiza las cirugías?<span class="chev" data-avoid><svg class="ico"><use href="#i-chev"/></svg></span></summary><div class="ans">El Dr. Aldo Ronquillo, médico invitado, en el consultorio del Dr. Olano.</div></details>
     <details><summary>¿Por qué necesito una evaluación antes?<span class="chev" data-avoid><svg class="ico"><use href="#i-chev"/></svg></span></summary><div class="ans">Para revisar tu caso y tu salud, y confirmar si el procedimiento es adecuado para ti. En la evaluación se define el plan y el precio final con el descuento de la jornada.</div></details>
     <details><summary>¿Cuánto cuesta?<span class="chev" data-avoid><svg class="ico"><use href="#i-chev"/></svg></span></summary><div class="ans">La evaluación cuesta S/&nbsp;70. Los procedimientos tienen 50&nbsp;% de descuento durante la jornada; el precio exacto depende de tu caso y te lo damos en la evaluación.</div></details>
-    <details id="separar"><summary>¿Cómo separo mi cita?<span class="chev" data-avoid><svg class="ico"><use href="#i-chev"/></svg></span></summary><div class="ans">Reserva tu evaluación, envía S/&nbsp;20 por Yape o BCP y manda la constancia por WhatsApp al +51 907 108 271. Esos S/&nbsp;20 se descuentan de los S/&nbsp;70 de tu evaluación.
+    <details id="separar"><summary>¿Cómo separo mi cita?<span class="chev" data-avoid><svg class="ico"><use href="#i-chev"/></svg></span></summary><div class="ans">Reserva tu evaluación, envía S/&nbsp;20 por Yape o BCP y manda la constancia por WhatsApp al +51 907 108 271. Esos S/&nbsp;20 se descuentan de los S/&nbsp;70 de tu evaluación y aseguran tu 50&nbsp;% de descuento en la jornada.
       <ul class="pay">
         <li><div><small>Yape</small><b data-avoid data-copy="981214007">981 214 007</b></div><button class="copy js-copy" type="button" data-avoid><svg class="ico"><use href="#i-copy"/></svg><span class="lbl">Copiar</span></button></li>
         <li><div><small>BCP · cuenta</small><b data-avoid data-copy="19190200628044">191-90200628044</b></div><button class="copy js-copy" type="button" data-avoid><svg class="ico"><use href="#i-copy"/></svg><span class="lbl">Copiar</span></button></li>
@@ -591,6 +614,24 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
   <div class="lb-bar"><span>Afiche de la jornada</span><button class="lb-x js-lb-close" type="button" aria-label="Cerrar"><svg class="ico"><use href="#i-x"/></svg></button></div>
   <div class="lb-body">
     <div class="lb-fig js-media"><img data-src="/assets/jornada-cirugia-nov-2026.webp" alt="Afiche: Jornada de cirugía facial con el Dr. Aldo Ronquillo y el Dr. Olano, 18, 19 y 20 de noviembre de 2026" width="1024" height="1536"><div class="fallback">No se pudo cargar el afiche. Cierra y vuelve a intentar.</div></div>
+  </div>
+</dialog>
+
+
+<!-- Ventana «Asegura tu 50 %»: aparece una vez, a los 40 s, si aún no tocó «Reservar» -->
+<dialog class="offer" id="oferta" aria-labelledby="oferta-t">
+  <div class="offer-in" tabindex="-1" autofocus>
+    <button class="offer-x js-offer-close" type="button" aria-label="Cerrar"><svg class="ico"><use href="#i-x"/></svg></button>
+    <div class="offer-seal" aria-hidden="true"><svg viewBox="0 0 120 120"><use href="#seal-shape"/></svg></div>
+    <h2 id="oferta-t">Asegura tu 50&nbsp;% con S/&nbsp;20</h2>
+    <p>Reserva tu evaluación y separa con <b>S/&nbsp;20</b>: tu <b>50&nbsp;% de descuento</b> en la jornada queda asegurado.</p>
+    <ul class="offer-pts">
+      <li><svg class="ico"><use href="#i-check"/></svg><span>Los S/&nbsp;20 se descuentan de tu evaluación: ese día pagas S/&nbsp;50.</span></li>
+      <li><svg class="ico"><use href="#i-check"/></svg><span>El procedimiento adecuado lo define el médico en tu evaluación.</span></li>
+      <li><svg class="ico"><use href="#i-cal"/></svg><span id="ofertaPlazo">Reservas hasta el 17 de noviembre.</span></li>
+    </ul>
+    <a class="offer-go js-book js-offer-go" href="/reserva-s?servicio=consulta"><svg class="ico"><use href="#i-calok"/></svg><span class="lbl">Asegurar mi 50&nbsp;%</span></a>
+    <button class="offer-later js-offer-close" type="button">Seguir viendo</button>
   </div>
 </dialog>
 
@@ -836,6 +877,34 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
     dlg.addEventListener("click",function(e){if(e.target===dlg||e.target.classList.contains("lb-body"))dlg.close()});
   })();
 
+
+  // ---------- Ventana «Asegura tu 50 %» ----------
+  // Una vez por visita, a los 40 s con la página visible, si aún no tocó «Reservar»,
+  // no está viendo el video ni el afiche y la reserva sigue abierta (hasta el 17/11).
+  (function(){
+    var dlg=$("#oferta");if(!dlg||typeof dlg.showModal!=="function")return;
+    var KEY="olanoOfertaJornadaVista",clicked=false,seen=0,last=Date.now(),timer;
+    try{if(sessionStorage.getItem(KEY)==="1")return}catch(e){}
+    if(Date.now()>=Date.UTC(2026,10,18,5,0,0))return;
+    var plazo=$("#ofertaPlazo"),ms=Date.UTC(2026,10,18,5,0,0)-Date.now(),days=Math.ceil(ms/86400000);
+    if(plazo)plazo.textContent=days===1?"Hoy es el último día para reservar.":"Quedan "+days+" días para reservar (hasta el 17 de noviembre).";
+    $$(".js-book").forEach(function(a){if(!a.classList.contains("js-offer-go"))a.addEventListener("click",function(){clicked=true})});
+    function busy(){return clicked||playing||document.documentElement.classList.contains("lb-open")||document.visibilityState!=="visible"}
+    timer=setInterval(function(){
+      var now=Date.now();if(document.visibilityState==="visible")seen+=now-last;last=now;
+      if(seen<40000||busy())return;
+      clearInterval(timer);
+      try{sessionStorage.setItem(KEY,"1")}catch(e){}
+      dlg.showModal();doc.classList.add("lb-open");
+      track("ventana_oferta","VentanaOferta",{},false,true);
+    },1000);
+    function close(how){if(!dlg.open)return;dlg.close();track("ventana_cerrada",null,{como:how})}
+    $$(".js-offer-close",dlg).forEach(function(b){b.addEventListener("click",function(){close(b.classList.contains("offer-x")?"x":"seguir")})});
+    dlg.addEventListener("click",function(e){if(e.target===dlg)close("fondo")});
+    dlg.addEventListener("cancel",function(){track("ventana_cerrada",null,{como:"atras"})});
+    dlg.addEventListener("close",function(){doc.classList.remove("lb-open")});
+  })();
+
   // ---------- Botón flotante ----------
   var fab=$("#fab"),heroCta=$(".cta"),endEl=$("#cierre");
   var heroIn=true,atEnd=false,compact=false,side="right",lastY=window.scrollY,idle=null;
@@ -897,7 +966,7 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
   }
   window.__jtrack=track;
   $$(".js-book").forEach(function(a){a.addEventListener("click",function(){
-    var lugar=a.id==="fab"?(a.classList.contains("dock")?"cierre":"flotante"):"portada";
+    var lugar=a.classList.contains("js-offer-go")?"ventana":a.id==="fab"?(a.classList.contains("dock")?"cierre":"flotante"):"portada";
     track("clic_reservar","ClicReservar",{lugar:lugar});
   })});
   $$(".js-wa").forEach(function(a){a.addEventListener("click",function(){

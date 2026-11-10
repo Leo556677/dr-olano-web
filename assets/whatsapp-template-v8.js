@@ -40,7 +40,7 @@
     if(jornada)lines.push('🏥 *Evaluación para la Jornada de cirugía facial (18, 19 y 20 de noviembre)*');
     lines.push('> ℹ️ El valor final está sujeto a evaluación médica.','',`📅 Fecha: ${fmtDate(state.date)}`,`🕐 Hora: ${state.time||''}`);
     if(state.manageUrl)lines.push('',`🔗 Gestionar / reprogramar / cancelar: ${state.manageUrl}`);
-    if(jornada)lines.push('','💳 Para separar tu horario: envía *S/ 20* por Yape (981 214 007) o BCP (191-90200628044) y la constancia en este chat. Se descuentan de tu evaluación.');
+    if(jornada)lines.push('','💳 Para separar tu horario: envía *S/ 20* por Yape (981 214 007) o BCP (191-90200628044) y la constancia en este chat. Se descuentan de tu evaluación y aseguran tu *50 % de descuento* en la jornada.');
     lines.push('',`📍 Dirección: ${ADDRESS}`,`🗺️ Google Maps: ${MAP}`);
     return `https://wa.me/${phone}?text=${encodeURIComponent(lines.join('\n'))}`;
   }
