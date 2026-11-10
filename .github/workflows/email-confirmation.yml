@@ -1,0 +1,59 @@
+name: Dr. Olano | Correo OTP y confirmación
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '_includes/v28/part04.html'
+      - '_includes/v28/patch06-booking-real.html'
+      - 'assets/booking-email-*.js'
+      - 'integrations/email/**'
+      - 'integrations/supabase/crm/**'
+      - 'tests/booking-email-confirm.test.mjs'
+      - 'tests/email-confirm-crm-*.sql'
+      - '.github/workflows/email-confirmation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  email-ui:
+    name: Interfaz y plantilla HTML, sin envío
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - run: node --test tests/booking-email-confirm.test.mjs
+      - run: node --test tests/booking-email-otp.test.mjs
+
+  email-database:
+    name: DNI y correo transaccional en Postgres efímero
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: ci_only_not_real
+          POSTGRES_DB: olano_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d olano_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_only_not_real
+      PGDATABASE: olano_test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - run: psql -X -v ON_ERROR_STOP=1 -f tests/otp-crm-fixture.sql
+      - run: psql -X -v ON_ERROR_STOP=1 -f integrations/supabase/crm/migrations/20261110170000_email_otp_booking_bridge.sql
+      - run: psql -X -v ON_ERROR_STOP=1 -f tests/email-confirm-crm-fixture.sql
+      - run: psql -X -v ON_ERROR_STOP=1 -f integrations/supabase/crm/migrations/20261110192000_reserva_dni_privado.sql
+      - run: psql -X -v ON_ERROR_STOP=1 -f tests/email-confirm-crm-integration.sql
