@@ -26,7 +26,9 @@
   window.OLANO_SERVICE_LINK_LIST=SERVICES.map(s=>({id:s.id,name:s.name,category:s.category,url:`https://doctorolano.pe/reserva-s?servicio=${encodeURIComponent(publicSlugFor(s))}`}));
   window.OLANO_SERVICE_LINKS=Object.fromEntries(window.OLANO_SERVICE_LINK_LIST.map(item=>[item.id,item.url]));
 
-  const params=new URLSearchParams(window.location.search);
+  // El píxel de TikTok borra por un momento los parámetros de la URL (privacidad);
+  // leemos la URL original que guarda en __olanoAttributionQuery.
+  const params=new URLSearchParams(window.__olanoAttributionQuery??window.location.search);
   const requestedRaw=params.get('servicio')||params.get('service')||'';
   const requestedService=serviceByRequest(requestedRaw);
 

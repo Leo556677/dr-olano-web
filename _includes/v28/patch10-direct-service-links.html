@@ -4,7 +4,9 @@
 (() => {
   if(typeof SERVICES==='undefined'||typeof state==='undefined'||typeof openBooking!=='function'||typeof go!=='function')return;
 
-  const params=new URLSearchParams(window.location.search);
+  // El píxel de TikTok borra por un momento los parámetros de la URL (privacidad);
+  // leemos la URL original que guarda en __olanoAttributionQuery.
+  const params=new URLSearchParams(window.__olanoAttributionQuery??window.location.search);
   const requestedId=String(params.get('servicio')||params.get('service')||'').trim().toLowerCase();
   const requestedService=SERVICES.find(s=>String(s.id).toLowerCase()===requestedId)||null;
   const linkedServiceId=requestedService?.id||'';
