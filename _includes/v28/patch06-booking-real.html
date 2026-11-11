@@ -68,7 +68,8 @@
     {id:"lipofilling",category:"novare",unit:"NOVARE",name:"Lipofilling facial",price:"Desde S/ 2000"},
     {id:"mini-lipoescultura",category:"novare",unit:"NOVARE",name:"Mini lipoescultura ambulatoria",price:"Desde S/ 2500"},
     {id:"lifting-cejas",category:"novare",unit:"NOVARE",name:"Lifting de cejas / Castañares",price:"Desde S/ 3000"},
-    {id:"otoplastia",category:"novare",unit:"NOVARE",name:"Otoplastia / Lobuloplastia",price:"Desde S/ 2000"}
+    {id:"otoplastia",category:"novare",unit:"NOVARE",name:"Otoplastia / Lobuloplastia",price:"Desde S/ 2000"},
+    {id:"evaluacion-jornada",category:"jornada",unit:"Jornada",name:"Evaluación previa · Jornada de cirugía facial",price:"S/ 70"}
   ];
   SERVICES.splice(0,SERVICES.length,...V26_SERVICES);
   if(typeof V23_FEATURED!=="undefined")V23_FEATURED.splice(0,V23_FEATURED.length,
@@ -121,7 +122,7 @@
   }
 
   async function bookingApi(body){
-    const endpoint=body?.action==="availability"?AVAILABILITY_API:BOOKING_API;
+    const endpoint=body?.action==="availability"&&body?.service_code!=="evaluacion-jornada"?AVAILABILITY_API:BOOKING_API;
     const res=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/json","apikey":SUPABASE_PUBLISHABLE_KEY},body:JSON.stringify(body)});
     let data={};try{data=await res.json()}catch{}
     if(!res.ok){const err=new Error(data.message||data.code||"No se pudo completar la operación");err.code=data.code||"API_ERROR";err.status=res.status;throw err}
@@ -211,7 +212,7 @@
     let m=state.month,days=$("#calendarDays"),today=new Date();today.setHours(0,0,0,0);let max=new Date(today);max.setDate(max.getDate()+CONFIG.maxDays);
     // Jornada de cirugía facial: quien llega desde /jornada solo puede elegir evaluación hasta el 17/11/2026.
     let jornadaOrigen=false;try{jornadaOrigen=sessionStorage.getItem("olanoOrigen")==="jornada-cirugia-nov-2026"}catch{}
-    if(jornadaOrigen){const jMax=new Date(2026,10,17);if(jMax<max)max=jMax;let note=$("#jornadaFechaNote");if(!note){note=document.createElement("p");note.id="jornadaFechaNote";note.style.cssText="margin:0 0 10px;padding:9px 12px;border-radius:12px;background:#eef9f7;border:1px solid #cfe6e3;color:var(--navy);font-size:.78rem;line-height:1.35;font-weight:600";$(".calendar-head")?.insertAdjacentElement("beforebegin",note)}note.textContent=today>jMax?"La reserva de evaluaciones para la jornada cerró el 17 de noviembre. Escríbenos por WhatsApp.":"Jornada de cirugía facial: elige tu evaluación hasta el 17 de noviembre.";}
+    if(jornadaOrigen||isJornadaEval()){const jMax=new Date(2026,10,17);if(jMax<max)max=jMax;let note=$("#jornadaFechaNote");if(!note){note=document.createElement("p");note.id="jornadaFechaNote";note.style.cssText="margin:0 0 10px;padding:9px 12px;border-radius:12px;background:#eef9f7;border:1px solid #cfe6e3;color:var(--navy);font-size:.78rem;line-height:1.35;font-weight:600";$(".calendar-head")?.insertAdjacentElement("beforebegin",note)}note.textContent=today>jMax?"La reserva de evaluaciones para la jornada cerró el 17 de noviembre. Escríbenos por WhatsApp.":"Jornada de cirugía facial: elige tu evaluación hasta el 17 de noviembre.";}
     
     $("#monthTitle").textContent=new Intl.DateTimeFormat("es-PE",{month:"long",year:"numeric"}).format(m);days.innerHTML="";
     let first=new Date(m.getFullYear(),m.getMonth(),1),last=new Date(m.getFullYear(),m.getMonth()+1,0);for(let i=0;i<first.getDay();i++)days.insertAdjacentHTML("beforeend","<span></span>");
@@ -306,10 +307,78 @@
     }catch{}
   }
 
+  // ===== Jornada · reserva 2 (evaluación previa) =====
+  // Los datos salen de la reserva 1 (token guardado por /jornada en este navegador). El DNI nunca se
+  // muestra ni se guarda aquí. El paso «Tus datos» se omite. Hasta el 17/11, sin chocar con la reserva 1.
+  function isJornadaEval(){return state.service?.id==="evaluacion-jornada"}
+  function readJornadaTk(){
+    for(const st of [()=>localStorage,()=>sessionStorage]){
+      try{const o=JSON.parse(st().getItem("olanoJornadaTk")||"null");if(o&&o.t&&o.exp>Date.now())return o}catch{}
+    }
+    return null
+  }
+  let jornadaEst=null,jornadaEstState="none",jornadaEstPromise=null;
+  function loadJornadaEst(){
+    if(jornadaEstPromise)return jornadaEstPromise;
+    const tk=readJornadaTk();
+    if(!tk){jornadaEstState="missing";return jornadaEstPromise=Promise.resolve()}
+    jornadaEstState="loading";
+    return jornadaEstPromise=bookingApi({action:"jornada_estado",jornada_token:tk.t}).then(d=>{jornadaEst=d.jornada||null;jornadaEstState=jornadaEst?"ok":"missing"}).catch(e=>{jornadaEstState=e?.status===404?"missing":"error"})
+  }
+  function jornadaDayLabel(){const j=jornadaEst;if(!j)return "";return `${fmt(fromIso(j.date))} · ${j.time}`}
+  function renderJornadaGate(){
+    const step=document.querySelector('.step[data-step="2"]');if(!step)return;
+    let gate=$("#jornadaGate");
+    if(!isJornadaEval()){step.classList.remove("jf-block");gate?.remove();return}
+    if(!gate){gate=document.createElement("div");gate.id="jornadaGate";gate.setAttribute("role","status");gate.style.cssText="margin:0 0 12px;padding:12px 14px;border-radius:14px;background:#eef9f7;border:1px solid #cfe6e3;color:var(--navy);font-size:.9rem;line-height:1.4;font-weight:600";step.querySelector(".step-title")?.insertAdjacentElement("afterend",gate)}
+    const link=(href,txt)=>`<a href="${href}" style="display:inline-flex;margin-top:8px;padding:10px 14px;border-radius:12px;background:var(--navy);color:#fff;font-weight:800;text-decoration:none">${txt}</a>`;
+    if(jornadaEstState==="loading"){step.classList.add("jf-block");gate.textContent="Verificando tu reserva de jornada…";return}
+    if(jornadaEstState==="missing"){step.classList.add("jf-block");gate.innerHTML="Para reservar tu evaluación, primero separa tu día de jornada.<br>"+link("/jornada","Elegir mi día de jornada");return}
+    if(jornadaEstState==="error"){step.classList.add("jf-block");gate.innerHTML="No pudimos verificar tu reserva de jornada. Revisa tu conexión e inténtalo de nuevo.<br>"+link("javascript:location.reload()","Reintentar");return}
+    if(jornadaEst?.evaluation?.booked){step.classList.add("jf-block");gate.textContent=`Tu evaluación ya está reservada para el ${fmt(fromIso(jornadaEst.evaluation.date))} a las ${jornadaEst.evaluation.time}. Para cambiarla, escríbenos por WhatsApp.`;return}
+    step.classList.remove("jf-block");
+    gate.textContent=`Tu jornada: ${jornadaDayLabel()}. Elige tu evaluación entre hoy y el 17 de noviembre, antes de tu día. No necesitas volver a escribir tus datos.`
+  }
+  (function(){
+    const st=document.createElement("style");
+    st.textContent='.step.jf-block>*:not(.step-title):not(#jornadaGate):not(#v252SelectedServiceBanner){display:none!important}';
+    document.head.appendChild(st);
+    const goBase=go;
+    go=function(n){
+      if(isJornadaEval()&&Number(n)===3){
+        // Atrás desde el resumen vuelve a la hora; adelante se salta «Tus datos».
+        if(state.step===4)return goBase.call(this,2);
+        if(jornadaEst){
+          const nm=$("#clientName"),ph=$("#clientPhone");
+          if(nm)nm.value=jornadaEst.name||"";if(ph)ph.value=jornadaEst.phone||"";
+          state.name=String(jornadaEst.name||"");state.phone=String(jornadaEst.phone||"");
+        }
+        return goBase.call(this,4)
+      }
+      const r=goBase.apply(this,arguments);
+      if(Number(n)===2){
+        if(isJornadaEval()){renderJornadaGate();loadJornadaEst().then(renderJornadaGate)}
+        else renderJornadaGate()
+      }
+      return r
+    };
+    const sumBase=renderSummary;
+    renderSummary=function(){
+      const r=sumBase.apply(this,arguments);
+      if(isJornadaEval()&&jornadaEst){
+        const box=$("#summary");
+        if(box&&!box.querySelector("[data-jornada-row]"))box.insertAdjacentHTML("beforeend",`<div class="summary-row" data-jornada-row><span class="summary-key">${icon("i-check")}Tu jornada</span><b>${jornadaDayLabel()}</b></div>`)
+      }
+      return r
+    };
+    if(readJornadaTk())loadJornadaEst()
+  })();
+
   async function sendRealBooking(){
     state.name=$("#clientName").value.trim();state.phone=$("#clientPhone").value.replace(/\s+/g,"");
-    const dni=getBookingDni();
-    if(!/^\d{8}$/.test(dni)){alert("Ingresa tu DNI de 8 dígitos.");go(3);$("#clientDni")?.focus();updateDniValidity();return}
+    const evalMode=isJornadaEval();
+    const dni=evalMode?"":getBookingDni();
+    if(!evalMode&&!/^\d{8}$/.test(dni)){alert("Ingresa tu DNI de 8 dígitos.");go(3);$("#clientDni")?.focus();updateDniValidity();return}
     if(!state.service||!state.date||!state.time||state.name.length<3||state.phone.length<7)return;
     if(isNovareConsult()&&!['presencial','videollamada'].includes(state.bookingModality)){alert("Selecciona si deseas la Consulta NOVARE presencial o por videollamada.");go(2);return}
     let note=isNovareService()?String(state.bookingNote||"").trim():"";
@@ -320,16 +389,20 @@
       location.assign("https://doctorolano.pe/reserva-s?servicio="+encodeURIComponent(state.service.id));return;
     }
     const otpBoot=window.OLANO_OTP_BOOTSTRAP;
-    if(otpBoot?.enabled && !otpBoot?.ready){
+    if(!evalMode && otpBoot?.enabled && !otpBoot?.ready){
       alert("Estamos preparando la verificación del correo. Revisa tu conexión o actualiza la página.");return;
     }
     const otp=window.OLANO_PATIENT_OTP;
-    const otpEnabled=otp?.isEnabled?.()===true;
+    const otpEnabled=!evalMode&&otp?.isEnabled?.()===true;
     if(otpEnabled && !await otp.confirmForBooking())return;
     if(!turnstileToken){renderBookingTurnstile();alert("Completa la verificación de seguridad para reservar.");return}
     const btn=$("#sendBooking"),old=btn.innerHTML;btn.disabled=true;btn.textContent="Reservando…";
     try{
-      const payload={action:"book",service_code:state.service.id,date:state.date,time:state.time,name:state.name,phone:state.phone,dni,note,modality:isNovareConsult()?state.bookingModality:undefined,device_id:getDeviceId(),turnstile_token:turnstileToken};
+      const jtk=evalMode?readJornadaTk():null;
+      if(evalMode&&!jtk){alert("Primero separa tu día de jornada para poder reservar tu evaluación.");location.assign("/jornada");return}
+      const payload=evalMode
+        ?{action:"book_evaluacion_jornada",service_code:state.service.id,date:state.date,time:state.time,jornada_token:jtk.t,device_id:getDeviceId(),turnstile_token:turnstileToken}
+        :{action:"book",service_code:state.service.id,date:state.date,time:state.time,name:state.name,phone:state.phone,dni,note,modality:isNovareConsult()?state.bookingModality:undefined,device_id:getDeviceId(),turnstile_token:turnstileToken};
       // Mantener reservas/WhatsApp actuales mientras OTP aún no se ha activado.
       const data=otpEnabled?await otp.book(payload):await bookingApi(payload);
       const b=data.booking||{};state.id=b.code||"";state.manageUrl=String(b.manage_url||"");$("#bookingCode").textContent=state.id;
@@ -368,6 +441,7 @@
         else {window.OLANO_PATIENT_OTP?.reset?.();alert("La verificación de correo venció o ya no es válida. Vuelve a tocar el botón de reserva para solicitar otro código.")}
       }
       else if(code==="TURNSTILE_FAILED"||code==="TURNSTILE_REQUIRED"||code==="TURNSTILE_HOSTNAME_MISMATCH"||code==="TURNSTILE_ACTION_MISMATCH")alert("No se pudo validar la verificación de seguridad. Intenta nuevamente.");
+      else if(code==="JORNADA_TOKEN_INVALID"||code==="EVALUACION_ALREADY_BOOKED"||code==="EVALUACION_AFTER_JORNADA")alert(e.message||"No se pudo registrar la evaluación. Escríbenos por WhatsApp y te ayudamos.");
       else alert("No se pudo registrar la cita. Intenta nuevamente.");
       try{renderTimes()}catch{}
     }finally{btn.disabled=false;btn.innerHTML=old}

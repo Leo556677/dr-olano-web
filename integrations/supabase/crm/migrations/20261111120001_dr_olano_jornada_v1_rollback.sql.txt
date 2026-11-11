@@ -1,0 +1,85 @@
+-- REVERSA de 20261111120000_dr_olano_jornada_v1.sql  (NO se aplica sola; extensión .txt a propósito)
+-- Úsala solo si hay que deshacer la jornada. Si ya existen citas de jornada, primero cancélalas o respáldalas:
+-- este archivo NO borra citas; desactiva servicios y recurso en vez de eliminarlos.
+
+begin;
+
+-- Números de prueba: revertir primero las reglas compartidas (antes de borrar la tabla y el helper)
+do $rb_prueba$
+declare v_def text; v_oid oid;
+begin
+  -- Revisión manual: devolver la función original a public
+  if exists (select 1 from pg_proc where proname = 'dr_olano_booking_risk_base' and pronamespace = 'private'::regnamespace) then
+    drop function if exists public.get_dr_olano_booking_risk(uuid, text);
+    alter function private.dr_olano_booking_risk_base(uuid, text) rename to get_dr_olano_booking_risk;
+    alter function private.get_dr_olano_booking_risk(uuid, text) set schema public;
+  end if;
+  -- Cita web normal
+  v_oid := 'public.crear_cita_web_segura_v3(uuid,uuid,uuid,text,text,timestamptz,text,text,text,text,text)'::regprocedure;
+  v_def := pg_get_functiondef(v_oid);
+  v_def := replace(v_def, E'  if not private.dr_olano_es_numero_de_prueba(p_telefono_e164) and exists(\n    select 1 from private.web_booking_guard g', E'  if exists(\n    select 1 from private.web_booking_guard g');
+  v_def := replace(v_def, E'  if not private.dr_olano_es_numero_de_prueba(p_telefono_e164) then\n    insert into private.web_booking_guard(negocio_id,cita_id,phone_hash,ip_hash,device_hash)\n    values(p_negocio_id,v_cita_id,p_phone_hash,p_ip_hash,p_device_hash);\n  end if;', E'  insert into private.web_booking_guard(negocio_id,cita_id,phone_hash,ip_hash,device_hash)\n  values(p_negocio_id,v_cita_id,p_phone_hash,p_ip_hash,p_device_hash);');
+  execute v_def;
+  -- Máximo de citas por día
+  v_oid := 'private.enforce_cita_booking_rules()'::regprocedure;
+  v_def := pg_get_functiondef(v_oid);
+  v_def := replace(v_def, E'\n     and not exists (select 1 from public.contactos ct join private.dr_olano_test_phones tp on tp.telefono_e164 = ct.telefono_e164 where ct.id = new.contacto_id) then', ' then');
+  execute v_def;
+end
+$rb_prueba$;
+drop function if exists private.dr_olano_es_numero_de_prueba(text);
+drop table if exists private.dr_olano_test_phones;
+
+
+-- 1) Funciones nuevas
+drop function if exists public.crear_cita_jornada_v1(uuid, uuid, uuid, text, text, timestamptz, text, text, text, text, text, text);
+drop function if exists public.crear_cita_evaluacion_jornada_v1(uuid, uuid, uuid, text, timestamptz, text, text, text);
+drop function if exists public.get_dr_olano_jornada_estado_v1(uuid, text);
+
+-- 2) Quitar la condición añadida al conteo por hora de crear_cita_web_segura_v3
+do $undo$
+declare
+  v_oid oid := 'public.crear_cita_web_segura_v3(uuid,uuid,uuid,text,text,timestamptz,text,text,text,text,text)'::regprocedure;
+  v_def text := pg_get_functiondef(v_oid);
+  v_new text := E'interval ''1 hour''\n    and c.estado in(''pendiente'',''confirmada'')\n    and c.tipo_cita is distinct from ''jornada'';';
+  v_old text := E'interval ''1 hour''\n    and c.estado in(''pendiente'',''confirmada'');';
+begin
+  if position(v_new in v_def) > 0 then
+    execute replace(v_def, v_new, v_old);
+  end if;
+end
+$undo$;
+
+-- 3) Servicios y recurso de la jornada: desactivar (no borrar, por las citas que ya los usan)
+update public.servicios set activo = false, visible_web = false
+ where codigo_externo in ('jornada', 'evaluacion-jornada')
+   and negocio_id = (select id from public.negocios where slug = 'dr-olano');
+update public.recursos_agenda set activo = false
+ where nombre = 'Jornada · Dr. Aldo Ronquillo'
+   and negocio_id = (select id from public.negocios where slug = 'dr-olano');
+delete from public.agenda_disponibilidad_config
+ where servicio_id in (select id from public.servicios where codigo_externo in ('jornada', 'evaluacion-jornada'));
+
+-- 4) Restricción de no solapamiento original (solo si NO quedan citas activas simultáneas en el recurso Jornada)
+do $undo2$
+begin
+  if exists (
+    select 1 from public.citas a join public.citas b
+      on a.recurso_id = b.recurso_id and a.id < b.id
+     and tstzrange(a.inicio, a.fin, '[)') && tstzrange(b.inicio, b.fin, '[)')
+    where a.estado in ('pendiente', 'confirmada') and b.estado in ('pendiente', 'confirmada')
+  ) then
+    raise notice 'Hay citas simultáneas en un mismo recurso: se conserva la restricción modificada. Cancela esas citas y vuelve a correr este paso.';
+  else
+    alter table public.citas drop constraint if exists citas_recurso_no_solapado;
+    alter table public.citas add constraint citas_recurso_no_solapado
+      exclude using gist (recurso_id with =, tstzrange(inicio, fin, '[)') with &&)
+      where (recurso_id is not null and estado = any (array['pendiente', 'confirmada']));
+  end if;
+end
+$undo2$;
+
+-- 5) La tabla de enlaces se conserva (tiene los tokens y procedimientos). Para borrarla, a mano:
+--    drop table private.dr_olano_jornada_reserva;
+
+commit;
