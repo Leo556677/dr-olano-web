@@ -1346,7 +1346,7 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
     function openWa(){
       var d=st.done||{};
       var msg="Hola, pagué S/ 20 para bloquear mi evaluación del "+dayLabel(d.day)+" a las "+hourLabel(d.hour)+"."+(d.code?" Código: "+d.code+".":"")+" Te envío mi constancia.";
-      track("clic_whatsapp","Contact",{lugar:"constancia"},true);
+      track("clic_whatsapp","ContactoWhatsApp",{lugar:"constancia"});
       next.classList.add("loading");
       location.href="https://wa.me/"+WA_PHONE+"?text="+encodeURIComponent(msg);
     }
@@ -1400,7 +1400,7 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
   })});
   $$(".js-wa").forEach(function(a){a.addEventListener("click",function(){
     var lugar=a.closest(".top")?"encabezado":a.closest(".faq")?"preguntas":a.closest(".end")?"cierre":"otro";
-    track("clic_whatsapp","Contact",{lugar:lugar},true);
+    track("clic_whatsapp","ContactoWhatsApp",{lugar:lugar});
   })});
   $$(".js-copy").forEach(function(b){b.addEventListener("click",function(){
     var v=($("[data-copy]",b.parentNode)||{}).getAttribute?$("[data-copy]",b.parentNode).getAttribute("data-copy"):"";

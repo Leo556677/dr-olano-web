@@ -22,7 +22,8 @@
   fbq("init",ID);
   fbq("track","PageView");
 
-  // Evento a Meta sin parámetros. standard=true para eventos estándar (Contact, ViewContent).
+  // Evento a Meta sin parámetros. standard=true para eventos estándar (ViewContent).
+  // Los clics a WhatsApp salen como el personalizado ContactoWhatsApp.
   // once=true lo envía una sola vez por visita.
   w.olanoMeta=function(name,standard,once){
     try{
@@ -31,16 +32,18 @@
     }catch(e){}
   };
 
-  // Schedule estándar, sin parámetros, UNA sola vez por reserva (clave = id de la reserva).
+  // ReservaConfirmada: evento PERSONALIZADO (Meta no deja salir el estándar Schedule en este píxel),
+  // sin parámetros, UNA sola vez por reserva (clave = id de la reserva).
   // Lo llama conversion-funnel-v8.js apenas el servidor confirma la reserva, antes de que
   // la página salte a WhatsApp. Es el único lugar que lo envía.
+  // El nombre de la función se mantiene (olanoMetaSchedule) para no tocar a quienes la llaman.
   w.olanoMetaSchedule=function(id){
     try{
       var key="olanoMetaSchedule:"+String(id||"").trim();
       if(!id)return;
       if(sessionStorage.getItem(key)==="1")return;
       sessionStorage.setItem(key,"1");
-      fbq("track","Schedule");
+      fbq("trackCustom","ReservaConfirmada");
     }catch(e){}
   };
 })(window,document);
