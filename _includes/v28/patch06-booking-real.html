@@ -320,6 +320,14 @@
     return null
   }
   let jornadaEst=null,jornadaEstState="none",jornadaEstPromise=null;
+  // Pasos reales de la evaluación (los datos ya se pidieron en la jornada): 1) Fecha y hora · 2) Resumen.
+  function jornadaStepHead(){
+    document.body.classList.toggle("jf-eval",isJornadaEval());
+    if(!isJornadaEval())return;
+    const n=Number(state.step),head=document.querySelector(".booking-head-row b"),bar=document.querySelector("#progressBar");
+    if(n===2){if(head)head.textContent="Paso 1 de 2 · Fecha y hora";if(bar)bar.style.width="50%"}
+    else if(n===4){if(head)head.textContent="Paso 2 de 2 · Resumen";if(bar)bar.style.width="100%"}
+  }
   function loadJornadaEst(){
     if(jornadaEstPromise)return jornadaEstPromise;
     const tk=readJornadaTk();
@@ -339,25 +347,26 @@
     if(jornadaEstState==="error"){step.classList.add("jf-block");gate.innerHTML="No pudimos verificar tu reserva de jornada. Revisa tu conexión e inténtalo de nuevo.<br>"+link("javascript:location.reload()","Reintentar");return}
     if(jornadaEst?.evaluation?.booked){step.classList.add("jf-block");gate.textContent=`Tu evaluación ya está reservada para el ${fmt(fromIso(jornadaEst.evaluation.date))} a las ${jornadaEst.evaluation.time}. Para cambiarla, escríbenos por WhatsApp.`;return}
     step.classList.remove("jf-block");
-    gate.textContent=`Tu jornada: ${jornadaDayLabel()}. Elige tu evaluación entre hoy y el 17 de noviembre, antes de tu día. No necesitas volver a escribir tus datos.`
+    gate.textContent=`Tu jornada: ${jornadaDayLabel()}. Elige tu evaluación hasta el 17 de noviembre.`
   }
   (function(){
     const st=document.createElement("style");
-    st.textContent='.step.jf-block>*:not(.step-title):not(#jornadaGate):not(#v252SelectedServiceBanner){display:none!important}';
+    st.textContent='.step.jf-block>*:not(.step-title):not(#jornadaGate):not(#v252SelectedServiceBanner){display:none!important}body.jf-eval #v252SelectedServiceBanner,body.jf-eval #jornadaFechaNote{display:none!important}body.jf-eval #jornadaGate{margin:0 0 8px!important;padding:9px 12px!important;font-size:.86rem!important}';
     document.head.appendChild(st);
     const goBase=go;
     go=function(n){
       if(isJornadaEval()&&Number(n)===3){
         // Atrás desde el resumen vuelve a la hora; adelante se salta «Tus datos».
-        if(state.step===4)return goBase.call(this,2);
+        if(state.step===4){const r2=goBase.call(this,2);jornadaStepHead();return r2}
         if(jornadaEst){
           const nm=$("#clientName"),ph=$("#clientPhone");
           if(nm)nm.value=jornadaEst.name||"";if(ph)ph.value=jornadaEst.phone||"";
           state.name=String(jornadaEst.name||"");state.phone=String(jornadaEst.phone||"");
         }
-        return goBase.call(this,4)
+        { const r4=goBase.call(this,4); jornadaStepHead(); return r4 }
       }
       const r=goBase.apply(this,arguments);
+      jornadaStepHead();
       if(Number(n)===2){
         if(isJornadaEval()){renderJornadaGate();loadJornadaEst().then(renderJornadaGate)}
         else renderJornadaGate()
