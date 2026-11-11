@@ -1,11 +1,13 @@
 -- Sólo las nuevas solicitudes de la ruta OTP con adelanto usan este ciclo.
 alter table public.citas add column requiere_adelanto_web boolean not null default false;
 
+create table private.dr_olano_solicitud_en_curso (transaccion bigint primary key);
+revoke all on private.dr_olano_solicitud_en_curso from public,anon,authenticated;
 create function private.dr_olano_estado_adelanto_web() returns trigger
 language plpgsql security definer set search_path='' as $$
 begin
   if tg_op='INSERT' then
-    if current_setting('dr_olano.solicitud_adelanto', true)='on' and new.origen='web'
+    if exists(select from private.dr_olano_solicitud_en_curso where transaccion=txid_current()) and new.origen='web'
        and exists(select from public.negocios where id=new.negocio_id and slug='dr-olano') then
       new.requiere_adelanto_web := true;
       new.estado := 'pendiente';
@@ -59,11 +61,13 @@ create function public.crear_solicitud_web_con_adelanto(
  p_inicio timestamptz,p_phone_hash text,p_ip_hash text,p_device_hash text,p_modalidad text,
  p_motivo_consulta text,p_patient_user_id uuid,p_dni text,p_verified_email text)
 returns table(cita_id uuid,codigo_web text,cupo_hora integer)
-language plpgsql security definer set search_path='' set dr_olano.solicitud_adelanto='on' as $$
+language plpgsql security definer set search_path='' as $$
 begin
+  insert into private.dr_olano_solicitud_en_curso values(txid_current());
   return query select * from public.crear_cita_web_segura_v6(p_negocio_id,p_servicio_id,
     p_recurso_id,p_nombre,p_telefono_e164,p_inicio,p_phone_hash,p_ip_hash,p_device_hash,p_modalidad,
     p_motivo_consulta,p_patient_user_id,p_dni,p_verified_email);
+  delete from private.dr_olano_solicitud_en_curso where transaccion=txid_current();
 end $$;
 revoke all on function public.crear_solicitud_web_con_adelanto(uuid,uuid,uuid,text,text,timestamptz,text,text,text,text,text,uuid,text,text) from public,anon,authenticated;
 grant execute on function public.crear_solicitud_web_con_adelanto(uuid,uuid,uuid,text,text,timestamptz,text,text,text,text,text,uuid,text,text) to service_role;
