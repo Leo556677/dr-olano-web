@@ -25,6 +25,24 @@
     if(hasOffer&&p.regular_price_pen!=null&&p.discounted_price_pen!=null){
       valueLine=`💰 Valor referencial: Desde ${money(p.regular_price_pen)} → *Desde ${money(p.discounted_price_pen)} con 10%*`;
     }
+    // Evaluación previa de la jornada: mensaje corto y sin enlace de gestión (los cambios van por WhatsApp).
+    if(state.service?.id==='evaluacion-jornada'){
+      let day='';
+      for(const st of [()=>localStorage,()=>sessionStorage]){try{const t=JSON.parse(st().getItem('olanoJornadaTk')||'null');if(t&&t.day){day=t.day;break}}catch{}}
+      const short=[
+        '✅ *Evaluación previa · Jornada de cirugía facial*',
+        `📋 Código: ${state.id}`,
+        `👤 Paciente: ${state.name||''}`,
+        day?`🏥 Día de jornada: *${fmtDate(day)}* (la hora la define el consultorio)`:'',
+        `📅 Evaluación previa: *${fmtDate(state.date)} · ${state.time||''}*`,
+        '',
+        '💳 Para separar tu cupo: envía *S/ 20* por Yape (981 214 007) o BCP (191-90200628044) y la constancia en este chat. Se descuentan de tu evaluación y aseguran tu *50 % de descuento*.',
+        '',
+        `📍 ${ADDRESS}`,
+        `🗺️ Google Maps: ${MAP}`,
+      ].filter((x,i,a)=>x!==''||(a[i-1]!==''&&i>0));
+      return `https://wa.me/${phone}?text=${encodeURIComponent(short.join('\n'))}`;
+    }
     const lines=[
       '✅ *Cita registrada · Dr. Olano*',
       `📋 Código: ${state.id}`,

@@ -416,7 +416,7 @@
         :{action:"book",service_code:state.service.id,date:state.date,time:state.time,name:state.name,phone:state.phone,dni,note,modality:isNovareConsult()?state.bookingModality:undefined,device_id:getDeviceId(),turnstile_token:turnstileToken};
       // Mantener reservas/WhatsApp actuales mientras OTP aún no se ha activado.
       const data=otpEnabled?await otp.book(payload):await bookingApi(payload);
-      const b=data.booking||{};state.id=b.code||"";state.manageUrl=String(b.manage_url||"");$("#bookingCode").textContent=state.id;
+      const b=data.booking||{};state.id=b.code||"";state.manageUrl=isJornadaEval()?"":String(b.manage_url||"");$("#bookingCode").textContent=state.id;
       const done=document.querySelector('#booking .step[data-step="5"]');
       if(done){
         const h=done.querySelector("h2"),paragraphs=done.querySelectorAll("p");if(h)h.textContent="Cita confirmada";if(paragraphs[0])paragraphs[0].textContent=`Tu cita quedó registrada para ${fmt(fromIso(state.date))} a las ${state.time}.`;if(paragraphs[1])paragraphs[1].textContent=`Código de reserva: ${state.id}`;
