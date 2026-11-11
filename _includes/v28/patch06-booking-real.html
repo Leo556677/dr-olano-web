@@ -68,9 +68,11 @@
     {id:"lipofilling",category:"novare",unit:"NOVARE",name:"Lipofilling facial",price:"Desde S/ 2000"},
     {id:"mini-lipoescultura",category:"novare",unit:"NOVARE",name:"Mini lipoescultura ambulatoria",price:"Desde S/ 2500"},
     {id:"lifting-cejas",category:"novare",unit:"NOVARE",name:"Lifting de cejas / Castañares",price:"Desde S/ 3000"},
-    {id:"otoplastia",category:"novare",unit:"NOVARE",name:"Otoplastia / Lobuloplastia",price:"Desde S/ 2000"},
-    {id:"evaluacion-jornada",category:"jornada",unit:"Jornada",name:"Evaluación previa · Jornada de cirugía facial",price:"S/ 70"}
+    {id:"otoplastia",category:"novare",unit:"NOVARE",name:"Otoplastia / Lobuloplastia",price:"Desde S/ 2000"}
   ];
+  // «Evaluación previa · Jornada» solo existe cuando se entra desde /jornada (?servicio=evaluacion-jornada):
+  // así no aparece en las búsquedas ni listas de la reserva normal de los demás pacientes.
+  try{if(new URLSearchParams(location.search).get("servicio")==="evaluacion-jornada")V26_SERVICES.push({id:"evaluacion-jornada",category:"jornada",unit:"Jornada",name:"Evaluación previa · Jornada de cirugía facial",price:"S/ 70"})}catch{}
   SERVICES.splice(0,SERVICES.length,...V26_SERVICES);
   if(typeof V23_FEATURED!=="undefined")V23_FEATURED.splice(0,V23_FEATURED.length,
     {serviceId:"estetica-facial",label:"Líneas de expresión",meta:"Estética · Desde S/ 70",tag:"Estética"},
