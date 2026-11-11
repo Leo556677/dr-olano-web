@@ -96,3 +96,19 @@ begin
  or not exists(select from private.cita_integracion_outbox where cita_id=a and tipo='google_calendar')
  then raise exception 'CONFIRMACION_NO_SINCRONIZADA'; end if;
 end $test$;
+
+\ir ../integrations/supabase/crm/migrations/20261111055000_dr_olano_confirmacion_sin_adelanto.sql
+do $test$
+declare a uuid;
+begin
+ select cita_id into strict a from public.crear_solicitud_web_con_adelanto(
+ '00000000-0000-4000-8000-000000000d01','00000000-0000-4000-8000-000000000e01',
+ '00000000-0000-4000-8000-000000000f01','Prueba Sin Adelanto','+12025550190',
+ '2026-12-11 10:00-05','qb1','qb2','qb3',null,null,gen_random_uuid(),'00000002','qb@example.invalid');
+ if not exists(select from public.citas where id=a and estado='confirmada' and not requiere_adelanto_web)
+ or exists(select from public.pagos where cita_id=a)
+ or not exists(select from private.dr_olano_booking_email_outbox where cita_id=a and next_attempt_at<>'infinity')
+ or not exists(select from private.dr_olano_app_bridge_queue where cita_id=a and next_attempt_at<>'infinity')
+ or not exists(select from private.cita_integracion_outbox where cita_id=a and tipo='google_calendar')
+ then raise exception 'RESERVA_SIN_PAGO_NO_SINCRONIZADA'; end if;
+end $test$;

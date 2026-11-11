@@ -154,7 +154,7 @@ function init() {
     <div id="patient-email-domains" hidden role="group" aria-label="Completar dominio del correo">
       ${domains.map(domain => '<button type="button" data-domain="' + domain + '">@' + domain + '</button>').join('')}
     </div>
-    <p class="patient-email-hint">Te enviaremos un código a este correo. La cita se confirma cuando el consultorio valida tu adelanto.</p>
+    <p class="patient-email-hint">Te enviaremos un código a este correo. Tu cita quedará confirmada al verificar. Coordina el pago con el consultorio.</p>
     <div id="patient-otp-send-actions" class="patient-otp-actions" hidden>
       <button id="patient-email-otp-send" type="button">Enviar código</button>
     </div>
