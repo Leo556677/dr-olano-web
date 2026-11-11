@@ -86,6 +86,10 @@ function mapBookingError(message: string) {
   if (m.includes("INVALID_NOTE")) return { status: 400, code: "INVALID_NOTE", message: "El comentario es demasiado largo." };
   if (m.includes("TOO_SOON")) return { status: 409, code: "TOO_SOON", message: "Ese horario ya no puede reservarse por la anticipación mínima." };
   if (m.includes("OUT_OF_HORIZON")) return { status: 409, code: "OUT_OF_HORIZON", message: "La fecha está fuera del rango disponible." };
+  if (m.includes("CLIENT_DAILY_LIMIT")) return { status: 409, code: "CLIENT_DAILY_LIMIT", message: "Con este celular ya tienes una cita registrada ese día. Elige otro día." };
+  if (m.includes("MANUAL_REVIEW_REQUIRED")) return { status: 409, code: "MANUAL_REVIEW_REQUIRED", message: "Para registrar esta cita escríbenos por WhatsApp y te ayudamos." };
+  if (m.includes("RESCHEDULE_LIMIT")) return { status: 409, code: "RESCHEDULE_LIMIT", message: "Esta cita ya alcanzó el máximo de reprogramaciones." };
+  if (m.includes("INVALID_DNI")) return { status: 400, code: "INVALID_DNI", message: "Ingresa un DNI válido de 8 dígitos." };
   if (m.includes("INVALID_SLOT_GRID")) return { status: 400, code: "INVALID_SLOT", message: "El horario seleccionado no es válido." };
   return { status: 500, code: "BOOKING_FAILED", message: "No se pudo registrar la cita." };
 }
@@ -230,6 +234,13 @@ export default {
     }
 
     if (action === "book") {
+      const rid = crypto.randomUUID();
+      let step = "inicio";
+      let dbMsg: string | null = null;
+      const info: Record<string, unknown> = {};
+      const mark = (name: string) => { step = name; };
+      const run = async (): Promise<Response> => {
+      mark("compuerta_otp");
       // Reject legacy bookings when secure OTP is activated, including stale cached browsers.
       const {data:otpEnabled,error:gateError}=await ctx.supabaseAdmin.rpc('dr_olano_otp_booking_enabled');
       if (gateError) return json({ok:false,code:"BOOKING_MODE_UNAVAILABLE"},503,origin);
@@ -240,6 +251,8 @@ export default {
       const serviceCode = String(body?.service_code || "").trim();
       const dateIso = String(body?.date || "").trim();
       const time = String(body?.time || "").trim();
+      mark("validar_datos");
+      Object.assign(info, { service_code: serviceCode, date: dateIso, time, has_dni: Boolean(String(body?.dni || "").trim()), has_turnstile: Boolean(body?.turnstile_token) });
       const name = String(body?.name || "").trim().replace(/\s+/g, " ");
       const phone = normalizePhone(String(body?.phone || ""));
       // El DNI se solicita en la web nueva; se conservan clientes antiguos
@@ -259,9 +272,11 @@ export default {
       if (deviceId.length < 16 || deviceId.length > 128) return json({ ok: false, code: "INVALID_DEVICE" }, 400, origin);
       if (note.length > 500) return json({ ok: false, code: "INVALID_NOTE", message: "El comentario es demasiado largo." }, 400, origin);
       const ip = getClientIp(req);
+      mark("turnstile");
       const turnstile = await verifyTurnstile(token, ip);
       if (!turnstile.ok) return json({ ok: false, code: turnstile.code, errors: (turnstile as any).errors || [] }, turnstile.status, origin);
       const secret = String((turnstile as any).secret);
+      mark("servicio_y_recurso");
       const service: any = await resolveService(serviceCode);
       if (!service || service.activo !== true || service.visible_web === false) return json({ ok: false, code: "INVALID_SERVICE" }, 404, origin);
       if (service.requiere_consulta_previa === true) {
@@ -278,24 +293,28 @@ export default {
       const phoneHash = await hmacHex(secret, `phone|${phone}`);
       const ipHash = await hmacHex(secret, `ip|${ip || "unavailable"}`);
       const deviceHash = await hmacHex(secret, `device|${deviceId}|${ua}|${lang}`);
+      mark("crear_cita_rpc");
       const { data: booking, error: bookingErr } = await ctx.supabaseAdmin.rpc(dni ? "crear_cita_web_segura_v5" : "crear_cita_web_segura_v3", {
         p_negocio_id: negocio.id, p_servicio_id: service.id, p_recurso_id: resource.id, p_nombre: name, p_telefono_e164: phone,
         p_inicio: localStart.toUTC().toISO(), p_phone_hash: phoneHash, p_ip_hash: ipHash, p_device_hash: deviceHash,
         p_modalidad: service.requiere_consulta_previa === true ? modality : null, p_motivo_consulta: note || null,
         ...(dni ? { p_dni: dni } : {}),
       });
-      if (bookingErr) { const mapped = mapBookingError(bookingErr.message || bookingErr.details || ""); return json({ ok: false, code: mapped.code, message: mapped.message }, mapped.status, origin); }
+      if (bookingErr) { dbMsg = String(bookingErr.message || bookingErr.details || "").slice(0, 300); const mapped = mapBookingError(bookingErr.message || bookingErr.details || ""); return json({ ok: false, code: mapped.code, message: mapped.message }, mapped.status, origin); }
       const row = Array.isArray(booking) ? booking[0] : booking;
       if (!row?.cita_id) return json({ ok: false, code: "BOOKING_FAILED" }, 500, origin);
 
+      mark("token_gestion");
       let manageUrl: string | null = null;
       try {
         const manageToken = randomManageToken();
         const tokenHash = await sha256Hex(manageToken);
         const { error: issueErr } = await ctx.supabaseAdmin.rpc("issue_dr_olano_manage_token", { p_cita_id: row.cita_id, p_token_hash: tokenHash });
+        if (issueErr) info.manage_token_error = String(issueErr.message || "").slice(0, 200);
         if (!issueErr) manageUrl = `https://doctorolano.pe/gestionar-cita/?t=${encodeURIComponent(manageToken)}`;
       } catch {}
 
+      mark("listo");
       return json({ ok: true, booking: {
         id: row.cita_id, code: row.codigo_web, cupo_hora: row.cupo_hora, service_code: serviceCode, service_name: service.nombre,
         date: dateIso, time, timezone: zone, modality: service.requiere_consulta_previa === true ? modality : "presencial",
@@ -303,6 +322,23 @@ export default {
         price_pen: service.requiere_consulta_previa === true ? Number(service.precio_consulta_pen) : null,
         note: note || null, manage_url: manageUrl,
       } }, 201, origin);
+      };
+
+      let res: Response;
+      try { res = await run(); }
+      catch (e) {
+        dbMsg = String((e as any)?.message || e).slice(0, 300);
+        res = json({ ok: false, code: "BOOKING_EXCEPTION", message: "No se pudo registrar la cita." }, 500, origin);
+      }
+      // Traza de cada intento, con acierto o error. No guarda nombre, celular, DNI ni correo.
+      try {
+        const out: any = await res.clone().json().catch(() => ({}));
+        const code = String(out?.code || (res.status === 201 ? "OK" : "SIN_CODIGO"));
+        const row = { request_id: rid, action: "book", ok: res.status === 201, http_status: res.status, code, last_step: step, detail: { ...info, db_message: dbMsg } };
+        console.log("[booking-trace]", JSON.stringify(row));
+        await ctx.supabaseAdmin.rpc("dr_olano_log_booking_trace", { p_request_id: rid, p_action: "book", p_ok: row.ok, p_http_status: res.status, p_code: code, p_last_step: step, p_detail: row.detail });
+      } catch (e) { console.error("[booking-trace] no se pudo guardar", String((e as any)?.message || e)); }
+      return res;
     }
     return json({ ok: false, code: "INVALID_ACTION" }, 400, origin);
   }),

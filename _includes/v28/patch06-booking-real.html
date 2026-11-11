@@ -354,6 +354,8 @@
       const code=e?.code||"";
       if(code==="RATE_LIMIT_1H")alert("Ya se registró una cita desde este celular, red o dispositivo. Podrás reservar nuevamente en 1 hora.");
       else if(code==="HOUR_FULL")alert("Esa hora acaba de completar sus 3 cupos. Elige otro horario.");
+      else if(code==="CLIENT_DAILY_LIMIT")alert("Con este celular ya tienes una cita registrada ese día. Elige otro día.");
+      else if(code==="MANUAL_REVIEW_REQUIRED")alert("Para registrar esta cita escríbenos por WhatsApp y te ayudamos.");
       else if(code==="SERVICE_DAY_UNAVAILABLE")alert(isNovareConsult()?"La Consulta NOVARE solo está disponible lunes y miércoles.":"Los procedimientos NOVARE solo están disponibles viernes, sábado y domingo.");
       else if(code==="INVALID_MODALITY")alert("Selecciona si deseas la Consulta NOVARE presencial o por videollamada.");
       else if(code==="INVALID_NOTE")alert("El comentario es demasiado largo.");
