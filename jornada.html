@@ -1224,6 +1224,8 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
         try{sessionStorage.setItem("olanoJornadaPref",JSON.stringify({day:st.day,hour:st.hour,proc:st.proc,label:when(st.day,st.hour)}))}catch(e){}
         st.name="";st.phone="";st.dni="";st.busy=false;st.tsToken="";
         track("separar_dia","SepararDia",{dia:st.day});
+        // Atribución: registra en el embudo la reserva 1 (con la etiqueta del anuncio y el id de la cita).
+        try{if(b.id&&typeof window.olanoFunnelTrack==="function")window.olanoFunnelTrack("booking_registered",{booking_id:b.id})}catch(e){}
         st.step=5;render();
       }).catch(function(e){
         st.busy=false;st.err=failMsg(e);
