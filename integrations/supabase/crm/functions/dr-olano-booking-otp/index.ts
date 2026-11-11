@@ -283,13 +283,6 @@ export default {
     }
 
     if (action === "book") {
-      // Feature flag privada: activar solo tras SMTP, worker email y prueba E2E.
-      const { data: otpEnabled, error: gateError } = await ctx.supabaseAdmin.rpc("dr_olano_otp_booking_enabled");
-      if (gateError || otpEnabled !== true) {
-        return json({ ok:false, code:"OTP_BOOKING_NOT_READY",
-          message:"La reserva verificada todavía no está disponible. Utiliza el formulario habitual."
-        },503,origin);
-      }
       const serviceCode = String(body?.service_code || "").trim();
       const dateIso = String(body?.date || "").trim();
       const time = String(body?.time || "").trim();
@@ -322,6 +315,15 @@ export default {
       if(!typedEmail || typedEmail !== verifiedPatient.email) return json({
         ok:false,code:"EMAIL_MISMATCH",message:"El correo debe coincidir con el que verificaste mediante el código."
       },409,origin);
+      // La ruta piloto requiere la identidad validada por Auth incluso con el despliegue público apagado.
+      const { data: allowed, error: gateError } = await ctx.supabaseAdmin.rpc("dr_olano_otp_booking_allowed", {
+        p_patient_user_id: verifiedPatient.id,
+      });
+      if (gateError || allowed !== true) {
+        return json({ ok:false, code:"OTP_BOOKING_NOT_READY",
+          message:"La reserva verificada todavía no está disponible para esta cuenta."
+        },503,origin);
+      }
       const appPatientId=verifiedPatient.id;
       const verifiedEmail=verifiedPatient.email;
       const secret = String((turnstile as any).secret);
