@@ -44,6 +44,13 @@ Deno.serve(async (req) => {
     let ok = false;
     let errorCode: string | null = null;
     try {
+      // Fetch only the display name attached to this already-linked booking.
+      const { data: booking, error: bookingError } = await admin.from('citas')
+        .select('contactos(nombre)').eq('id', job.cita_id)
+        .eq('negocio_id', 'c656a9ac-2739-451b-a93f-9e25fc9f4cbe').single();
+      const contact = Array.isArray(booking?.contactos) ? booking.contactos[0] : booking?.contactos;
+      const patientName = typeof contact?.nombre === 'string' ? contact.nombre.trim().slice(0, 160) : '';
+      if (bookingError || !patientName) throw Error('DISPLAY_NAME_UNAVAILABLE');
       const remote = await fetch(APP_EDGE_URL, {
         method: 'POST',
         headers: {
@@ -54,6 +61,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           booking_id: job.cita_id,
           patient_user_id: job.patient_user_id,
+          patient_name: patientName,
           starts_at: job.starts_at,
           ends_at: job.ends_at,
           state: job.state,
