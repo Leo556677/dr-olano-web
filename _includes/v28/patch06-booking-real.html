@@ -273,7 +273,7 @@
     const serviceName=String(state.service?.name||state.service?.id||"");
     const value=String(state.service?.price||"").trim();
     const lines=[
-      state.depositPending?"*Solicitud de cita · Pendiente de adelanto*":"✅ *Cita registrada · Dr. Olano*",
+      "✅ *Cita confirmada · Dr. Olano*",
       "",
       `📋 Código: ${state.id}`,
       `👤 Paciente: ${state.name}`,
@@ -330,16 +330,15 @@
     try{
       const payload={action:"book",service_code:state.service.id,date:state.date,time:state.time,name:state.name,phone:state.phone,dni,note,modality:isNovareConsult()?state.bookingModality:undefined,device_id:getDeviceId(),turnstile_token:turnstileToken};
       // Mantener reservas/WhatsApp actuales mientras OTP aún no se ha activado.
-      if(otpEnabled)payload.deposit_flow=true;
       const data=otpEnabled?await otp.book(payload):await bookingApi(payload);
-      const b=data.booking||{};state.depositPending=b.deposit_pending===true;state.id=b.code||"";state.manageUrl=String(b.manage_url||"");$("#bookingCode").textContent=state.id;
+      const b=data.booking||{};state.id=b.code||"";state.manageUrl=String(b.manage_url||"");$("#bookingCode").textContent=state.id;
       const done=document.querySelector('#booking .step[data-step="5"]');
       if(done){
-        const h=done.querySelector("h2"),paragraphs=done.querySelectorAll("p");if(h)h.textContent=state.depositPending?"Solicitud pendiente de adelanto":"Cita reservada";if(paragraphs[0])paragraphs[0].textContent=state.depositPending?`Solicitaste el ${fmt(fromIso(state.date))} a las ${state.time}. Coordina tu adelanto por WhatsApp.`:`Tu cita quedó registrada para ${fmt(fromIso(state.date))} a las ${state.time}.`;if(paragraphs[1])paragraphs[1].textContent=`Código de reserva: ${state.id}`;
+        const h=done.querySelector("h2"),paragraphs=done.querySelectorAll("p");if(h)h.textContent="Cita confirmada";if(paragraphs[0])paragraphs[0].textContent=`Tu cita quedó registrada para ${fmt(fromIso(state.date))} a las ${state.time}.`;if(paragraphs[1])paragraphs[1].textContent=`Código de reserva: ${state.id}`;
         let appNotice=done.querySelector("#patientAppBookingNotice");
         if(!appNotice){appNotice=document.createElement("p");appNotice.id="patientAppBookingNotice";appNotice.style.cssText="font-size:13px;line-height:1.5;margin-top:8px";done.querySelector(".done")?.appendChild(appNotice)}
         if(appNotice){
-          if(state.depositPending)appNotice.textContent="Cuando el consultorio valide tu adelanto y confirme la cita, recibirás el correo y la verás en la app.";else if(otpEnabled)appNotice.textContent="Tu cita quedará disponible en la app del Dr. Olano con el mismo correo verificado. La sincronización puede tardar unos minutos.";
+          if(otpEnabled)appNotice.textContent="Tu cita quedará disponible en la app del Dr. Olano con el mismo correo verificado. La sincronización puede tardar unos minutos.";
           else appNotice.remove(); // No prometer sincronización antes de activarla
         }
         let manage=done.querySelector("#manageBookingLink");
@@ -348,7 +347,7 @@
       }
       const waUrl=buildWhatsAppHandoff();state.url=waUrl;const wa=$("#openWhatsApp");if(wa&&waUrl){wa.href=waUrl;wa.style.display="inline-flex";wa.innerHTML=`${icon("i-send")}Abrir WhatsApp`}
       if(otpEnabled)window.OLANO_PATIENT_OTP?.reset?.();
-      clearConfirmedUi();if(state.depositPending){trackEvent("booking_requested")}else{trackEvent("booking_confirmed");trackTikTokSchedule()}go(5);
+      clearConfirmedUi();trackEvent("booking_confirmed");trackTikTokSchedule();go(5);
       if(waUrl){trackEvent("booking_whatsapp_handoff",{source:"auto_redirect"});window.__olanoWaGo(waUrl,1)}
     }catch(e){
       turnstileToken="";if(turnstileWidgetId!==null&&window.turnstile){try{window.turnstile.reset(turnstileWidgetId)}catch{}}
