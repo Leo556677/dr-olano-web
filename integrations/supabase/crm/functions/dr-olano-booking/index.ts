@@ -1,5 +1,9 @@
 // Reserva v17: identidad documental privada por cita, sin afectar el calendario
 // ni la salida automática a WhatsApp. La app autentica solamente por correo OTP.
+// v1.6.0 · Jornada de cirugía facial: acciones book_jornada (reserva 1, sin tope por hora),
+// jornada_estado y book_evaluacion_jornada (reserva 2, enlazada por token). Las acciones
+// availability y book originales no cambian, salvo que availability no aplica tope por hora
+// al servicio «jornada».
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { withSupabase } from "jsr:@supabase/server@^1";
 import { DateTime } from "npm:luxon@3.5.0";
@@ -8,6 +12,12 @@ const BUSINESS_SLUG = "dr-olano";
 const EXPECTED_HOSTNAME = "doctorolano.pe";
 const TURNSTILE_SITE_KEY = "0x4AAAAAAEquPSErt1V9EL1G";
 const ALLOWED_ORIGINS = new Set(["https://doctorolano.pe"]);
+// Jornada de cirugía facial · mismos textos que muestra /jornada
+const JORNADA_DAYS = new Set(["2026-11-18", "2026-11-19", "2026-11-20"]);
+const JORNADA_PROCEDURES = new Set([
+  "Blefaroplastia superior", "Blefaroplastia inferior", "Rinoplastia", "Otoplastia", "Lip lift",
+  "Lipopapada", "Lifting facial", "Bichectomía", "Injerto de grasa facial", "Aún no sé, que me oriente el médico",
+]);
 
 function cors(origin: string | null) {
   const allow = origin && ALLOWED_ORIGINS.has(origin) ? origin : "https://doctorolano.pe";
@@ -90,6 +100,12 @@ function mapBookingError(message: string) {
   if (m.includes("MANUAL_REVIEW_REQUIRED")) return { status: 409, code: "MANUAL_REVIEW_REQUIRED", message: "Para registrar esta cita escríbenos por WhatsApp y te ayudamos." };
   if (m.includes("RESCHEDULE_LIMIT")) return { status: 409, code: "RESCHEDULE_LIMIT", message: "Esta cita ya alcanzó el máximo de reprogramaciones." };
   if (m.includes("INVALID_DNI")) return { status: 400, code: "INVALID_DNI", message: "Ingresa un DNI válido de 8 dígitos." };
+  if (m.includes("JORNADA_ALREADY_BOOKED")) return { status: 409, code: "JORNADA_ALREADY_BOOKED", message: "Con este celular ya separaste un día de jornada. Si necesitas cambiarlo, escríbenos por WhatsApp." };
+  if (m.includes("RATE_LIMIT_JORNADA")) return { status: 429, code: "RATE_LIMIT_JORNADA", message: "Hubo muchas reservas desde esta red en poco tiempo. Intenta de nuevo en unos minutos." };
+  if (m.includes("INVALID_PROCEDURE")) return { status: 400, code: "INVALID_PROCEDURE", message: "Elige un procedimiento de interés." };
+  if (m.includes("JORNADA_TOKEN_INVALID")) return { status: 404, code: "JORNADA_TOKEN_INVALID", message: "No encontramos tu reserva de jornada. Vuelve a elegir tu día." };
+  if (m.includes("EVALUACION_ALREADY_BOOKED")) return { status: 409, code: "EVALUACION_ALREADY_BOOKED", message: "Ya tienes tu evaluación reservada." };
+  if (m.includes("EVALUACION_AFTER_JORNADA")) return { status: 409, code: "EVALUACION_AFTER_JORNADA", message: "La evaluación debe ser antes de tu día de jornada." };
   if (m.includes("INVALID_SLOT_GRID")) return { status: 400, code: "INVALID_SLOT", message: "El horario seleccionado no es válido." };
   return { status: 500, code: "BOOKING_FAILED", message: "No se pudo registrar la cita." };
 }
@@ -100,6 +116,34 @@ function mapManageError(message: string) {
   return mapBookingError(m);
 }
 
+// Traza por intento para las acciones de jornada (acierto o error). No guarda nombre, celular, DNI ni correo.
+async function tracedBooking(
+  ctx: any, action: string, origin: string | null,
+  run: (mark: (name: string) => void, setDb: (msg: string) => void, info: Record<string, unknown>) => Promise<Response>,
+): Promise<Response> {
+  const rid = crypto.randomUUID();
+  let step = "inicio";
+  let dbMsg: string | null = null;
+  const info: Record<string, unknown> = {};
+  const mark = (name: string) => { step = name; };
+  const setDb = (msg: string) => { dbMsg = String(msg || "").slice(0, 300); };
+  let res: Response;
+  try { res = await run(mark, setDb, info); }
+  catch (e) {
+    setDb(String((e as any)?.message || e));
+    res = json({ ok: false, code: "BOOKING_EXCEPTION", message: "No se pudo registrar la cita." }, 500, origin);
+  }
+  try {
+    const out: any = await res.clone().json().catch(() => ({}));
+    const code = String(out?.code || (res.status === 201 ? "OK" : "SIN_CODIGO"));
+    const ok = res.status === 201;
+    const detail = { ...info, db_message: dbMsg };
+    console.log("[booking-trace]", JSON.stringify({ request_id: rid, action, ok, http_status: res.status, code, last_step: step, detail }));
+    await ctx.supabaseAdmin.rpc("dr_olano_log_booking_trace", { p_request_id: rid, p_action: action, p_ok: ok, p_http_status: res.status, p_code: code, p_last_step: step, p_detail: detail });
+  } catch (e) { console.error("[booking-trace] no se pudo guardar", String((e as any)?.message || e)); }
+  return res;
+}
+
 export default {
   fetch: withSupabase({ auth: "none" }, async (req, ctx) => {
     const origin = req.headers.get("origin");
@@ -108,7 +152,7 @@ export default {
       return new Response(null, { status: 204, headers: cors(origin) });
     }
     if (!validOrigin(origin)) return json({ ok: false, code: "ORIGIN_DENIED" }, 403, origin);
-    if (req.method === "GET") return json({ ok: true, service: "dr-olano-booking", version: "1.5.0", site_key: TURNSTILE_SITE_KEY, turnstile_configured: Boolean(Deno.env.get("TURNSTILE_SECRET_KEY")), patient_note_supported: true, self_manage_supported: true }, 200, origin);
+    if (req.method === "GET") return json({ ok: true, service: "dr-olano-booking", version: "1.7.0", site_key: TURNSTILE_SITE_KEY, turnstile_configured: Boolean(Deno.env.get("TURNSTILE_SECRET_KEY")), patient_note_supported: true, self_manage_supported: true, jornada_supported: true }, 200, origin);
     if (req.method !== "POST") return json({ ok: false, code: "METHOD_NOT_ALLOWED" }, 405, origin);
 
     let body: any;
@@ -212,6 +256,8 @@ export default {
       const noticeCutoff = nowLocal.plus({ minutes: Number(config.anticipacion_min) });
       const blocks = (exceptions || []).filter((e: any) => e.tipo === "bloqueo").map((e: any) => ({ start: DateTime.fromISO(String(e.inicio), { setZone: true }).setZone(zone), end: DateTime.fromISO(String(e.fin), { setZone: true }).setZone(zone) }));
       const busy = (appointments || []).map((c: any) => ({ start: DateTime.fromISO(String(c.inicio), { setZone: true }).setZone(zone), end: DateTime.fromISO(String(c.fin), { setZone: true }).setZone(zone) }));
+      // Servicio «jornada»: sin tope por hora ni choque entre pacientes (agenda propia).
+      const unlimited = service.codigo_externo === "jornada";
       const hourCounts = new Map<string, number>();
       for (const c of busy) { const key = c.start.startOf("hour").toISO()!; hourCounts.set(key, (hourCounts.get(key) || 0) + 1); }
       const slots: any[] = [];
@@ -223,14 +269,168 @@ export default {
         while (cursor.plus({ minutes: step }) <= endWindow) {
           const end = cursor.plus({ minutes: step });
           const hourKey = cursor.startOf("hour").toISO()!;
-          const full = (hourCounts.get(hourKey) || 0) >= capacity;
+          const full = !unlimited && (hourCounts.get(hourKey) || 0) >= capacity;
           const blocked = blocks.some((x: any) => overlaps(cursor, end, x.start, x.end));
-          const occupied = busy.some((x: any) => overlaps(cursor, end, x.start, x.end));
-          if (cursor >= noticeCutoff && !full && !blocked && !occupied) slots.push({ time: cursor.toFormat("HH:mm"), remaining_in_hour: Math.max(0, capacity - (hourCounts.get(hourKey) || 0)) });
+          const occupied = !unlimited && busy.some((x: any) => overlaps(cursor, end, x.start, x.end));
+          if (cursor >= noticeCutoff && !full && !blocked && !occupied) slots.push({ time: cursor.toFormat("HH:mm"), remaining_in_hour: unlimited ? null : Math.max(0, capacity - (hourCounts.get(hourKey) || 0)) });
           cursor = cursor.plus({ minutes: step });
         }
       }
       return json({ ok: true, service_code: serviceCode, service_name: service.nombre, date: dateIso, service_meta: serviceMeta, slots }, 200, origin);
+    }
+
+    // ===== Jornada de cirugía facial =====
+    // Estado de la reserva 1 por token (sirve para no pedir los datos otra vez en la reserva 2).
+    if (action === "jornada_estado") {
+      const rawToken = String(body?.jornada_token || "").trim();
+      const notFound = () => json({ ok: false, code: "JORNADA_TOKEN_INVALID", message: "No encontramos tu reserva de jornada. Vuelve a elegir tu día." }, 404, origin);
+      if (!/^[A-Za-z0-9_-]{40,100}$/.test(rawToken)) return notFound();
+      const { data, error } = await ctx.supabaseAdmin.rpc("get_dr_olano_jornada_estado_v1", { p_negocio_id: negocio.id, p_token_hash: await sha256Hex(rawToken) });
+      if (error) return json({ ok: false, code: "JORNADA_ESTADO_FAILED" }, 500, origin);
+      const row: any = Array.isArray(data) ? data[0] : data;
+      if (!row || !["pendiente", "confirmada"].includes(String(row.jornada_estado))) return notFound();
+      const zone = String(negocio.zona_horaria || "America/Lima");
+      const j = DateTime.fromISO(String(row.inicio), { setZone: true }).setZone(zone);
+      const evActive = Boolean(row.evaluacion_cita_id) && ["pendiente", "confirmada"].includes(String(row.evaluacion_estado));
+      const ev = evActive ? DateTime.fromISO(String(row.evaluacion_inicio), { setZone: true }).setZone(zone) : null;
+      return json({ ok: true, jornada: {
+        name: row.nombre, phone: row.celular, procedure: row.procedimiento,
+        date: j.toFormat("yyyy-MM-dd"), time: j.toFormat("HH:mm"),
+        evaluation: { booked: evActive, date: ev ? ev.toFormat("yyyy-MM-dd") : null, time: ev ? ev.toFormat("HH:mm") : null },
+      } }, 200, origin);
+    }
+
+    // RESERVA 1 · día de jornada (cita real en la agenda «Jornada · Dr. Aldo Ronquillo», sin tope por hora).
+    // No escribe en el guard de 1 hora; por eso la reserva 2 puede seguir de inmediato.
+    if (action === "book_jornada") {
+      return await tracedBooking(ctx, action, origin, async (mark, setDb, info) => {
+        mark("validar_datos");
+        const serviceCode = String(body?.service_code || "").trim();
+        const dateIso = String(body?.date || "").trim();
+        const time = String(body?.time || "").trim();
+        const name = String(body?.name || "").trim().replace(/\s+/g, " ");
+        const phone = normalizePhone(String(body?.phone || ""));
+        const dni = String(body?.dni || "").trim();
+        const procedure = String(body?.procedure || "").trim();
+        const deviceId = String(body?.device_id || "").trim();
+        const token = String(body?.turnstile_token || "");
+        Object.assign(info, { service_code: serviceCode, date: dateIso, time, has_dni: Boolean(dni), has_turnstile: Boolean(token), procedure_ok: JORNADA_PROCEDURES.has(procedure) });
+        if (serviceCode !== "jornada") return json({ ok: false, code: "INVALID_SERVICE" }, 400, origin);
+        if (!JORNADA_DAYS.has(dateIso)) return json({ ok: false, code: "INVALID_DATE", message: "Elige el 18, 19 o 20 de noviembre." }, 400, origin);
+        if (!/^\d{2}:00$/.test(time)) return json({ ok: false, code: "INVALID_SLOT" }, 400, origin);
+        if (name.length < 3 || name.length > 120) return json({ ok: false, code: "INVALID_NAME" }, 400, origin);
+        if (!phone) return json({ ok: false, code: "INVALID_PHONE" }, 400, origin);
+        if (!/^[0-9]{8}$/.test(dni)) return json({ ok: false, code: "INVALID_DNI", message: "Ingresa un DNI válido de 8 dígitos." }, 400, origin);
+        if (!JORNADA_PROCEDURES.has(procedure)) return json({ ok: false, code: "INVALID_PROCEDURE", message: "Elige un procedimiento de interés." }, 400, origin);
+        if (deviceId.length < 16 || deviceId.length > 128) return json({ ok: false, code: "INVALID_DEVICE" }, 400, origin);
+        const ip = getClientIp(req);
+        mark("turnstile");
+        const turnstile = await verifyTurnstile(token, ip);
+        if (!turnstile.ok) return json({ ok: false, code: turnstile.code, errors: (turnstile as any).errors || [] }, turnstile.status, origin);
+        const secret = String((turnstile as any).secret);
+        mark("servicio_y_recurso");
+        const service: any = await resolveService("jornada");
+        if (!service || service.activo !== true || service.visible_web === false) return json({ ok: false, code: "INVALID_SERVICE" }, 404, origin);
+        const resource = await resolveResourceForService(service.id);
+        if (!resource) return json({ ok: false, code: "RESOURCE_UNAVAILABLE" }, 503, origin);
+        const zone = String(negocio.zona_horaria || "America/Lima");
+        const localStart = DateTime.fromISO(`${dateIso}T${time}:00`, { zone });
+        if (!localStart.isValid) return json({ ok: false, code: "INVALID_SLOT" }, 400, origin);
+        const ua = req.headers.get("user-agent") || "";
+        const lang = req.headers.get("accept-language") || "";
+        const phoneHash = await hmacHex(secret, `phone|${phone}`);
+        const ipHash = await hmacHex(secret, `ip|${ip || "unavailable"}`);
+        const deviceHash = await hmacHex(secret, `device|${deviceId}|${ua}|${lang}`);
+        const rawToken = randomManageToken();
+        mark("crear_cita_jornada_rpc");
+        const { data: booking, error: bookingErr } = await ctx.supabaseAdmin.rpc("crear_cita_jornada_v1", {
+          p_negocio_id: negocio.id, p_servicio_id: service.id, p_recurso_id: resource.id, p_nombre: name, p_telefono_e164: phone,
+          p_inicio: localStart.toUTC().toISO(), p_phone_hash: phoneHash, p_ip_hash: ipHash, p_device_hash: deviceHash,
+          p_dni: dni, p_procedimiento: procedure, p_token_hash: await sha256Hex(rawToken),
+        });
+        if (bookingErr) {
+          setDb(String(bookingErr.message || bookingErr.details || ""));
+          const mapped = mapBookingError(bookingErr.message || bookingErr.details || "");
+          return json({ ok: false, code: mapped.code, message: mapped.message }, mapped.status, origin);
+        }
+        const row = Array.isArray(booking) ? booking[0] : booking;
+        if (!row?.cita_id) return json({ ok: false, code: "BOOKING_FAILED" }, 500, origin);
+        mark("listo");
+        return json({ ok: true, booking: {
+          id: row.cita_id, code: row.codigo_web, service_code: "jornada", service_name: service.nombre,
+          date: dateIso, time, timezone: zone, procedure, jornada_token: rawToken,
+        } }, 201, origin);
+      });
+    }
+
+    // RESERVA 2 · evaluación previa (hasta el 17/11), enlazada a la reserva 1 por token.
+    // Los datos (nombre, celular, DNI) salen de la reserva 1: el paciente no los vuelve a escribir.
+    // Mantiene el límite de 1 hora, el tope de 3 por hora y el resto de reglas de una cita web normal.
+    if (action === "book_evaluacion_jornada") {
+      return await tracedBooking(ctx, action, origin, async (mark, setDb, info) => {
+        mark("validar_datos");
+        const serviceCode = String(body?.service_code || "").trim();
+        const dateIso = String(body?.date || "").trim();
+        const time = String(body?.time || "").trim();
+        const rawToken = String(body?.jornada_token || "").trim();
+        const deviceId = String(body?.device_id || "").trim();
+        const token = String(body?.turnstile_token || "");
+        Object.assign(info, { service_code: serviceCode, date: dateIso, time, has_token: Boolean(rawToken), has_turnstile: Boolean(token) });
+        if (serviceCode !== "evaluacion-jornada") return json({ ok: false, code: "INVALID_SERVICE" }, 400, origin);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateIso) || !/^\d{2}:\d{2}$/.test(time)) return json({ ok: false, code: "INVALID_SLOT" }, 400, origin);
+        if (!/^[A-Za-z0-9_-]{40,100}$/.test(rawToken)) return json({ ok: false, code: "JORNADA_TOKEN_INVALID", message: "No encontramos tu reserva de jornada. Vuelve a elegir tu día." }, 404, origin);
+        if (deviceId.length < 16 || deviceId.length > 128) return json({ ok: false, code: "INVALID_DEVICE" }, 400, origin);
+        const ip = getClientIp(req);
+        mark("turnstile");
+        const turnstile = await verifyTurnstile(token, ip);
+        if (!turnstile.ok) return json({ ok: false, code: turnstile.code, errors: (turnstile as any).errors || [] }, turnstile.status, origin);
+        const secret = String((turnstile as any).secret);
+        mark("estado_jornada");
+        const tokenHash = await sha256Hex(rawToken);
+        const { data: est, error: estErr } = await ctx.supabaseAdmin.rpc("get_dr_olano_jornada_estado_v1", { p_negocio_id: negocio.id, p_token_hash: tokenHash });
+        if (estErr) { setDb(String(estErr.message || "")); return json({ ok: false, code: "JORNADA_ESTADO_FAILED" }, 500, origin); }
+        const estRow: any = Array.isArray(est) ? est[0] : est;
+        if (!estRow || !["pendiente", "confirmada"].includes(String(estRow.jornada_estado))) return json({ ok: false, code: "JORNADA_TOKEN_INVALID", message: "No encontramos tu reserva de jornada. Vuelve a elegir tu día." }, 404, origin);
+        mark("servicio_y_recurso");
+        const service: any = await resolveService("evaluacion-jornada");
+        if (!service || service.activo !== true || service.visible_web === false) return json({ ok: false, code: "INVALID_SERVICE" }, 404, origin);
+        const resource = await resolveResourceForService(service.id);
+        if (!resource) return json({ ok: false, code: "RESOURCE_UNAVAILABLE" }, 503, origin);
+        const zone = String(negocio.zona_horaria || "America/Lima");
+        const localStart = DateTime.fromISO(`${dateIso}T${time}:00`, { zone });
+        if (!localStart.isValid) return json({ ok: false, code: "INVALID_SLOT" }, 400, origin);
+        const ua = req.headers.get("user-agent") || "";
+        const lang = req.headers.get("accept-language") || "";
+        const phoneHash = await hmacHex(secret, `phone|${String(estRow.celular)}`);
+        const ipHash = await hmacHex(secret, `ip|${ip || "unavailable"}`);
+        const deviceHash = await hmacHex(secret, `device|${deviceId}|${ua}|${lang}`);
+        mark("crear_evaluacion_rpc");
+        const { data: booking, error: bookingErr } = await ctx.supabaseAdmin.rpc("crear_cita_evaluacion_jornada_v1", {
+          p_negocio_id: negocio.id, p_servicio_id: service.id, p_recurso_id: resource.id, p_token_hash: tokenHash,
+          p_inicio: localStart.toUTC().toISO(), p_phone_hash: phoneHash, p_ip_hash: ipHash, p_device_hash: deviceHash,
+        });
+        if (bookingErr) {
+          setDb(String(bookingErr.message || bookingErr.details || ""));
+          const mapped = mapBookingError(bookingErr.message || bookingErr.details || "");
+          return json({ ok: false, code: mapped.code, message: mapped.message }, mapped.status, origin);
+        }
+        const row = Array.isArray(booking) ? booking[0] : booking;
+        if (!row?.cita_id) return json({ ok: false, code: "BOOKING_FAILED" }, 500, origin);
+        mark("token_gestion");
+        let manageUrl: string | null = null;
+        try {
+          const manageToken = randomManageToken();
+          const { error: issueErr } = await ctx.supabaseAdmin.rpc("issue_dr_olano_manage_token", { p_cita_id: row.cita_id, p_token_hash: await sha256Hex(manageToken) });
+          if (issueErr) info.manage_token_error = String(issueErr.message || "").slice(0, 200);
+          else manageUrl = `https://doctorolano.pe/gestionar-cita/?t=${encodeURIComponent(manageToken)}`;
+        } catch {}
+        mark("listo");
+        return json({ ok: true, booking: {
+          id: row.cita_id, code: row.codigo_web, cupo_hora: row.cupo_hora, service_code: "evaluacion-jornada", service_name: service.nombre,
+          date: dateIso, time, timezone: zone, modality: "presencial", appointment_type: "servicio", price_pen: 70,
+          name: estRow.nombre, phone: estRow.celular, manage_url: manageUrl,
+        } }, 201, origin);
+      });
     }
 
     if (action === "book") {

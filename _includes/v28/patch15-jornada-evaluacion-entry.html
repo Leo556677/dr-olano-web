@@ -1,0 +1,25 @@
+// ===== JORNADA · ENTRADA DIRECTA A LA EVALUACIÓN (reserva 2) =====
+// /reserva-s?servicio=evaluacion-jornada abre directo en «Fecha y hora»: el servicio ya está elegido
+// y los datos salen de la reserva de jornada, así que no hay nada que decidir en el paso 1.
+(() => {
+  if(typeof state==='undefined'||typeof openBooking!=='function'||typeof go!=='function')return;
+  const params=new URLSearchParams(window.__olanoAttributionQuery??window.location.search);
+  const wanted=String(params.get('servicio')||params.get('service')||'').trim().toLowerCase();
+  if(wanted!=='evaluacion-jornada')return;
+  const base=openBooking;
+  let done=false;
+  openBooking=function(serviceId='',options={}){
+    const r=base.apply(this,arguments);
+    if(!done&&!serviceId){
+      done=true;
+      // Después de los parches de enlace directo (60–80 ms) para que este paso sea el último en ejecutarse.
+      setTimeout(()=>{
+        if(state.service?.id!=='evaluacion-jornada')return;
+        state.date='';state.time='';
+        go(2);
+        document.querySelector('.step[data-step="2"]')?.scrollIntoView({behavior:'instant',block:'start'});
+      },400);
+    }
+    return r;
+  };
+})();
