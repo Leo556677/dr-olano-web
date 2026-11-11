@@ -68,3 +68,31 @@ begin
  raise exception 'PUBLIC_EMAIL_CLAIM'; end if;
 end $$;
 select 'PASS: DNI and verified OTP email outbox' as result;
+
+-- Reproducir sólo las columnas del CRM que usa el control de adelanto.
+alter table public.citas add column origen text default 'web', add column notas text;
+create table public.pagos(cita_id uuid,negocio_id uuid,contacto_id uuid,estado text,monto numeric);
+\ir ../integrations/supabase/crm/migrations/20261111041000_dr_olano_solicitud_adelanto.sql
+do $test$
+declare a uuid;
+begin
+ select cita_id into strict a from public.crear_solicitud_web_con_adelanto(
+ '00000000-0000-4000-8000-000000000d01','00000000-0000-4000-8000-000000000e01',
+ '00000000-0000-4000-8000-000000000f01','Prueba Adelanto','+12025550189',
+ '2026-12-10 10:00-05','qa1','qa2','qa3',null,null,gen_random_uuid(),'00000001','qa@example.invalid');
+ if not exists(select from public.citas where id=a and estado='pendiente' and requiere_adelanto_web)
+ or exists(select from private.cita_integracion_outbox where cita_id=a)
+ or not exists(select from private.dr_olano_booking_email_outbox where cita_id=a and next_attempt_at='infinity')
+ or not exists(select from private.dr_olano_app_bridge_queue where cita_id=a and next_attempt_at='infinity')
+ then raise exception 'SOLICITUD_NO_AISLADA'; end if;
+ begin
+   update public.citas set estado='confirmada' where id=a;
+   raise exception 'ACEPTO_SIN_ADELANTO';
+ exception when raise_exception then if sqlerrm<>'ADELANTO_PENDIENTE' then raise; end if; end;
+ insert into public.pagos select id,negocio_id,contacto_id,'pagado',1 from public.citas where id=a;
+ update public.citas set estado='confirmada' where id=a;
+ if not exists(select from private.dr_olano_booking_email_outbox where cita_id=a and next_attempt_at<='now'::timestamptz)
+ or not exists(select from private.dr_olano_app_bridge_queue where cita_id=a and next_attempt_at<>'infinity')
+ or not exists(select from private.cita_integracion_outbox where cita_id=a and tipo='google_calendar')
+ then raise exception 'CONFIRMACION_NO_SINCRONIZADA'; end if;
+end $test$;

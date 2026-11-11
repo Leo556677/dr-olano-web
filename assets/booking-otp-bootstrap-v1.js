@@ -3,10 +3,11 @@
 (async () => {
   const URL='https://xnlzsgulskqyecfgzhwa.supabase.co/functions/v1/dr-olano-booking-otp';
   const KEY='sb_publishable_s9YdJaMe_ll4QehPkADlKQ_KkuvWt32';
-  const pilot=new URLSearchParams(location.search).get('prueba_otp')==='1';
+  const pilot=window.OLANO_BOOKING_PILOT===true || new URLSearchParams(location.search).get('prueba_otp')==='1';
   const state={enabled:pilot,ready:false,error:false};
   window.OLANO_OTP_BOOTSTRAP=state;
   try {
+    if(!pilot){
     const response=await fetch(URL,{
       method:'GET',
       headers:{apikey:KEY},
@@ -15,10 +16,11 @@
     });
     if(!response.ok)throw new Error('OTP_STATUS_UNAVAILABLE');
     const result=await response.json();
-    if(result?.otp_enabled!==true && !pilot)return;
+    if(result?.otp_enabled!==true)return;
+    }
     state.enabled=true;
-    await import('/assets/booking-email-confirm-v1.js?v=20261110');
-    await import('/assets/booking-email-otp-v1.js?v=20261110');
+    await import('/assets/booking-email-confirm-v1.js?v=20261111b');
+    await import('/assets/booking-email-otp-v1.js?v=20261111b');
     if(!window.OLANO_PATIENT_OTP?.isVerified || !window.OLANO_EMAIL_CONFIRM?.confirmEmail){
       throw new Error('OTP_MODULES_UNAVAILABLE');
     }

@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const source = readFileSync(new URL('../assets/booking-email-otp-v1.js', import.meta.url), 'utf8')
-  .replace(/^import \{ createClient \} from .*;\r?\n/m, '');
+  .replace("await import('https://esm.sh/@supabase/supabase-js@2.117.0')", "({createClient: globalThis.createClient})");
 const bookingPatch = readFileSync(new URL('../_includes/v28/patch06-booking-real.html', import.meta.url), 'utf8');
 const server = readFileSync(new URL('../integrations/supabase/crm/functions/dr-olano-booking-otp/index.ts', import.meta.url), 'utf8');
 const whatsAppTemplate = readFileSync(new URL('../assets/whatsapp-template-v8.js', import.meta.url), 'utf8');
@@ -148,7 +148,7 @@ test('El backend exige identidad validada antes de ejecutar la reserva transacci
   assert.match(server, /"\/auth\/v1\/user"/);
   assert.match(server, /user\?\.email_confirmed_at/);
   assert.match(server, /"EMAIL_OTP_REQUIRED"/);
-  assert.match(server, /"crear_cita_web_segura_v6"/);
+  assert.match(server, /"crear_solicitud_web_con_adelanto"/);
   assert.match(server, /p_verified_email: verifiedEmail/);
   assert.match(bookingPatch, /otpEnabled\?await otp\.book\(payload\):await bookingApi\(payload\)/);
   assert.doesNotMatch(bookingPatch, /app_access_token:/, 'El token no sale del módulo OTP');
