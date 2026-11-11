@@ -51,7 +51,7 @@ begin
 end $$;
 revoke all on function private.dr_olano_liberar_email_adelanto() from public,anon,authenticated;
 create trigger liberar_email_adelanto after update of estado on public.citas
-for each row when(new.requiere_adelanto_web and old.estado='pendiente' and new.estado<>'pendiente')
+for each row when(new.requiere_adelanto_web and old.estado='pendiente' and new.estado in ('confirmada','completada'))
 execute function private.dr_olano_liberar_email_adelanto();
 
 create function public.crear_solicitud_web_con_adelanto(
