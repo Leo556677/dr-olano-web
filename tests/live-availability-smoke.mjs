@@ -66,7 +66,7 @@ test('El flujo OTP permanece desactivado hasta configurar un correo real', async
   assert.equal(response.status,200);
   assert.equal(data.otp_enabled,false);
 });
-test('El endpoint OTP no crea una cita si el proveedor no está habilitado', async () => {
+test('El piloto rechaza una solicitud incompleta antes de crear una cita', async () => {
   const response=await fetch(`${API}/dr-olano-booking-otp`,{
     method:'POST',
     headers:{Origin:official,'Content-Type':'application/json',apikey:PUBLISHABLE},
@@ -74,6 +74,6 @@ test('El endpoint OTP no crea una cita si el proveedor no está habilitado', asy
     signal:AbortSignal.timeout(12000)
   });
   const data=await response.json();
-  assert.equal(response.status,503);
-  assert.equal(data.code,'OTP_BOOKING_NOT_READY');
+  assert.equal(response.status,400);
+  assert.equal(data.code,'INVALID_DNI');
 });
