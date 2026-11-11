@@ -113,6 +113,11 @@
       };
     });
     try{
+      // «Evaluación previa · Jornada» no viene del catálogo del servidor: solo la agrega la reserva cuando se entra
+      // desde /jornada. Si ya está cargada, se conserva para que la recarga del catálogo no la borre.
+      if(typeof SERVICES!=='undefined'){
+        SERVICES.filter(s=>s.id==='evaluacion-jornada'&&!mappedServices.some(m=>m.id===s.id)).forEach(s=>mappedServices.push(s));
+      }
       if(typeof V23_CATEGORIES!=='undefined')V23_CATEGORIES.splice(0,V23_CATEGORIES.length,...mappedCategories);
       if(typeof V23_SERVICES!=='undefined')V23_SERVICES.splice(0,V23_SERVICES.length,...mappedServices);
       if(typeof SERVICES!=='undefined')SERVICES.splice(0,SERVICES.length,...mappedServices);
