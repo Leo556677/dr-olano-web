@@ -1,0 +1,12 @@
+-- REVERSA de 20261111180000_dr_olano_reserva_rapida_pago.sql  (NO se aplica sola; extensión .txt a propósito)
+-- Quita el plazo de 2 horas. No borra ni cambia citas: las que estén «pendiente» se quedan así y hay que
+-- confirmarlas o cancelarlas a mano en la agenda.
+
+begin;
+
+select cron.unschedule('dr_olano_liberar_reservas_sin_pago');
+drop trigger if exists trg_dr_olano_reserva_rapida_pendiente on public.citas;
+drop function if exists private.dr_olano_reserva_rapida_pendiente();
+drop function if exists private.dr_olano_liberar_reservas_rapidas_sin_pago();
+
+commit;
