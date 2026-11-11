@@ -72,7 +72,7 @@
   ];
   // «Evaluación previa · Jornada» solo existe cuando se entra desde /jornada (?servicio=evaluacion-jornada):
   // así no aparece en las búsquedas ni listas de la reserva normal de los demás pacientes.
-  try{if(new URLSearchParams(location.search).get("servicio")==="evaluacion-jornada")V26_SERVICES.push({id:"evaluacion-jornada",category:"jornada",unit:"Jornada",name:"Evaluación previa · Jornada de cirugía facial",price:"S/ 70"})}catch{}
+  try{if(new URLSearchParams(window.__olanoAttributionQuery??location.search).get("servicio")==="evaluacion-jornada")V26_SERVICES.push({id:"evaluacion-jornada",category:"jornada",unit:"Jornada",name:"Evaluación previa · Jornada de cirugía facial",price:"S/ 70"})}catch{}
   SERVICES.splice(0,SERVICES.length,...V26_SERVICES);
   if(typeof V23_FEATURED!=="undefined")V23_FEATURED.splice(0,V23_FEATURED.length,
     {serviceId:"estetica-facial",label:"Líneas de expresión",meta:"Estética · Desde S/ 70",tag:"Estética"},
