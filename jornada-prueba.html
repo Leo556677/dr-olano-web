@@ -688,7 +688,7 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
 <!-- Flujo «Elegir mi día de jornada»: preferencia de día, hora y procedimiento de interés -->
 <dialog class="jf" id="jflow" aria-label="Elegir mi día de jornada">
   <div class="jf-in">
-    <div class="jf-top"><b class="js-jf-title">Elige tu día</b><span class="jf-step js-jf-step">Paso 1 de 4</span><button class="jf-x js-jf-close" type="button" aria-label="Cerrar"><svg class="ico"><use href="#i-x"/></svg></button></div>
+    <div class="jf-top"><b class="js-jf-title">Elige tu día</b><span class="jf-step js-jf-step">Paso 1 de 3</span><button class="jf-x js-jf-close" type="button" aria-label="Cerrar"><svg class="ico"><use href="#i-x"/></svg></button></div>
     <div class="jf-body js-jf-body"></div>
     <div class="jf-foot"><button class="jf-back js-jf-back" type="button" aria-label="Volver"><svg class="ico" style="transform:rotate(90deg)"><use href="#i-chev"/></svg></button><button class="jf-next js-jf-next" type="button" disabled>Continuar</button></div>
     <div class="jf-pop js-jf-pop" role="alertdialog" aria-modal="true" aria-labelledby="jfNoteT" hidden>
@@ -1077,8 +1077,10 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
     var st={step:1,day:null,hour:null,proc:null,slots:null,slotsErr:"",loading:false,name:"",phone:"",dni:"",err:"",busy:false,tsToken:"",tsId:null,done:null};
     function esc(t){return String(t).replace(/[&<>"]/g,function(m){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]})}
     function dayOf(id){for(var i=0;i<DAYS.length;i++)if(DAYS[i].id===id)return DAYS[i];return null}
+    // La hora de la jornada la define el consultorio: el paciente solo elige el día. Internamente la cita se guarda a las 9:00.
+    var FIXED_HOUR="09:00";
     function hourLabel(h){var p=h.split(":"),n=+p[0];return (n>12?n-12:n)+":"+p[1]+(n<12?" a. m.":" p. m.")}
-    function when(d,h){var x=dayOf(d);return x?x.dow+" "+x.n+" de noviembre · "+hourLabel(h):""}
+    function when(d,h){var x=dayOf(d);return x?x.dow+" "+x.n+" de noviembre":""}
     function deviceId(){
       var k="olanoBookingDeviceId";
       try{var id=localStorage.getItem(k);if(!id){id=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():Date.now()+"-"+Math.random().toString(36).slice(2)+"-"+Math.random().toString(36).slice(2);localStorage.setItem(k,id)}return id}
@@ -1140,28 +1142,19 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
       var h="";
       back.style.visibility=(st.step===1||st.step===5)?"hidden":"visible";
       if(st.step===1){
-        title.textContent="Elige tu día";stepEl.textContent="Paso 1 de 4";
+        title.textContent="Elige tu día";stepEl.textContent="Paso 1 de 3";
         h='<h3>¿Qué día prefieres?</h3><p class="jf-help">Jornada de cirugía facial con el Dr. Aldo Ronquillo, en el consultorio del Dr. Olano.</p><div class="jf-days">';
         DAYS.forEach(function(d){h+=opt("js-day",d.id,'<small>'+d.dow+'</small><b>'+d.n+'</b><small>noviembre</small>',st.day===d.id)});
         h+='</div>';
         next.textContent="Continuar";next.disabled=!st.day;
-      }else if(st.step===2){
-        var d=dayOf(st.day);
-        title.textContent="Elige la hora";stepEl.textContent="Paso 2 de 4";
-        h='<h3>¿A qué hora?</h3><p class="jf-help">'+esc(d.dow+" "+d.n+" de noviembre")+'. Tu hora queda registrada en la agenda de la jornada.</p>';
-        if(st.loading)h+='<p class="jf-wait" role="status">Cargando horarios…</p>';
-        else if(st.slotsErr)h+='<p class="jf-err" role="alert">'+esc(st.slotsErr)+'</p><button type="button" class="jf-retry js-jf-retry">Intentar de nuevo</button>';
-        else if(st.slots&&!st.slots.length)h+='<p class="jf-err" role="alert">Ya no quedan horarios para este día. Elige otro día.</p>';
-        else if(st.slots){h+='<div class="jf-hours">';st.slots.forEach(function(x){h+=opt("js-hour",x,hourLabel(x),st.hour===x)});h+='</div>'}
-        next.textContent="Continuar";next.disabled=!st.hour;
       }else if(st.step===3){
-        title.textContent="Procedimiento de interés";stepEl.textContent="Paso 3 de 4";
+        title.textContent="Procedimiento de interés";stepEl.textContent="Paso 2 de 3";
         h='<h3>¿Qué te interesa?</h3><p class="jf-help">Elige uno. El médico define cuál te corresponde en tu evaluación.</p><div class="jf-proc">';
         PROCS.forEach(function(x){h+=opt("js-proc",x,esc(x),st.proc===x)});
         h+='</div>';
         next.textContent="Continuar";next.disabled=!st.proc;
       }else if(st.step===4){
-        title.textContent="Tus datos";stepEl.textContent="Paso 4 de 4";
+        title.textContent="Tus datos";stepEl.textContent="Paso 3 de 3";
         h='<h3>Tus datos, una sola vez</h3><p class="jf-help">Los usaremos también en tu evaluación: no te los pediremos de nuevo.</p>'+
           '<div class="jf-card jf-mini"><small>Tu día</small><p><b>'+esc(when(st.day,st.hour))+'</b><br>'+esc(st.proc)+'</p></div>'+
           '<label class="jf-f"><span>Nombre completo</span><input class="js-f-name" type="text" autocomplete="name" maxlength="120" value="'+esc(st.name)+'"></label>'+
@@ -1202,7 +1195,7 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
       if(e.target.closest(".js-jf-retry")){loadSlots();return}
       var b=e.target.closest(".jf-opt");if(!b)return;
       var v=b.getAttribute("data-v");
-      if(b.classList.contains("js-day")){if(st.day!==v){st.day=v;st.hour=null}render();setTimeout(function(){st.step=2;loadSlots()},180);return}
+      if(b.classList.contains("js-day")){st.day=v;st.hour=FIXED_HOUR;render();setTimeout(function(){st.step=3;render()},180);return}
       if(b.classList.contains("js-hour")){st.hour=v;render();setTimeout(function(){st.step=3;render()},180);return}
       if(b.classList.contains("js-proc")){st.proc=v;render()}
     });
@@ -1234,7 +1227,7 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
         st.step=5;render();
       }).catch(function(e){
         st.busy=false;st.err=failMsg(e);
-        if(e.code==="SLOT_BUSY"||e.code==="BLOCKED_SLOT"||e.code==="OUTSIDE_SCHEDULE"){st.hour=null;st.step=2;loadSlots();return}
+        if(e.code==="SLOT_BUSY"||e.code==="BLOCKED_SLOT"||e.code==="OUTSIDE_SCHEDULE"){st.step=1;render();return}
         var el=$(".jf-err",body);if(el){el.textContent=st.err;el.hidden=false}
         next.classList.remove("loading");
         try{if(window.turnstile&&st.tsId!==null)window.turnstile.reset(st.tsId)}catch(x){}
@@ -1246,7 +1239,7 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
       if(st.step===2){st.step=3;render();return}
       if(st.step===3){st.step=4;render();return}
       if(st.step===4){submit();return}
-      if(st.step===1){st.step=2;loadSlots();return}
+      if(st.step===1){st.hour=FIXED_HOUR;st.step=3;render();return}
       // Paso 5: primero un aviso corto («esto no se repite, es necesario antes de tu operación»).
       var vid=$(".js-jf-video",body);if(vid)try{vid.pause()}catch(e){}
       showNote(true);
@@ -1270,7 +1263,7 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
     dlg.addEventListener("cancel",function(e){if(!note.hidden){e.preventDefault();showNote(false)}});
     back.addEventListener("click",function(){
       if(st.step===4){st.step=3;render()}
-      else if(st.step===3){st.step=2;if(st.slots)render();else loadSlots()}
+      else if(st.step===3){st.step=1;render()}
       else if(st.step===2){st.step=1;render()}
     });
     $(".js-jf-close",dlg).addEventListener("click",function(){dlg.close()});
@@ -1284,8 +1277,7 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
       else if(pick){
         // Tocar 18, 19 o 20 en la portada ya es elegir el día: se salta al paso de la hora.
         st.done=null;
-        if(st.day!==pick)st.hour=null;
-        st.day=pick;st.step=2;loadSlots();
+        st.day=pick;st.hour=FIXED_HOUR;st.step=3;render();
       }
       else{st.step=1;st.done=null;render()}
       try{var lb=$("#afiche");if(lb&&lb.open)lb.close();var of=$("#oferta");if(of&&of.open)of.close()}catch(e){}
