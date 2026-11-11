@@ -68,7 +68,9 @@ svg{display:block}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 .dates{grid-area:dates;display:flex;justify-content:space-between;margin-top:8px}
-.d{position:relative;padding-bottom:7px}
+.d{position:relative;padding:0 0 7px;margin:0;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .2s var(--ease)}
+.d:active{transform:scale(.97)}
+.d:focus-visible{outline:3px solid var(--aqua);outline-offset:6px;border-radius:8px}
 .d::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;border-radius:3px;background:var(--aqua);transform-origin:left}
 .num{position:relative;display:flex;font:700 clamp(4.6rem,24.6vw,7rem)/.92 Fraunces,serif;letter-spacing:-.02em;font-kerning:none;font-variant-numeric:lining-nums}
 .num::after{content:attr(data-n);position:absolute;left:.06em;top:.05em;z-index:-1;color:transparent;-webkit-text-stroke:1.3px rgba(127,227,217,.5);pointer-events:none}
@@ -471,9 +473,9 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
 
     <div class="dates">
       <span class="sr">Fechas: 18, 19 y 20 de noviembre de 2026.</span>
-      <div class="d" aria-hidden="true"><span class="num" data-n="18">18</span><span class="dow">miércoles</span></div>
-      <div class="d" aria-hidden="true"><span class="num" data-n="19">19</span><span class="dow">jueves</span></div>
-      <div class="d" aria-hidden="true"><span class="num" data-n="20">20</span><span class="dow">viernes</span></div>
+      <button type="button" class="d js-day-pick" data-day="2026-11-18" aria-label="Elegir el miércoles 18 de noviembre"><span class="num" data-n="18" aria-hidden="true">18</span><span class="dow">miércoles</span></button>
+      <button type="button" class="d js-day-pick" data-day="2026-11-19" aria-label="Elegir el jueves 19 de noviembre"><span class="num" data-n="19" aria-hidden="true">19</span><span class="dow">jueves</span></button>
+      <button type="button" class="d js-day-pick" data-day="2026-11-20" aria-label="Elegir el viernes 20 de noviembre"><span class="num" data-n="20" aria-hidden="true">20</span><span class="dow">viernes</span></button>
     </div>
 
     <p class="when"><svg class="ico"><use href="#i-clock"/></svg>Noviembre de 2026, de 9:00 a. m. a 7:00 p. m.</p>
@@ -1245,12 +1247,18 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
     $(".js-jf-close",dlg).addEventListener("click",function(){dlg.close()});
     dlg.addEventListener("close",function(){doc.classList.remove("lb-open");var v=$(".js-jf-video",body);if(v)try{v.pause()}catch(e){}});
     window.addEventListener("pageshow",function(){next.classList.remove("loading")});
-    window.__jornadaOpen=function(){
+    window.__jornadaOpen=function(dayId){
       if(dlg.open)return;
       var tk=readTk();
-      if(tk){st.done={day:tk.day,hour:tk.hour,proc:tk.proc};st.step=5}
-      else{st.step=1;st.done=null}
-      render();
+      var pick=(typeof dayId==="string"&&dayOf(dayId))?dayId:null;
+      if(tk){st.done={day:tk.day,hour:tk.hour,proc:tk.proc};st.step=5;render()}
+      else if(pick){
+        // Tocar 18, 19 o 20 en la portada ya es elegir el día: se salta al paso de la hora.
+        st.done=null;
+        if(st.day!==pick)st.hour=null;
+        st.day=pick;st.step=2;loadSlots();
+      }
+      else{st.step=1;st.done=null;render()}
       try{var lb=$("#afiche");if(lb&&lb.open)lb.close();var of=$("#oferta");if(of&&of.open)of.close()}catch(e){}
       dlg.showModal();doc.classList.add("lb-open");
       track("abrir_eleccion","AbrirEleccion",{},false,true);
@@ -1259,6 +1267,10 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
         if(e.status===404){clearTk();st.done=null;st.step=1;render()}
       });
     };
+    // Tocar el 18, 19 o 20 de la portada abre el flujo ya en la hora de ese día.
+    $$(".js-day-pick").forEach(function(b){b.addEventListener("click",function(){
+      window.__jornadaOpen(b.getAttribute("data-day"));
+    })});
     // Todos los botones «Elegir mi día» abren este flujo en vez de ir directo a la reserva.
     $$(".js-book").forEach(function(a){a.addEventListener("click",function(e){
       e.preventDefault();
