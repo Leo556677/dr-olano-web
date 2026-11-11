@@ -269,9 +269,14 @@ details[open] .chev{transform:rotate(180deg);background:var(--teal2);color:#fff}
 .lb::backdrop{background:rgba(6,29,51,.9)}
 .lb-bar{position:absolute;left:0;right:0;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 10px 0 var(--pad);font-weight:600}
 .lb-x{width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;display:grid;place-items:center;cursor:pointer}
-.lb-body{position:absolute;left:12px;right:12px;top:60px;bottom:14px;display:grid;place-items:center}
-.lb-fig{position:relative;width:min(100%,calc((100vh - 78px) * .6667));width:min(100%,calc((100dvh - 78px) * .6667));aspect-ratio:2/3;border-radius:14px;overflow:hidden;background:#dfeef0}
+.lb-body{position:absolute;left:12px;right:12px;top:60px;bottom:calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
+.lb-fig{position:relative;width:min(100%,calc((100vh - 150px) * .6667));width:min(100%,calc((100dvh - 150px) * .6667));aspect-ratio:2/3;border-radius:14px;overflow:hidden;background:#dfeef0}
 .lb-fig img{width:100%;height:100%;object-fit:contain;display:block}
+.lb-fig .fallback{flex-direction:column;gap:12px}
+.lb-retry{min-height:44px;padding:0 20px;border:0;border-radius:999px;background:var(--navy);color:#fff;font:inherit;font-weight:700;cursor:pointer}
+.lb-cta{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;width:min(100%,420px);padding:0 22px;border-radius:999px;background:linear-gradient(135deg,#9af3ea,#45cdc1);color:#061d33;font-weight:800;text-decoration:none;box-shadow:0 12px 26px rgba(0,0,0,.35)}
+.lb-cta .ico{width:18px;height:18px}
+.lb-cta.loading{opacity:.7;pointer-events:none}
 html:has(dialog[open]),html.lb-open{overflow:hidden}
 @supports not (overflow-x:clip){.hero{overflow:hidden}}
 
@@ -614,7 +619,8 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
 <dialog class="lb" id="afiche" aria-label="Afiche de la jornada">
   <div class="lb-bar"><span>Afiche de la jornada</span><button class="lb-x js-lb-close" type="button" aria-label="Cerrar"><svg class="ico"><use href="#i-x"/></svg></button></div>
   <div class="lb-body">
-    <div class="lb-fig js-media"><img data-src="/assets/jornada-cirugia-nov-2026.webp" alt="Afiche: Jornada de cirugía facial con el Dr. Aldo Ronquillo y el Dr. Olano, 18, 19 y 20 de noviembre de 2026" width="1024" height="1536"><div class="fallback">No se pudo cargar el afiche. Cierra y vuelve a intentar.</div></div>
+    <div class="lb-fig js-media"><img data-src="/assets/jornada-cirugia-nov-2026.webp" data-fallback="/assets/jornada-cirugia-nov-2026.jpg" alt="Afiche: Jornada de cirugía facial con el Dr. Aldo Ronquillo y el Dr. Olano, 18, 19 y 20 de noviembre de 2026" width="1024" height="1536"><div class="fallback"><span>No se pudo cargar el afiche.</span><button class="lb-retry js-lb-retry" type="button">Reintentar</button></div></div>
+    <a class="lb-cta js-book" href="/reserva-s?servicio=consulta"><svg class="ico"><use href="#i-calok"/></svg><span class="lbl">Reservar mi evaluación</span></a>
   </div>
 </dialog>
 
@@ -705,7 +711,7 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
     doc.classList.add("js");
     var fontsReady=document.fonts&&document.fonts.load?Promise.all([document.fonts.load('700 80px "Fraunces"'),document.fonts.load('600 16px "Inter"')]):Promise.resolve();
     fontsReady.then(startHero,startHero);
-    setTimeout(startHero,1400);
+    setTimeout(startHero,450);
   }
 
   // Plazo real para reservar la evaluación (hora de Lima).
@@ -874,6 +880,20 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
       if(!img.getAttribute("src"))img.setAttribute("src",img.getAttribute("data-src"));
       dlg.showModal();doc.classList.add("lb-open");
     });
+    // Si el WebP no carga (navegador de Facebook/Instagram antiguo o red lenta), usa el JPG.
+    (function(){
+      var img=$("img",dlg),box=$(".js-media",dlg),tries=0;
+      img.addEventListener("error",function(){
+        var fb=img.getAttribute("data-fallback");
+        if(fb&&img.getAttribute("src")!==fb){box.classList.remove("failed");img.setAttribute("src",fb)}
+      });
+      var rb=$(".js-lb-retry",dlg);
+      if(rb)rb.addEventListener("click",function(){
+        tries++;box.classList.remove("failed");box.classList.remove("ready");
+        img.setAttribute("src",(img.getAttribute("data-fallback")||img.getAttribute("data-src"))+"?r="+tries);
+        track("reintentar_afiche","",{intento:tries});
+      });
+    })();
     dlg.addEventListener("close",function(){doc.classList.remove("lb-open")});
     $(".js-lb-close",dlg).addEventListener("click",function(){dlg.close()});
     dlg.addEventListener("click",function(e){if(e.target===dlg||e.target.classList.contains("lb-body"))dlg.close()});
@@ -968,7 +988,7 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
   }
   window.__jtrack=track;
   $$(".js-book").forEach(function(a){a.addEventListener("click",function(){
-    var lugar=a.classList.contains("js-offer-go")?"ventana":a.id==="fab"?(a.classList.contains("dock")?"cierre":"flotante"):"portada";
+    var lugar=a.closest(".lb")?"afiche":a.classList.contains("js-offer-go")?"ventana":a.id==="fab"?(a.classList.contains("dock")?"cierre":"flotante"):"portada";
     track("clic_reservar","ClicReservar",{lugar:lugar});
   })});
   $$(".js-wa").forEach(function(a){a.addEventListener("click",function(){
