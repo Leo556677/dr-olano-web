@@ -105,7 +105,7 @@
           if(requestBody?.action==='book'&&response.ok){
             response.clone().json().then(data=>{
               const id=data?.booking?.id;
-              if(id){window.__olanoLastBookingId=String(id);track('booking_registered',{booking_id:id})}
+              if(id){window.__olanoLastBookingId=String(id);track('booking_registered',{booking_id:id});try{if(typeof window.olanoMetaSchedule==='function')window.olanoMetaSchedule(id)}catch{}}
             }).catch(()=>{});
           }
         }

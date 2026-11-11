@@ -21,22 +21,7 @@
     dataNote.textContent="Tus datos se utilizan para registrar y gestionar tu cita. Al completar la reserva, te conectaremos con el WhatsApp oficial del centro con el mensaje preparado.";
   }
 
-  // 3) Meta: custom health/wellness events remain disabled in reserva-s.html.
-  // Send only the standard Schedule event, without parameters, after the success
-  // step is active and a real booking code exists. Dedupe per booking code/session.
-  function sendMetaScheduleAfterRealBooking(){
-    const done=document.querySelector('#booking .step[data-step="5"].active');
-    const code=String(document.querySelector("#bookingCode")?.textContent||"").trim();
-    if(!done||!code||typeof window.fbq!=="function")return;
-    const key=`olanoMetaSchedule:${code}`;
-    try{if(sessionStorage.getItem(key)==="1")return}catch{}
-    window.fbq("track","Schedule");
-    try{sessionStorage.setItem(key,"1")}catch{}
-  }
-
-  const bookingRoot=document.querySelector("#booking");
-  if(bookingRoot){
-    new MutationObserver(sendMetaScheduleAfterRealBooking).observe(bookingRoot,{subtree:true,attributes:true,attributeFilter:["class"]});
-  }
-  sendMetaScheduleAfterRealBooking();
+  // 3) Meta: el evento Schedule ya no se envía desde aquí. Lo envía una sola vez por reserva
+  // window.olanoMetaSchedule (analytics-meta.html), llamado por conversion-funnel-v8.js
+  // cuando el servidor confirma la reserva.
 })();

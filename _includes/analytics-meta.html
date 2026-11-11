@@ -30,5 +30,18 @@
       fbq(standard?"track":"trackCustom",name);
     }catch(e){}
   };
+
+  // Schedule estándar, sin parámetros, UNA sola vez por reserva (clave = id de la reserva).
+  // Lo llama conversion-funnel-v8.js apenas el servidor confirma la reserva, antes de que
+  // la página salte a WhatsApp. Es el único lugar que lo envía.
+  w.olanoMetaSchedule=function(id){
+    try{
+      var key="olanoMetaSchedule:"+String(id||"").trim();
+      if(!id)return;
+      if(sessionStorage.getItem(key)==="1")return;
+      sessionStorage.setItem(key,"1");
+      fbq("track","Schedule");
+    }catch(e){}
+  };
 })(window,document);
 </script>
