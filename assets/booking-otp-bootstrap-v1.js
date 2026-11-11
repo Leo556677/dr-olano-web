@@ -19,9 +19,8 @@
     if(result?.otp_enabled!==true)return;
     }
     state.enabled=true;
-    await import('/assets/booking-email-confirm-v1.js?v=20261111b');
-    await import('/assets/booking-email-otp-v1.js?v=20261111b');
-    if(!window.OLANO_PATIENT_OTP?.isVerified || !window.OLANO_EMAIL_CONFIRM?.confirmEmail){
+    await import('/assets/booking-email-otp-v1.js?v=20261111c');
+    if(!window.OLANO_PATIENT_OTP?.isVerified || !window.OLANO_PATIENT_OTP?.confirmForBooking){
       throw new Error('OTP_MODULES_UNAVAILABLE');
     }
     state.ready=true;

@@ -306,22 +306,6 @@
     }catch{}
   }
 
-  function bookingPromoPreview(){
-    // Solo aviso previo: los descuentos se validan en el servidor.
-    try{
-      const o=JSON.parse(sessionStorage.getItem("olanoOffer10V2")||"null");
-      const c=o?.claim||{};
-      const percent=Number(c.discount_pct);
-      const expires=Date.parse(String(c.expires_at||""));
-      if(c.service_code===state.service?.id && (o?.accepted===true || o?.redeemed===true) &&
-         Number.isInteger(percent) && percent>0 && percent<=100 &&
-         (o.redeemed===true || (Number.isFinite(expires)&&expires>Date.now()))){
-        return {percent,kind:"pending"};
-      }
-    }catch{}
-    return null;
-  }
-
   async function sendRealBooking(){
     state.name=$("#clientName").value.trim();state.phone=$("#clientPhone").value.replace(/\s+/g,"");
     const dni=getBookingDni();
@@ -340,27 +324,7 @@
     }
     const otp=window.OLANO_PATIENT_OTP;
     const otpEnabled=otp?.isEnabled?.()===true;
-    if(otpEnabled&&!otp?.isVerified?.()){alert("Antes de reservar, verifica tu correo con el código recibido.");go(3);setTimeout(()=>otp?.focusVerification?.(),30);return}
-    if(otpEnabled){
-      const emailField=document.getElementById("patient-booking-email");
-      const confirm=window.OLANO_EMAIL_CONFIRM?.confirmEmail;
-      if(!emailField||typeof confirm!=="function"){
-        alert("No pudimos preparar la confirmación del correo. Recarga la página.");return;
-      }
-      const confirmed=await confirm(emailField.value,bookingPromoPreview());
-      if(confirmed.changed){
-        // Nuevo correo: invalidar OTP anterior; nunca reutilizar una identidad verificada.
-        emailField.value=confirmed.email;
-        emailField.dispatchEvent(new Event("input",{bubbles:true}));
-        otp.reset?.();
-        go(3);
-        setTimeout(()=>otp.focusVerification?.(),40);
-        alert("Verifica el nuevo correo con otro código antes de completar tu reserva.");
-        return;
-      }
-      if(!confirmed.confirmed)return;
-      if(!otp.isVerified()){alert("La verificación venció. Solicita un código nuevo.");go(3);return}
-    }
+    if(otpEnabled && !await otp.confirmForBooking())return;
     if(!turnstileToken){renderBookingTurnstile();alert("Completa la verificación de seguridad para reservar.");return}
     const btn=$("#sendBooking"),old=btn.innerHTML;btn.disabled=true;btn.textContent="Reservando…";
     try{
@@ -395,9 +359,10 @@
       else if(code==="INVALID_MODALITY")alert("Selecciona si deseas la Consulta NOVARE presencial o por videollamada.");
       else if(code==="INVALID_NOTE")alert("El comentario es demasiado largo.");
       else if(code==="PATIENT_PROFILE_REVIEW_REQUIRED")alert("Tu correo ya está asociado a una ficha. Para actualizar nombre o celular, comunícate con recepción antes de reservar.");
+      else if(code==="OTP_BOOKING_NOT_READY")alert("Este enlace de prueba admite únicamente el correo habilitado para el piloto.");
       else if(code==="EMAIL_OTP_REQUIRED"){
         if(!otpEnabled)alert("Debes verificar tu correo antes de reservar. Actualiza la página para cargar el formulario seguro.");
-        else {window.OLANO_PATIENT_OTP?.reset?.();alert("La verificación de correo venció o ya no es válida. Solicita un nuevo código.");go(3)}
+        else {window.OLANO_PATIENT_OTP?.reset?.();alert("La verificación de correo venció o ya no es válida. Vuelve a tocar el botón de reserva para solicitar otro código.")}
       }
       else if(code==="TURNSTILE_FAILED"||code==="TURNSTILE_REQUIRED"||code==="TURNSTILE_HOSTNAME_MISMATCH"||code==="TURNSTILE_ACTION_MISMATCH")alert("No se pudo validar la verificación de seguridad. Intenta nuevamente.");
       else alert("No se pudo registrar la cita. Intenta nuevamente.");

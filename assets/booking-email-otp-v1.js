@@ -28,6 +28,8 @@ const errorText = 'No pudimos validar el correo. Revisa los datos e inténtalo d
 
 function clearVerification() {
   verified = null;
+  const accept = byId('patient-otp-accept');
+  if (accept) accept.disabled = true;
   byId('patient-email-otp-code')?.setAttribute('value', '');
   const code = byId('patient-email-otp-code');
   if (code) code.value = '';
@@ -90,22 +92,50 @@ window.OLANO_PATIENT_OTP = {
   reset,
 };
 
+function confirmForBooking() {
+  const dialog = byId('patient-otp-dialog');
+  if (!dialog || dialog.open) return Promise.resolve(false);
+  dialog.returnValue = '';
+  dialog.showModal();
+  const field = byId('patient-booking-email');
+  field.focus();
+  field.select();
+  const viewport = window.visualViewport;
+  const resize = () => {
+    if (!viewport) return;
+    dialog.style.maxHeight = Math.max(100, viewport.height - 24) + 'px';
+    dialog.style.top = (viewport.offsetTop + viewport.height / 2) + 'px';
+  };
+  resize();
+  viewport?.addEventListener('resize', resize);
+  viewport?.addEventListener('scroll', resize);
+  return new Promise(resolve => dialog.addEventListener('close', () => {
+    viewport?.removeEventListener('resize', resize);
+    viewport?.removeEventListener('scroll', resize);
+    resolve(dialog.returnValue === 'aceptar' && Boolean(getVerifiedIdentity()));
+  }, { once: true }));
+}
+window.OLANO_PATIENT_OTP.confirmForBooking = confirmForBooking;
+
 function init() {
   const phone = byId('clientPhone');
   if (!phone || byId('patient-booking-email')) return;
   const phoneField = phone.closest('.field');
   if (!phoneField) return;
-  const section = document.createElement('section');
+  const section = document.createElement('dialog');
+  section.id = 'patient-otp-dialog';
   section.className = 'patient-email-otp';
   section.setAttribute('aria-label', 'Verificación de correo para ver la cita en la aplicación');
   section.innerHTML = `
+    <h2>Verifica tu correo para solicitar tu cita</h2>
     <label for="patient-booking-email">Correo electrónico <span aria-hidden="true">*</span></label>
     <input id="patient-booking-email" type="email" autocomplete="email" inputmode="email"
       maxlength="254" spellcheck="false" placeholder="ejemplo@correo.com" required>
-    <p class="patient-email-hint">Te enviaremos un código a este correo. Utiliza el mismo correo en la aplicación del Dr. Olano para ver tu cita.</p>
+    <p class="patient-email-hint">Te enviaremos un código a este correo. La cita se confirma cuando el consultorio valida tu adelanto.</p>
     <div class="patient-otp-actions">
       <button id="patient-email-otp-send" type="button">Enviar código</button>
     </div>
+    <a id="patient-open-inbox" hidden target="_blank" rel="noopener noreferrer">Abrir mi correo</a>
     <div class="patient-otp-verify">
       <input id="patient-email-otp-code" inputmode="numeric" pattern="[0-9]{6,10}"
         autocomplete="one-time-code" maxlength="10" placeholder="Código recibido"
@@ -113,13 +143,15 @@ function init() {
       <button id="patient-email-otp-verify" type="button">Verificar</button>
     </div>
     <p id="patient-email-otp-status" role="status" aria-live="polite"></p>
+    <button id="patient-otp-accept" type="button" disabled>Aceptar y continuar a WhatsApp</button>
+    <button id="patient-otp-cancel" type="button">Cancelar</button>
   `;
-  // DNI aparece antes del correo; un solo campo de nombres y apellidos.
-  const dniField = byId('clientDni')?.closest('.field');
-  (dniField || phoneField).insertAdjacentElement('afterend', section);
+  document.body.appendChild(section);
   const css = document.createElement('style');
   css.textContent = `
-    .patient-email-otp{margin:12px 0;padding:14px;border:1px solid #d1e4e4;border-radius:16px;background:#f6fafa}
+    .patient-email-otp:not([open]){display:none!important}
+    .patient-email-otp::backdrop{background:rgba(0,26,43,.69);backdrop-filter:blur(5px)}
+    .patient-email-otp{position:fixed;inset:50% auto auto 50%;transform:translate(-50%,-50%);width:min(440px,calc(100% - 24px));box-sizing:border-box;overflow:auto;max-height:90dvh;margin:0;padding:14px;border:1px solid #d1e4e4;border-radius:16px;background:#f6fafa}
     .patient-email-otp>label{display:block;font-size:14px;font-weight:700;margin-bottom:8px;color:#123b47}
     .patient-email-otp>input,.patient-otp-verify input{box-sizing:border-box;width:100%;min-width:0;border:1px solid #b2d0d0;border-radius:10px;padding:11px 12px;background:white;color:#123b47;font:inherit}
     .patient-email-hint{font-size:12px;line-height:1.5;margin:8px 0 12px;color:#35545b}
@@ -136,7 +168,16 @@ function init() {
   const codeInput = byId('patient-email-otp-code');
   const send = byId('patient-email-otp-send');
   const check = byId('patient-email-otp-verify');
-  emailInput.addEventListener('input', clearVerification);
+  const inbox = byId('patient-open-inbox');
+  const accept = byId('patient-otp-accept');
+  accept.onclick = () => { if (getVerifiedIdentity()) section.close('aceptar'); };
+  byId('patient-otp-cancel').onclick = () => section.close();
+  emailInput.addEventListener('input', () => {
+    requestedEmail = '';
+    inbox.hidden = true;
+    accept.disabled = true;
+    clearVerification();
+  });
 
   send.addEventListener('click', async () => {
     const email = normalized(emailInput.value);
@@ -149,6 +190,7 @@ function init() {
     send.disabled = true;
     check.disabled = true;
     verified = null;
+    accept.disabled = true;
     requestedEmail = '';
     updateState('Enviando código de verificación…');
     try {
@@ -157,7 +199,18 @@ function init() {
         options: { shouldCreateUser: true },
       });
       if (error) throw error;
+      if (normalized(emailInput.value) !== email) return;
       requestedEmail = email;
+      const domain = email.split('@')[1];
+      const gmail = domain === 'gmail.com' || domain === 'googlemail.com';
+      const outlook = ['outlook.com','hotmail.com','live.com'].includes(domain);
+      inbox.hidden = !(gmail || outlook);
+      if (gmail || outlook) {
+        const url = gmail ? 'https://mail.google.com/mail/u/0/' : 'https://outlook.live.com/mail/';
+        const android = /Android/i.test(navigator.userAgent);
+        inbox.href = gmail && android ? 'intent://mail.google.com/mail/u/0/#Intent;scheme=https;package=com.google.android.gm;S.browser_fallback_url=' + encodeURIComponent(url) + ';end' : url;
+        inbox.textContent = gmail ? 'Abrir Gmail' : 'Abrir Outlook';
+      }
       nextRequestAt = Date.now() + 60000;
       updateState('Revisa tu correo e ingresa el código recibido.');
       codeInput.focus();
@@ -192,7 +245,8 @@ function init() {
       };
       codeInput.value = '';
       if (!getVerifiedIdentity()) throw Error('EXPIRED');
-      updateState('Correo verificado. Tu cita podrá aparecer en la aplicación.');
+      accept.disabled = false;
+      updateState('Correo verificado. Ya puedes continuar a WhatsApp.');
     } catch {
       verified = null;
       updateState(errorText, true);

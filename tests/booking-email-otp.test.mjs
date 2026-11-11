@@ -31,6 +31,7 @@ function harness({ userEmail = 'paciente@ejemplo.pe', rejected = false } = {}) {
   fields.set('patient-email-otp-verify', verify);
   fields.set('patient-email-otp-status', status);
 
+  for (const id of ['patient-open-inbox','patient-otp-accept','patient-otp-cancel']) fields.set(id, element());
   let mounted = false;
   const fieldContainer = { insertAdjacentElement: () => { mounted = true; } };
   const phone = element();
@@ -39,6 +40,7 @@ function harness({ userEmail = 'paciente@ejemplo.pe', rejected = false } = {}) {
 
   const document = {
     readyState: 'complete',
+    body: { appendChild() { mounted = true; } },
     head: { appendChild() {} },
     createElement: () => ({ setAttribute() {}, innerHTML: '', textContent: '' }),
     getElementById: id => {

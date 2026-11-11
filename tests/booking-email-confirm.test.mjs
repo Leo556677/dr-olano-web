@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {renderBookingConfirmationEmail} from '../integrations/email/booking-confirmation-template.mjs';
 
-const modal=readFileSync(new URL('../assets/booking-email-confirm-v1.js',import.meta.url),'utf8');
+const modal=readFileSync(new URL('../assets/booking-email-otp-v1.js',import.meta.url),'utf8');
 const booking=readFileSync(new URL('../_includes/v28/patch06-booking-real.html',import.meta.url),'utf8');
 const form=readFileSync(new URL('../_includes/v28/part04.html',import.meta.url),'utf8');
 const backend=readFileSync(new URL('../integrations/supabase/crm/functions/dr-olano-booking-otp/index.ts',import.meta.url),'utf8');
@@ -18,22 +18,15 @@ const args={
 test('Diseño móvil de correo: modal sombreado, editable y adaptación al teclado',()=>{
   new vm.Script(modal);
   new vm.Script(booking);
-  assert.match(modal,/aria-modal="true"/);
+  assert.match(modal,/dialog.showModal\(\)/);
   assert.match(modal,/type="email"/);
-  assert.match(modal,/inputmode="email"/);
   assert.match(modal,/window\.visualViewport/);
-  assert.match(modal,/requestAnimationFrame\(/);
   assert.match(modal,/backdrop-filter:blur/);
-  assert.match(modal,/Correo electrónico del paciente/);
-  assert.match(modal,/Aquí recibirás la confirmación de tu cita/);
-  assert.match(modal,/Modificar y verificar correo/);
+  assert.match(modal,/field\.select\(\)/);
+  assert.match(booking,/await otp\.confirmForBooking\(\)/);
 });
-test('Cambio de correo invalida OTP y vuelve al paso de verificación',()=>{
-  assert.match(booking,/await confirm\(emailField.value,bookingPromoPreview\(\)\)/);
-  assert.match(booking,/if\(confirmed.changed\)/);
-  assert.match(booking,/emailField\.dispatchEvent\(new Event\("input"/);
-  assert.match(booking,/otp\.reset\?\.\(\)/);
-  assert.match(booking,/go\(3\)/);
+test('El cambio de dirección exige otro código en la ventana final',()=>{
+  assert.match(modal,/emailInput.addEventListener\('input',[\s\S]*?clearVerification\(\)/);
   assert.match(backend,/EMAIL_MISMATCH/);
   assert.match(backend,/verifiedPatient\.email/);
   assert.match(backend,/p_verified_email: verifiedEmail/);
