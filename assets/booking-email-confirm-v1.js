@@ -43,15 +43,15 @@
       '<section class="olano-email-confirm-card" role="dialog" aria-modal="true" aria-labelledby="olanoEmailConfirmTitle" aria-describedby="olanoEmailConfirmDesc" tabindex="-1">',
       '<div class="olano-email-confirm-icon" aria-hidden="true">✉</div>',
       '<h2 id="olanoEmailConfirmTitle">¿Este es tu correo correcto?</h2>',
-      '<p id="olanoEmailConfirmDesc">Aquí recibirás la confirmación de tu cita, sus datos y el descuento aplicado, si corresponde. Revísalo antes de reservar.</p>',
+      '<p id="olanoEmailConfirmDesc">Aquí recibirás la confirmación de tu cita después de que el consultorio verifique tu adelanto.</p>',
       '<label class="olano-email-confirm-label" for="olanoEmailConfirmInput">Correo electrónico del paciente</label>',
       '<input id="olanoEmailConfirmInput" type="email" autocomplete="email" inputmode="email" enterkeyhint="done" spellcheck="false" maxlength="254" required>',
-      '<span class="olano-email-confirm-help">Puedes modificarlo. Si lo cambias, volverás a verificarlo mediante un código enviado al nuevo correo.</span>',
+      '<span class="olano-email-confirm-help">Si cambias el correo, te enviaremos otro código.</span>',
       '<div id="olanoEmailConfirmBenefit" class="olano-email-confirm-benefit" role="status"></div>',
       '<div id="olanoEmailConfirmError" class="olano-email-confirm-error" role="alert"></div>',
       '<div class="olano-email-confirm-actions">',
-      '<button id="olanoEmailConfirmContinue" class="olano-email-confirm-btn" type="button">Confirmar correo y reservar</button>',
-      '<button id="olanoEmailConfirmCancel" class="olano-email-confirm-cancel" type="button">Volver a revisar mi cita</button>',
+      '<button id="olanoEmailConfirmContinue" class="olano-email-confirm-btn" type="button">Aceptar y continuar a WhatsApp</button>',
+      '<button id="olanoEmailConfirmCancel" class="olano-email-confirm-cancel" type="button">Cancelar</button>',
       '</div></section>'
     ].join('');
     document.body.appendChild(root);
@@ -114,7 +114,7 @@
     const button = byId('olanoEmailConfirmContinue');
     const warning = byId('olanoEmailConfirmError');
     button.disabled = !valid;
-    button.textContent = changed ? 'Modificar y verificar correo' : 'Confirmar correo y reservar';
+    button.textContent = changed ? 'Modificar y verificar correo' : 'Aceptar y continuar a WhatsApp';
     warning.classList.toggle('show', !valid);
     warning.textContent = valid ? '' : 'Escribe un correo válido, por ejemplo paciente@correo.com.';
   }
@@ -126,7 +126,7 @@
       return 'Promoción solicitada: ' + String(percent) +
         ' % de descuento, sujeto a validación del consultorio. El correo reflejará el porcentaje realmente confirmado.';
     }
-    return 'Tu confirmación incluirá el porcentaje de descuento solo cuando el consultorio lo haya validado.';
+    return '';
   }
 
   function confirmEmail(email, discount) {
@@ -137,7 +137,9 @@
     const root = byId('olanoEmailConfirmOverlay');
     const input = byId('olanoEmailConfirmInput');
     input.value = initial;
-    byId('olanoEmailConfirmBenefit').textContent = offerLabel(discount);
+    const benefit = byId('olanoEmailConfirmBenefit');
+    benefit.textContent = offerLabel(discount);
+    benefit.style.display = benefit.textContent ? 'block' : 'none';
     root.hidden = false;
     const previousFocus = document.activeElement;
     const previousOverflow = document.body.style.overflow;
@@ -160,7 +162,9 @@
     input.onkeydown=e=>{if(e.key === 'Enter'){e.preventDefault();byId('olanoEmailConfirmContinue').click()}};
     // El navegador decide cuándo abrir el teclado; mantenemos el modal visible
     // con visualViewport mientras el teclado Android/iOS ocupa la zona inferior.
-    requestAnimationFrame(() => { if (active) { input.focus({preventScroll:true}); input.select(); syncViewport(); } });
+    input.focus({preventScroll:true});
+    input.select();
+    requestAnimationFrame(() => { if (active) syncViewport(); });
     return promise;
   }
 

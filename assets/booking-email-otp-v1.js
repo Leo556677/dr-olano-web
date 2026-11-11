@@ -1,15 +1,21 @@
 // Web de reserva: OTP del MISMO Supabase Auth que usa APP PACIENTES.
 // La sesión verificada vive solo en memoria y nunca se guarda en localStorage.
 // El servidor de reservas DEBE revalidar el access token contra /auth/v1/user.
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.117.0';
+
 
 const BOOKING_API = 'https://xnlzsgulskqyecfgzhwa.supabase.co/functions/v1/dr-olano-booking-otp';
 const BOOKING_PUBLISHABLE_KEY = 'sb_publishable_s9YdJaMe_ll4QehPkADlKQ_KkuvWt32';
 const AUTH_URL = 'https://pxccwrhtmwkwrzofuphj.supabase.co';
 const AUTH_PUBLISHABLE_KEY = 'sb_publishable_kKxqpfyz6MwFPyIrDo7X6w_yWy-OkNb';
-const patientAuth = createClient(AUTH_URL, AUTH_PUBLISHABLE_KEY, {
-  auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-});
+let authClient;
+async function getPatientAuth() {
+  if (authClient) return authClient;
+  const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.117.0');
+  authClient = createClient(AUTH_URL, AUTH_PUBLISHABLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  });
+  return authClient;
+}
 
 let verified = null;
 let requestedEmail = '';
@@ -146,7 +152,7 @@ function init() {
     requestedEmail = '';
     updateState('Enviando código de verificación…');
     try {
-      const { error } = await patientAuth.auth.signInWithOtp({
+      const { error } = await (await getPatientAuth()).auth.signInWithOtp({
         email,
         options: { shouldCreateUser: true },
       });
@@ -177,7 +183,7 @@ function init() {
     check.disabled = true;
     updateState('Validando código…');
     try {
-      const { data, error } = await patientAuth.auth.verifyOtp({ email, token, type: 'email' });
+      const { data, error } = await (await getPatientAuth()).auth.verifyOtp({ email, token, type: 'email' });
       if (error || !data?.session?.access_token || normalized(data.user?.email) !== email) throw error || Error();
       verified = {
         email,
