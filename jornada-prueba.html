@@ -325,6 +325,14 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
 .jf-opt.sel{border-color:var(--teal);background:#e8f8f6}
 .jf-opt.sel::after{content:"";position:absolute;top:8px;right:10px;width:10px;height:10px;border-radius:50%;background:var(--teal)}
 .jf-note{margin:14px 0 0;padding:12px 14px;border-radius:14px;background:var(--mist);font-size:.88rem;color:var(--muted)}
+/* Aviso previo a la evaluación (paso 5): corto, centrado, con un solo botón */
+.jf-pop{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(6,29,51,.78);overscroll-behavior:contain}
+.jf-pop[hidden]{display:none}
+.jf-pop-card{width:100%;max-width:420px;padding:24px 22px 18px;border-radius:24px;background:#fff;box-shadow:0 30px 60px rgba(3,14,26,.45);animation:sheetUp .35s var(--ease) both}
+.jf-pop-card h3{margin:0 0 8px;font-size:1.35rem;color:var(--navy)}
+.jf-pop-card p{margin:0;color:#33495a;line-height:1.5}
+.jf-pop-card .jf-next{width:100%;margin-top:18px;flex:none}
+.jf-pop-back{display:block;width:100%;margin-top:6px;min-height:46px;border:0;background:none;color:var(--teal2);font:inherit;font-weight:700;cursor:pointer}
 .jf-foot{flex:none;display:flex;gap:10px;padding:12px var(--pad) calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:#fff}
 .jf-back{flex:none;width:52px;min-height:54px;border:1px solid var(--line);border-radius:16px;background:#fff;color:var(--navy);display:grid;place-items:center;cursor:pointer}
 .jf-next{position:relative;flex:1;min-height:54px;border:0;border-radius:999px;background:linear-gradient(135deg,#9af3ea,#45cdc1);color:var(--ink);font:inherit;font-weight:800;font-size:1.05rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
@@ -683,6 +691,14 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
     <div class="jf-top"><b class="js-jf-title">Elige tu día</b><span class="jf-step js-jf-step">Paso 1 de 4</span><button class="jf-x js-jf-close" type="button" aria-label="Cerrar"><svg class="ico"><use href="#i-x"/></svg></button></div>
     <div class="jf-body js-jf-body"></div>
     <div class="jf-foot"><button class="jf-back js-jf-back" type="button" aria-label="Volver"><svg class="ico" style="transform:rotate(90deg)"><use href="#i-chev"/></svg></button><button class="jf-next js-jf-next" type="button" disabled>Continuar</button></div>
+    <div class="jf-pop js-jf-pop" role="alertdialog" aria-modal="true" aria-labelledby="jfNoteT" hidden>
+      <div class="jf-pop-card">
+        <h3 id="jfNoteT">Falta un paso: tu evaluación</h3>
+        <p>Tu día de jornada ya quedó separado. Ahora elige la fecha de tu <b>evaluación médica</b>: es un paso aparte y necesario antes de tu operación. Puedes elegirla hasta el 17 de noviembre.</p>
+        <button class="jf-next js-jf-pop-go" type="button">Elegir fecha de mi evaluación</button>
+        <button class="jf-pop-back js-jf-pop-back" type="button">Volver</button>
+      </div>
+    </div>
   </div>
 </dialog>
 
@@ -1231,14 +1247,27 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
       if(st.step===3){st.step=4;render();return}
       if(st.step===4){submit();return}
       if(st.step===1){st.step=2;loadSlots();return}
-      // Paso 5: ir a la reserva 2 (evaluación) con los UTM del anuncio. El token va por almacenamiento, no por URL.
-      next.classList.add("loading");
+      // Paso 5: primero un aviso corto («esto no se repite, es necesario antes de tu operación»).
+      var vid=$(".js-jf-video",body);if(vid)try{vid.pause()}catch(e){}
+      showNote(true);
+    });
+    var note=$(".js-jf-pop",dlg),noteGo=$(".js-jf-pop-go",dlg);
+    function showNote(on){
+      note.hidden=!on;
+      if(on)try{noteGo.focus()}catch(e){}
+    }
+    $(".js-jf-pop-back",dlg).addEventListener("click",function(){showNote(false)});
+    noteGo.addEventListener("click",function(){
+      // Ir a la reserva 2 (evaluación) con los UTM del anuncio. El token va por almacenamiento, no por URL.
+      noteGo.classList.add("loading");
       track("clic_reservar","ClicReservar",{lugar:"video"});
       var url=new URL("/reserva-s?servicio=evaluacion-jornada",location.origin);
       keep.forEach(function(k){if(params.has(k))url.searchParams.set(k,params.get(k))});
       if(!url.searchParams.has("utm_campaign"))url.searchParams.set("utm_campaign",ORIGEN);
       location.href=url.pathname+url.search;
     });
+    // Esc cierra primero el aviso y no todo el flujo.
+    dlg.addEventListener("cancel",function(e){if(!note.hidden){e.preventDefault();showNote(false)}});
     back.addEventListener("click",function(){
       if(st.step===4){st.step=3;render()}
       else if(st.step===3){st.step=2;if(st.slots)render();else loadSlots()}
@@ -1246,7 +1275,7 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
     });
     $(".js-jf-close",dlg).addEventListener("click",function(){dlg.close()});
     dlg.addEventListener("close",function(){doc.classList.remove("lb-open");var v=$(".js-jf-video",body);if(v)try{v.pause()}catch(e){}});
-    window.addEventListener("pageshow",function(){next.classList.remove("loading")});
+    window.addEventListener("pageshow",function(){next.classList.remove("loading");if(noteGo)noteGo.classList.remove("loading");if(note)note.hidden=true});
     window.__jornadaOpen=function(dayId){
       if(dlg.open)return;
       var tk=readTk();
@@ -1260,6 +1289,7 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
       }
       else{st.step=1;st.done=null;render()}
       try{var lb=$("#afiche");if(lb&&lb.open)lb.close();var of=$("#oferta");if(of&&of.open)of.close()}catch(e){}
+      if(note)note.hidden=true;
       dlg.showModal();doc.classList.add("lb-open");
       track("abrir_eleccion","AbrirEleccion",{},false,true);
       if(tk)api({action:"jornada_estado",jornada_token:tk.t}).catch(function(e){
