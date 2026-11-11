@@ -31,7 +31,8 @@ function harness({ userEmail = 'paciente@ejemplo.pe', rejected = false } = {}) {
   fields.set('patient-email-otp-verify', verify);
   fields.set('patient-email-otp-status', status);
 
-  for (const id of ['patient-open-inbox','patient-otp-accept','patient-otp-cancel']) fields.set(id, element());
+  for (const id of ['patient-web-inbox','patient-open-inbox','patient-otp-accept','patient-otp-cancel']) fields.set(id, element());
+  fields.set('patient-email-domains', { querySelectorAll: () => [] });
   let mounted = false;
   const fieldContainer = { insertAdjacentElement: () => { mounted = true; } };
   const phone = element();

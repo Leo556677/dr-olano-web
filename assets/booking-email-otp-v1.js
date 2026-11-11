@@ -117,6 +117,27 @@ function confirmForBooking() {
 }
 window.OLANO_PATIENT_OTP.confirmForBooking = confirmForBooking;
 
+const domains = ['gmail.com', 'hotmail.com', 'yahoo.com', 'outlook.com'];
+const mailboxes = {
+  gmail: { label: 'Gmail', web: 'https://mail.google.com/mail/u/0/', android: 'com.google.android.gm', ios: 'googlegmail://' },
+  outlook: { label: 'Outlook', web: 'https://outlook.live.com/mail/', android: 'com.microsoft.office.outlook', ios: 'ms-outlook://emails' },
+  yahoo: { label: 'Yahoo Mail', web: 'https://mail.yahoo.com/', android: 'com.yahoo.mobile.client.android.mail', ios: 'ymail://' },
+};
+function getMailbox(domain) {
+  if (['gmail.com','googlemail.com'].includes(domain)) return mailboxes.gmail;
+  if (['outlook.com','hotmail.com','live.com','msn.com'].includes(domain)) return mailboxes.outlook;
+  if (['yahoo.com','yahoo.es','yahoo.com.mx','ymail.com'].includes(domain)) return mailboxes.yahoo;
+  return null;
+}
+function inboxUrl(mailbox, agent) {
+  if (/Android/i.test(agent)) {
+    const destination = mailbox === mailboxes.outlook ? 'intent://emails/#Intent;scheme=ms-outlook' :
+      mailbox.web.replace('https:', 'intent:') + '#Intent;scheme=https';
+    return destination + ';package=' + mailbox.android + ';S.browser_fallback_url=' + encodeURIComponent(mailbox.web) + ';end';
+  }
+  return /iPhone|iPad|iPod/i.test(agent) ? mailbox.ios : mailbox.web;
+}
+
 function init() {
   const phone = byId('clientPhone');
   if (!phone || byId('patient-booking-email')) return;
@@ -131,11 +152,15 @@ function init() {
     <label for="patient-booking-email">Correo electrónico <span aria-hidden="true">*</span></label>
     <input id="patient-booking-email" type="email" autocomplete="email" inputmode="email"
       maxlength="254" spellcheck="false" placeholder="ejemplo@correo.com" required>
+    <div id="patient-email-domains" hidden role="group" aria-label="Completar dominio del correo">
+      ${domains.map(domain => '<button type="button" data-domain="' + domain + '">@' + domain + '</button>').join('')}
+    </div>
     <p class="patient-email-hint">Te enviaremos un código a este correo. La cita se confirma cuando el consultorio valida tu adelanto.</p>
     <div class="patient-otp-actions">
       <button id="patient-email-otp-send" type="button">Enviar código</button>
     </div>
     <a id="patient-open-inbox" hidden target="_blank" rel="noopener noreferrer">Abrir mi correo</a>
+    <a id="patient-web-inbox" hidden target="_blank" rel="noopener noreferrer">Usar correo web</a>
     <div class="patient-otp-verify">
       <input id="patient-email-otp-code" inputmode="numeric" pattern="[0-9]{6,10}"
         autocomplete="one-time-code" maxlength="10" placeholder="Código recibido"
@@ -159,6 +184,10 @@ function init() {
     .patient-otp-verify{margin-top:10px}
     .patient-email-otp button{border:0;border-radius:10px;padding:11px 12px;background:#166d72;color:white;font-weight:700;cursor:pointer;white-space:nowrap}
     .patient-email-otp button:disabled{opacity:.5;cursor:default}
+    #patient-email-domains:not([hidden]){display:flex;gap:6px;overflow-x:auto;margin:6px 0;max-width:100%}
+    #patient-email-domains button{flex:none;padding:7px 10px;background:#deefee;color:#164f54;font-size:13px}
+    #patient-open-inbox:not([hidden]),#patient-web-inbox:not([hidden]){display:inline-block;padding:7px 4px;color:#155d57;font-weight:700}
+    #patient-web-inbox:not([hidden]){font-weight:400;font-size:12px;margin-left:8px}
     #patient-email-otp-status{font-size:12px;margin:8px 0 0;min-height:17px;line-height:1.4}
     @media(max-width:380px){.patient-otp-verify{flex-wrap:wrap}.patient-otp-verify button{width:100%}}
   `;
@@ -169,12 +198,29 @@ function init() {
   const send = byId('patient-email-otp-send');
   const check = byId('patient-email-otp-verify');
   const inbox = byId('patient-open-inbox');
+  const webInbox = byId('patient-web-inbox');
+  const choices = byId('patient-email-domains');
+  const buttons = Array.from(choices.querySelectorAll('button'));
+  choices.onclick = event => {
+    const domain = event.target.dataset.domain;
+    if (!domains.includes(domain)) return;
+    emailInput.value = emailInput.value.trim().split('@')[0] + '@' + domain;
+    emailInput.dispatchEvent(new Event('input'));
+    emailInput.focus();
+  };
   const accept = byId('patient-otp-accept');
   accept.onclick = () => { if (getVerifiedIdentity()) section.close('aceptar'); };
   byId('patient-otp-cancel').onclick = () => section.close();
   emailInput.addEventListener('input', () => {
     requestedEmail = '';
     inbox.hidden = true;
+    webInbox.hidden = true;
+    const [local, suffix = '', extra] = normalized(emailInput.value).split('@');
+    for (const button of buttons) {
+      button.hidden = !local || /\s/.test(local) || extra !== undefined ||
+        !button.dataset.domain.startsWith(suffix) || button.dataset.domain === suffix;
+    }
+    choices.hidden = buttons.every(button => button.hidden);
     accept.disabled = true;
     clearVerification();
   });
@@ -185,7 +231,13 @@ function init() {
       updateState('Ingresa un correo electrónico válido.', true);
       return;
     }
-    if (busy || Date.now() < nextRequestAt) return;
+    if (busy) return;
+    if (Date.now() < nextRequestAt) {
+      updateState('Espera ' + Math.ceil((nextRequestAt - Date.now()) / 1000) + ' segundos para solicitar otro código.');
+      return;
+    }
+    choices.hidden = true;
+    codeInput.focus();
     busy = true;
     send.disabled = true;
     check.disabled = true;
@@ -201,19 +253,17 @@ function init() {
       if (error) throw error;
       if (normalized(emailInput.value) !== email) return;
       requestedEmail = email;
-      const domain = email.split('@')[1];
-      const gmail = domain === 'gmail.com' || domain === 'googlemail.com';
-      const outlook = ['outlook.com','hotmail.com','live.com'].includes(domain);
-      inbox.hidden = !(gmail || outlook);
-      if (gmail || outlook) {
-        const url = gmail ? 'https://mail.google.com/mail/u/0/' : 'https://outlook.live.com/mail/';
-        const android = /Android/i.test(navigator.userAgent);
-        inbox.href = gmail && android ? 'intent://mail.google.com/mail/u/0/#Intent;scheme=https;package=com.google.android.gm;S.browser_fallback_url=' + encodeURIComponent(url) + ';end' : url;
-        inbox.textContent = gmail ? 'Abrir Gmail' : 'Abrir Outlook';
+      const mailbox = getMailbox(email.split('@')[1]);
+      inbox.hidden = !mailbox;
+      if (mailbox) {
+        inbox.href = inboxUrl(mailbox, navigator.userAgent);
+        inbox.textContent = 'Abrir ' + mailbox.label;
+        webInbox.href = mailbox.web;
+        webInbox.hidden = inbox.href === mailbox.web;
       }
       nextRequestAt = Date.now() + 60000;
       updateState('Revisa tu correo e ingresa el código recibido.');
-      codeInput.focus();
+      if (section.open && document.activeElement === codeInput) codeInput.scrollIntoView({block:'nearest'});
     } catch {
       updateState('No pudimos enviar el código. Vuelve a intentarlo.', true);
     } finally {
