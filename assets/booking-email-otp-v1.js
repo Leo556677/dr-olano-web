@@ -28,8 +28,6 @@ const errorText = 'No pudimos validar el correo. Revisa los datos e inténtalo d
 
 function clearVerification() {
   verified = null;
-  const accept = byId('patient-otp-accept');
-  if (accept) accept.disabled = true;
   byId('patient-email-otp-code')?.setAttribute('value', '');
   const code = byId('patient-email-otp-code');
   if (code) code.value = '';
@@ -96,6 +94,7 @@ function confirmForBooking() {
   const dialog = byId('patient-otp-dialog');
   if (!dialog || dialog.open) return Promise.resolve(false);
   dialog.returnValue = '';
+  byId('patient-otp-send-actions').hidden = !EMAIL.test(normalized(byId('patient-booking-email').value));
   dialog.showModal();
   const field = byId('patient-booking-email');
   field.focus();
@@ -156,19 +155,17 @@ function init() {
       ${domains.map(domain => '<button type="button" data-domain="' + domain + '">@' + domain + '</button>').join('')}
     </div>
     <p class="patient-email-hint">Te enviaremos un código a este correo. La cita se confirma cuando el consultorio valida tu adelanto.</p>
-    <div class="patient-otp-actions">
+    <div id="patient-otp-send-actions" class="patient-otp-actions" hidden>
       <button id="patient-email-otp-send" type="button">Enviar código</button>
     </div>
     <a id="patient-open-inbox" hidden target="_blank" rel="noopener noreferrer">Abrir mi correo</a>
-    <a id="patient-web-inbox" hidden target="_blank" rel="noopener noreferrer">Usar correo web</a>
-    <div class="patient-otp-verify">
+    <div id="patient-otp-code-actions" class="patient-otp-verify" hidden>
       <input id="patient-email-otp-code" inputmode="numeric" pattern="[0-9]{6,10}"
         autocomplete="one-time-code" maxlength="10" placeholder="Código recibido"
         aria-label="Código de verificación">
       <button id="patient-email-otp-verify" type="button">Verificar</button>
     </div>
     <p id="patient-email-otp-status" role="status" aria-live="polite"></p>
-    <button id="patient-otp-accept" type="button" disabled>Aceptar y continuar a WhatsApp</button>
     <button id="patient-otp-cancel" type="button">Cancelar</button>
   `;
   document.body.appendChild(section);
@@ -180,13 +177,14 @@ function init() {
     .patient-email-otp>label{display:block;font-size:14px;font-weight:700;margin-bottom:8px;color:#123b47}
     .patient-email-otp>input,.patient-otp-verify input{box-sizing:border-box;width:100%;min-width:0;border:1px solid #b2d0d0;border-radius:10px;padding:11px 12px;background:white;color:#123b47;font:inherit}
     .patient-email-hint{font-size:12px;line-height:1.5;margin:8px 0 12px;color:#35545b}
+    .patient-otp-actions[hidden],.patient-otp-verify[hidden]{display:none!important}
     .patient-otp-actions,.patient-otp-verify{display:flex;gap:8px;align-items:center}
     .patient-otp-verify{margin-top:10px}
     .patient-email-otp button{border:0;border-radius:10px;padding:11px 12px;background:#166d72;color:white;font-weight:700;cursor:pointer;white-space:nowrap}
     .patient-email-otp button:disabled{opacity:.5;cursor:default}
     #patient-email-domains:not([hidden]){display:flex;gap:6px;overflow-x:auto;margin:6px 0;max-width:100%}
     #patient-email-domains button{flex:none;padding:7px 10px;background:#deefee;color:#164f54;font-size:13px}
-    #patient-open-inbox:not([hidden]),#patient-web-inbox:not([hidden]){display:inline-block;padding:7px 4px;color:#155d57;font-weight:700}
+    #patient-open-inbox:not([hidden]){display:inline-flex;align-items:center;gap:7px;padding:7px 4px;color:#155d57;font-weight:700}
     #patient-web-inbox:not([hidden]){font-weight:400;font-size:12px;margin-left:8px}
     #patient-email-otp-status{font-size:12px;margin:8px 0 0;min-height:17px;line-height:1.4}
     @media(max-width:380px){.patient-otp-verify{flex-wrap:wrap}.patient-otp-verify button{width:100%}}
@@ -198,7 +196,8 @@ function init() {
   const send = byId('patient-email-otp-send');
   const check = byId('patient-email-otp-verify');
   const inbox = byId('patient-open-inbox');
-  const webInbox = byId('patient-web-inbox');
+  const sendActions = byId('patient-otp-send-actions');
+  const codeActions = byId('patient-otp-code-actions');
   const choices = byId('patient-email-domains');
   const buttons = Array.from(choices.querySelectorAll('button'));
   choices.onclick = event => {
@@ -208,20 +207,18 @@ function init() {
     emailInput.dispatchEvent(new Event('input'));
     emailInput.focus();
   };
-  const accept = byId('patient-otp-accept');
-  accept.onclick = () => { if (getVerifiedIdentity()) section.close('aceptar'); };
   byId('patient-otp-cancel').onclick = () => section.close();
   emailInput.addEventListener('input', () => {
     requestedEmail = '';
     inbox.hidden = true;
-    webInbox.hidden = true;
+    sendActions.hidden = !EMAIL.test(normalized(emailInput.value));
+    codeActions.hidden = true;
     const [local, suffix = '', extra] = normalized(emailInput.value).split('@');
     for (const button of buttons) {
       button.hidden = !local || /\s/.test(local) || extra !== undefined ||
         !button.dataset.domain.startsWith(suffix) || button.dataset.domain === suffix;
     }
     choices.hidden = buttons.every(button => button.hidden);
-    accept.disabled = true;
     clearVerification();
   });
 
@@ -237,12 +234,13 @@ function init() {
       return;
     }
     choices.hidden = true;
+    codeActions.hidden = false;
     codeInput.focus();
+    codeInput.scrollIntoView({behavior:'smooth',block:'center'});
     busy = true;
     send.disabled = true;
     check.disabled = true;
     verified = null;
-    accept.disabled = true;
     requestedEmail = '';
     updateState('Enviando código de verificación…');
     try {
@@ -257,10 +255,18 @@ function init() {
       inbox.hidden = !mailbox;
       if (mailbox) {
         inbox.href = inboxUrl(mailbox, navigator.userAgent);
-        inbox.textContent = 'Abrir ' + mailbox.label;
-        webInbox.href = mailbox.web;
-        webInbox.hidden = inbox.href === mailbox.web;
+        inbox.replaceChildren();
+        const icon = document.createElement('img');
+        icon.src = mailbox.web.split('/').slice(0,3).join('/') + '/favicon.ico';
+        icon.alt = '';
+        icon.width = 22;
+        icon.height = 22;
+        icon.onerror = () => { icon.hidden = true; };
+        inbox.appendChild(icon);
+        inbox.appendChild(document.createTextNode('Abrir correo'));
+        inbox.setAttribute('aria-label', 'Abrir ' + mailbox.label);
       }
+      send.textContent = 'Reenviar código';
       nextRequestAt = Date.now() + 60000;
       updateState('Revisa tu correo e ingresa el código recibido.');
       if (section.open && document.activeElement === codeInput) codeInput.scrollIntoView({block:'nearest'});
@@ -295,8 +301,8 @@ function init() {
       };
       codeInput.value = '';
       if (!getVerifiedIdentity()) throw Error('EXPIRED');
-      accept.disabled = false;
-      updateState('Correo verificado. Ya puedes continuar a WhatsApp.');
+      updateState('Correo verificado. Registrando tu solicitud…');
+      if (section.open) section.close('aceptar');
     } catch {
       verified = null;
       updateState(errorText, true);
