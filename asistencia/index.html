@@ -1,0 +1,17 @@
+---
+layout: null
+---
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer"><title>Revisar asistencia · Dr. Olano</title>
+<style>body{margin:0;background:#eef6f7;color:#102f46;font-family:Arial,sans-serif;min-height:100vh;display:grid;place-items:center}main{max-width:420px;margin:24px;padding:28px;background:white;border-radius:20px}h1{font-size:26px}p{line-height:1.6}a{display:block;padding:16px;background:#166d72;color:white;text-align:center;border-radius:12px;text-decoration:none;font-weight:bold}a[hidden]{display:none}</style></head>
+<body><main><h1>Revisar asistencia</h1><p id="message">Abra la aplicación con su cuenta de doctor o recepción para revisar la asistencia seleccionada.</p><a id="open" hidden>Abrir en la app</a></main>
+<script>
+const key=new URLSearchParams(location.search).get('c')||'';
+const valid=/^(web:)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(key);
+if(valid){
+ const path='asistencia/'+encodeURIComponent(key.toLowerCase());
+ const link=document.getElementById('open');
+ link.href=/Android/i.test(navigator.userAgent)?'intent://'+path+'#Intent;scheme=drolano;package=pe.drolano.pacientes;end':'drolano://'+path;
+ link.hidden=false;
+}else document.getElementById('message').textContent='El enlace de asistencia está incompleto. Solicite al paciente un nuevo recordatorio.';
+</script></body></html>
