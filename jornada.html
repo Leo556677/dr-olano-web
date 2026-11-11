@@ -68,7 +68,9 @@ svg{display:block}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 .dates{grid-area:dates;display:flex;justify-content:space-between;margin-top:8px}
-.d{position:relative;padding-bottom:7px}
+.d{position:relative;padding:0 0 7px;margin:0;border:0;background:none;color:inherit;font:inherit;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .2s var(--ease)}
+.d:active{transform:scale(.97)}
+.d:focus-visible{outline:3px solid var(--aqua);outline-offset:6px;border-radius:8px}
 .d::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;border-radius:3px;background:var(--aqua);transform-origin:left}
 .num{position:relative;display:flex;font:700 clamp(4.6rem,24.6vw,7rem)/.92 Fraunces,serif;letter-spacing:-.02em;font-kerning:none;font-variant-numeric:lining-nums}
 .num::after{content:attr(data-n);position:absolute;left:.06em;top:.05em;z-index:-1;color:transparent;-webkit-text-stroke:1.3px rgba(127,227,217,.5);pointer-events:none}
@@ -299,6 +301,64 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
 @keyframes stamp{0%{opacity:0;transform:scale(2.3) rotate(-42deg)}55%{opacity:1}100%{opacity:1;transform:rotate(-12deg)}}
 
 
+
+/* Flujo «Elegir mi día de jornada» */
+.jf{border:0;padding:0;margin:0;width:100vw;max-width:100vw;height:100vh;height:100dvh;max-height:none;background:var(--mist);color:var(--ink);overflow:hidden}
+.jf::backdrop{background:rgba(6,29,51,.75)}
+.jf-in{position:absolute;inset:0;display:flex;flex-direction:column;max-width:560px;margin:0 auto;background:#fff}
+.jf-top{flex:none;display:flex;align-items:center;gap:10px;padding:10px 10px 10px var(--pad);border-bottom:1px solid var(--line);background:#fff}
+.jf-top b{flex:1;font-family:Fraunces,Georgia,serif;font-size:1.12rem;color:var(--navy)}
+.jf-step{font-size:.78rem;font-weight:700;color:var(--teal2);white-space:nowrap}
+.jf-x{width:44px;height:44px;border:0;border-radius:50%;background:var(--mist);color:var(--navy);display:grid;place-items:center;cursor:pointer}
+.jf-x .ico,.jf-back .ico{width:20px;height:20px}
+.jf-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:18px var(--pad) 24px}
+.jf-body h3{font-size:1.35rem;margin:0 0 6px}
+.jf-help{margin:0 0 16px;color:var(--muted);font-size:.95rem}
+.jf-days{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.jf-hours{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.jf-proc{display:grid;gap:8px}
+.jf-opt{position:relative;min-height:56px;padding:12px 10px;border:2px solid var(--line);border-radius:16px;background:#fff;color:var(--navy);font:inherit;font-weight:700;font-size:1.05rem;cursor:pointer;text-align:center;transition:border-color .2s,background .2s,transform .1s}
+.jf-opt small{display:block;font-weight:600;font-size:.8rem;color:var(--muted)}
+.jf-opt b{display:block;font-family:Fraunces,Georgia,serif;font-size:2rem;line-height:1.1}
+.jf-proc .jf-opt{text-align:left;padding-left:16px}
+.jf-opt:active{transform:scale(.98)}
+.jf-opt.sel{border-color:var(--teal);background:#e8f8f6}
+.jf-opt.sel::after{content:"";position:absolute;top:8px;right:10px;width:10px;height:10px;border-radius:50%;background:var(--teal)}
+.jf-note{margin:14px 0 0;padding:12px 14px;border-radius:14px;background:var(--mist);font-size:.88rem;color:var(--muted)}
+/* Aviso previo a la evaluación (paso 5): corto, centrado, con un solo botón */
+.jf-pop{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(6,29,51,.78);overscroll-behavior:contain}
+.jf-pop[hidden]{display:none}
+.jf-pop-card{width:100%;max-width:420px;padding:24px 22px 18px;border-radius:24px;background:#fff;box-shadow:0 30px 60px rgba(3,14,26,.45);animation:sheetUp .35s var(--ease) both}
+.jf-pop-card h3{margin:0 0 8px;font-size:1.35rem;color:var(--navy)}
+.jf-pop-card p{margin:0;color:#33495a;line-height:1.5}
+.jf-pop-card .jf-next{width:100%;margin-top:18px;flex:none}
+.jf-pop-back{display:block;width:100%;margin-top:6px;min-height:46px;border:0;background:none;color:var(--teal2);font:inherit;font-weight:700;cursor:pointer}
+.jf-foot{flex:none;display:flex;gap:10px;padding:12px var(--pad) calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:#fff}
+.jf-back{flex:none;width:52px;min-height:54px;border:1px solid var(--line);border-radius:16px;background:#fff;color:var(--navy);display:grid;place-items:center;cursor:pointer}
+.jf-next{position:relative;flex:1;min-height:54px;border:0;border-radius:999px;background:linear-gradient(135deg,#9af3ea,#45cdc1);color:var(--ink);font:inherit;font-weight:800;font-size:1.05rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.jf-next[disabled]{opacity:.45;cursor:not-allowed}
+.jf-next.loading{pointer-events:none;color:transparent}
+.jf-next.loading::after{content:"";position:absolute;width:20px;height:20px;border:2.5px solid rgba(6,29,51,.25);border-top-color:var(--ink);border-radius:50%;animation:jfspin .7s linear infinite}
+@keyframes jfspin{to{transform:rotate(360deg)}}
+.jf-card{padding:16px;border-radius:18px;background:var(--navy);color:#fff}
+.jf-card small{display:block;color:var(--aqua);font-weight:700;font-size:.78rem;letter-spacing:.04em;text-transform:uppercase}
+.jf-card p{margin:6px 0 0;font-size:1rem}
+.jf-video{position:relative;margin:14px auto 0;width:min(100%,340px);aspect-ratio:9/16;border-radius:18px;overflow:hidden;background:#0b2e4f}
+.jf-video video{width:100%;height:100%;object-fit:cover;display:block}
+.jf-steps{margin:14px 0 0;padding:0;list-style:none;display:grid;gap:10px}
+.jf-steps li{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start;font-size:.95rem}
+.jf-steps li span{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#e8f8f6;color:var(--teal2);font-weight:800}
+.jf-f{display:block;margin:12px 0 0}
+.jf-f span{display:block;margin:0 0 4px;font-weight:700;font-size:.9rem;color:var(--navy)}
+.jf-f input{width:100%;min-height:52px;padding:10px 14px;border:2px solid var(--line);border-radius:14px;font:inherit;font-size:1.05rem;color:var(--ink);background:#fff}
+.jf-f input:focus{outline:0;border-color:var(--teal)}
+.jf-ts{margin:14px 0 4px;min-height:66px;display:flex;justify-content:center}
+.jf-err{margin:12px 0 0;padding:12px 14px;border-radius:14px;background:#fdecec;color:#8a1f1f;font-size:.92rem;font-weight:600}
+.jf-wait{margin:20px 0;text-align:center;color:var(--muted)}
+.jf-retry{min-height:48px;padding:0 20px;border:2px solid var(--teal);border-radius:999px;background:#fff;color:var(--navy);font:inherit;font-weight:700;cursor:pointer;margin-top:10px}
+.jf-mini{margin:0 0 4px;padding:12px 14px}
+@media(min-width:600px){.jf-in{top:24px;bottom:24px;border-radius:24px;overflow:hidden}}
+
 /* Ventana «Asegura tu 50 %» */
 .offer{border:0;padding:0;margin:auto auto 0;width:100%;max-width:440px;max-height:100dvh;background:transparent;overflow:visible}
 .offer::backdrop{background:rgba(6,29,51,.62);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
@@ -421,14 +481,14 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
 
     <div class="dates">
       <span class="sr">Fechas: 18, 19 y 20 de noviembre de 2026.</span>
-      <div class="d" aria-hidden="true"><span class="num" data-n="18">18</span><span class="dow">miércoles</span></div>
-      <div class="d" aria-hidden="true"><span class="num" data-n="19">19</span><span class="dow">jueves</span></div>
-      <div class="d" aria-hidden="true"><span class="num" data-n="20">20</span><span class="dow">viernes</span></div>
+      <button type="button" class="d js-day-pick" data-day="2026-11-18" aria-label="Elegir el miércoles 18 de noviembre"><span class="num" data-n="18" aria-hidden="true">18</span><span class="dow">miércoles</span></button>
+      <button type="button" class="d js-day-pick" data-day="2026-11-19" aria-label="Elegir el jueves 19 de noviembre"><span class="num" data-n="19" aria-hidden="true">19</span><span class="dow">jueves</span></button>
+      <button type="button" class="d js-day-pick" data-day="2026-11-20" aria-label="Elegir el viernes 20 de noviembre"><span class="num" data-n="20" aria-hidden="true">20</span><span class="dow">viernes</span></button>
     </div>
 
     <p class="when"><svg class="ico"><use href="#i-clock"/></svg>Noviembre de 2026, de 9:00 a. m. a 7:00 p. m.</p>
 
-    <a class="cta js-book" href="/reserva-s?servicio=consulta"><svg class="ico"><use href="#i-calok"/></svg><span class="lbl">Reservar mi evaluación</span></a>
+    <a class="cta js-book" href="/reserva-s?servicio=consulta"><svg class="ico"><use href="#i-calok"/></svg><span class="lbl">Elegir mi día de jornada</span></a>
 
     <p class="hero-note"><b id="plazo">Reservas hasta el 17 de noviembre.</b> La evaluación médica cuesta S/&nbsp;70. En el consultorio del Dr. Olano, Carabayllo. Solo mayores de 18 años.</p>
   </div>
@@ -610,9 +670,9 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
 </div></footer>
 
 <!-- Botón flotante -->
-<a class="fab right js-book" id="fab" href="/reserva-s?servicio=consulta" aria-label="Reservar evaluación">
+<a class="fab right js-book" id="fab" href="/reserva-s?servicio=consulta" aria-label="Elegir mi día de jornada">
   <span class="fab-ico" aria-hidden="true"><svg class="ico"><use href="#i-calok"/></svg></span>
-  <span class="fab-lbl lbl">Reservar evaluación</span>
+  <span class="fab-lbl lbl">Elegir mi día</span>
 </a>
 
 <!-- Afiche completo -->
@@ -620,10 +680,27 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
   <div class="lb-bar"><span>Afiche de la jornada</span><button class="lb-x js-lb-close" type="button" aria-label="Cerrar"><svg class="ico"><use href="#i-x"/></svg></button></div>
   <div class="lb-body">
     <div class="lb-fig js-media"><img data-src="/assets/jornada-cirugia-nov-2026.webp" data-fallback="/assets/jornada-cirugia-nov-2026.jpg" alt="Afiche: Jornada de cirugía facial con el Dr. Aldo Ronquillo y el Dr. Olano, 18, 19 y 20 de noviembre de 2026" width="1024" height="1536"><div class="fallback"><span>No se pudo cargar el afiche.</span><button class="lb-retry js-lb-retry" type="button">Reintentar</button></div></div>
-    <a class="lb-cta js-book" href="/reserva-s?servicio=consulta"><svg class="ico"><use href="#i-calok"/></svg><span class="lbl">Reservar mi evaluación</span></a>
+    <a class="lb-cta js-book" href="/reserva-s?servicio=consulta"><svg class="ico"><use href="#i-calok"/></svg><span class="lbl">Elegir mi día de jornada</span></a>
   </div>
 </dialog>
 
+
+<!-- Flujo «Elegir mi día de jornada»: preferencia de día, hora y procedimiento de interés -->
+<dialog class="jf" id="jflow" aria-label="Elegir mi día de jornada">
+  <div class="jf-in">
+    <div class="jf-top"><b class="js-jf-title">Elige tu día</b><span class="jf-step js-jf-step">Paso 1 de 3</span><button class="jf-x js-jf-close" type="button" aria-label="Cerrar"><svg class="ico"><use href="#i-x"/></svg></button></div>
+    <div class="jf-body js-jf-body"></div>
+    <div class="jf-foot"><button class="jf-back js-jf-back" type="button" aria-label="Volver"><svg class="ico" style="transform:rotate(90deg)"><use href="#i-chev"/></svg></button><button class="jf-next js-jf-next" type="button" disabled>Continuar</button></div>
+    <div class="jf-pop js-jf-pop" role="alertdialog" aria-modal="true" aria-labelledby="jfNoteT" hidden>
+      <div class="jf-pop-card">
+        <h3 id="jfNoteT">Falta un paso: tu evaluación</h3>
+        <p>Tu día de jornada ya quedó separado. Ahora elige la fecha de tu <b>evaluación médica</b>: es un paso aparte y necesario antes de tu operación. Puedes elegirla hasta el 17 de noviembre.</p>
+        <button class="jf-next js-jf-pop-go" type="button">Elegir fecha de mi evaluación</button>
+        <button class="jf-pop-back js-jf-pop-back" type="button">Volver</button>
+      </div>
+    </div>
+  </div>
+</dialog>
 
 <!-- Ventana «Asegura tu 50 %»: aparece una vez, a los 40 s, si aún no tocó «Reservar» -->
 <dialog class="offer" id="oferta" aria-labelledby="oferta-t">
@@ -979,6 +1056,250 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
     window.addEventListener("resize",fabApply);
     $$("details").forEach(function(d){d.addEventListener("toggle",fabApply)});
   }else if(fab){fab.classList.add("show")}
+
+
+  // ---------- Flujo «Elegir mi día de jornada» (reserva 1) ----------
+  // 1) Día 18/19/20 · 2) Hora (agenda real «Jornada», sin tope) · 3) Procedimiento de interés
+  // 4) Datos (nombre, celular, DNI: una sola vez) · 5) Video + UN botón «Reservar mi evaluación».
+  // La reserva 1 crea una cita real. El token que devuelve el servidor se guarda en este
+  // navegador (nunca en la URL) y enlaza la reserva 2 sin volver a pedir datos.
+  // A GA4 y Meta solo van nombres neutros: nunca procedimiento, nombre, celular ni DNI.
+  (function(){
+    var dlg=$("#jflow");if(!dlg||!dlg.showModal)return;
+    var body=$(".js-jf-body",dlg),next=$(".js-jf-next",dlg),back=$(".js-jf-back",dlg),title=$(".js-jf-title",dlg),stepEl=$(".js-jf-step",dlg);
+    var API="https://xnlzsgulskqyecfgzhwa.supabase.co/functions/v1/dr-olano-booking";
+    var APIKEY="sb_publishable_s9YdJaMe_ll4QehPkADlKQ_KkuvWt32";
+    var TS_KEY="0x4AAAAAAEquPSErt1V9EL1G";
+    var VIDEO="/assets/jornada-explicacion-v1.mp4";
+    var TK="olanoJornadaTk";
+    var DAYS=[{id:"2026-11-18",dow:"Miércoles",n:"18"},{id:"2026-11-19",dow:"Jueves",n:"19"},{id:"2026-11-20",dow:"Viernes",n:"20"}];
+    var PROCS=["Blefaroplastia superior","Blefaroplastia inferior","Rinoplastia","Otoplastia","Lip lift","Lipopapada","Lifting facial","Bichectomía","Injerto de grasa facial","Aún no sé, que me oriente el médico"];
+    var st={step:1,day:null,hour:null,proc:null,slots:null,slotsErr:"",loading:false,name:"",phone:"",dni:"",err:"",busy:false,tsToken:"",tsId:null,done:null};
+    function esc(t){return String(t).replace(/[&<>"]/g,function(m){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]})}
+    function dayOf(id){for(var i=0;i<DAYS.length;i++)if(DAYS[i].id===id)return DAYS[i];return null}
+    // La hora de la jornada la define el consultorio: el paciente solo elige el día. Internamente la cita se guarda a las 9:00.
+    var FIXED_HOUR="09:00";
+    function hourLabel(h){var p=h.split(":"),n=+p[0];return (n>12?n-12:n)+":"+p[1]+(n<12?" a. m.":" p. m.")}
+    function when(d,h){var x=dayOf(d);return x?x.dow+" "+x.n+" de noviembre":""}
+    function deviceId(){
+      var k="olanoBookingDeviceId";
+      try{var id=localStorage.getItem(k);if(!id){id=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():Date.now()+"-"+Math.random().toString(36).slice(2)+"-"+Math.random().toString(36).slice(2);localStorage.setItem(k,id)}return id}
+      catch(e){return Date.now()+"-"+Math.random().toString(36).slice(2)+"-"+Math.random().toString(36).slice(2)}
+    }
+    function api(payload){
+      return fetch(API,{method:"POST",headers:{"Content-Type":"application/json","apikey":APIKEY},body:JSON.stringify(payload)}).then(function(r){
+        return r.json().catch(function(){return {}}).then(function(d){
+          if(!r.ok||d.ok===false){var e=new Error(d.message||d.code||"No se pudo completar la operación");e.code=d.code||"API_ERROR";e.status=r.status;throw e}
+          return d;
+        });
+      });
+    }
+    // Token y datos neutros de la reserva 1 (sin nombre, celular ni DNI). Vence el 21/11/2026.
+    function readTk(){try{var o=JSON.parse(localStorage.getItem(TK)||"null");if(o&&o.t&&o.exp>Date.now())return o}catch(e){}return null}
+    function saveTk(o){
+      o.exp=new Date("2026-11-21T12:00:00-05:00").getTime();
+      try{localStorage.setItem(TK,JSON.stringify(o))}catch(e){}
+      try{sessionStorage.setItem(TK,JSON.stringify(o))}catch(e){}
+    }
+    function clearTk(){try{localStorage.removeItem(TK)}catch(e){}try{sessionStorage.removeItem(TK)}catch(e){}}
+    function opt(cls,val,inner,sel){return '<button type="button" class="jf-opt '+cls+(sel?" sel":"")+'" data-v="'+esc(val)+'">'+inner+'</button>'}
+
+    function loadSlots(){
+      st.slots=null;st.slotsErr="";st.loading=true;render();
+      var want=st.day;
+      api({action:"availability",service_code:"jornada",date:want}).then(function(d){
+        if(want!==st.day||st.step!==2)return;
+        var s=(d.slots||[]).map(function(x){return x.time}).filter(function(t){return /:00$/.test(t)});
+        st.slots=s;st.loading=false;
+        if(st.hour&&s.indexOf(st.hour)<0)st.hour=null;
+        render();
+      }).catch(function(e){
+        if(want!==st.day||st.step!==2)return;
+        st.loading=false;st.slotsErr=e.message||"No pudimos cargar los horarios.";render();
+      });
+    }
+    function validForm(){return st.name.trim().length>=3&&/^9\d{8}$/.test(st.phone.replace(/\D/g,"").replace(/^51(?=9\d{8}$)/,""))&&/^\d{8}$/.test(st.dni)}
+    function syncNext(){if(st.step===4){next.disabled=st.busy||!validForm()||!st.tsToken}}
+    function renderTurnstile(){
+      var host=$("#jfTs",body);if(!host)return;
+      function go(){
+        if(!window.turnstile)return false;
+        st.tsToken="";
+        try{
+          if(st.tsId!==null){window.turnstile.remove(st.tsId);st.tsId=null}
+          st.tsId=window.turnstile.render(host,{sitekey:TS_KEY,action:"booking",theme:"light",size:"flexible",
+            callback:function(t){st.tsToken=t||"";syncNext()},"expired-callback":function(){st.tsToken="";syncNext()},"error-callback":function(){st.tsToken="";syncNext()}});
+        }catch(e){}
+        return true;
+      }
+      if(go())return;
+      if(!document.querySelector("script[data-olano-turnstile]")){
+        var s=document.createElement("script");s.src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";s.async=true;s.defer=true;s.setAttribute("data-olano-turnstile","1");document.head.appendChild(s);
+      }
+      var n=0,iv=setInterval(function(){if(go()||++n>60)clearInterval(iv)},250);
+    }
+    function render(){
+      var h="";
+      back.style.visibility=(st.step===1||st.step===5)?"hidden":"visible";
+      if(st.step===1){
+        title.textContent="Elige tu día";stepEl.textContent="Paso 1 de 3";
+        h='<h3>¿Qué día prefieres?</h3><p class="jf-help">Jornada de cirugía facial con el Dr. Aldo Ronquillo, en el consultorio del Dr. Olano.</p><div class="jf-days">';
+        DAYS.forEach(function(d){h+=opt("js-day",d.id,'<small>'+d.dow+'</small><b>'+d.n+'</b><small>noviembre</small>',st.day===d.id)});
+        h+='</div>';
+        next.textContent="Continuar";next.disabled=!st.day;
+      }else if(st.step===3){
+        title.textContent="Procedimiento de interés";stepEl.textContent="Paso 2 de 3";
+        h='<h3>¿Qué te interesa?</h3><p class="jf-help">Elige uno. El médico define cuál te corresponde en tu evaluación.</p><div class="jf-proc">';
+        PROCS.forEach(function(x){h+=opt("js-proc",x,esc(x),st.proc===x)});
+        h+='</div>';
+        next.textContent="Continuar";next.disabled=!st.proc;
+      }else if(st.step===4){
+        title.textContent="Tus datos";stepEl.textContent="Paso 3 de 3";
+        h='<h3>Tus datos, una sola vez</h3><p class="jf-help">Los usaremos también en tu evaluación: no te los pediremos de nuevo.</p>'+
+          '<div class="jf-card jf-mini"><small>Tu día</small><p><b>'+esc(when(st.day,st.hour))+'</b><br>'+esc(st.proc)+'</p></div>'+
+          '<label class="jf-f"><span>Nombre completo</span><input class="js-f-name" type="text" autocomplete="name" maxlength="120" value="'+esc(st.name)+'"></label>'+
+          '<label class="jf-f"><span>Celular</span><input class="js-f-phone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="9XXXXXXXX" value="'+esc(st.phone)+'"></label>'+
+          '<label class="jf-f"><span>DNI</span><input class="js-f-dni" type="text" inputmode="numeric" autocomplete="off" placeholder="8 dígitos" value="'+esc(st.dni)+'"></label>'+
+          '<div id="jfTs" class="jf-ts"></div>'+
+          '<p class="jf-err" role="alert" '+(st.err?'':'hidden')+'>'+esc(st.err)+'</p>'+
+          '<p class="jf-note">Solo para mayores de 18 años. Usamos tu celular solo para confirmar tu cita por WhatsApp.</p>';
+        next.textContent="Separar mi día";
+      }else{
+        var dn=st.done||{};
+        title.textContent="Tu día quedó separado";stepEl.textContent="Listo";
+        h='<div class="jf-card"><small>Tu reserva</small><p><b>'+esc(when(dn.day||st.day,dn.hour||st.hour))+'</b><br>'+esc(dn.proc||st.proc||"")+'<br>Consultorio del Dr. Olano · Av. Pacayal 1243, Carabayllo</p></div>';
+        h+='<div class="jf-video js-media" hidden><video class="js-jf-video" playsinline controls preload="metadata"></video></div>';
+        h+='<ol class="jf-steps js-jf-steps">'+
+           '<li><span>1</span><div>Antes de tu día, pasa por una <b>evaluación médica (S/ 70)</b>. El médico revisa tu caso y decide si el procedimiento es adecuado para ti.</div></li>'+
+           '<li><span>2</span><div>Asegura tu cupo y tu <b>50 % de descuento</b> pagando <b>S/ 20</b> por Yape o BCP. Se descuentan de los S/ 70 de la evaluación.</div></li>'+
+           '<li><span>3</span><div>Toca <b>Reservar mi evaluación</b>, elige día y hora (hasta el 17 de noviembre) y envía tu constancia por WhatsApp.</div></li>'+
+           '</ol><p class="jf-note">El procedimiento y el resultado se definen en la evaluación médica. Para cambiar tu día, escríbenos por WhatsApp. Solo para mayores de 18 años.</p>';
+        next.textContent="Reservar mi evaluación";next.disabled=false;
+      }
+      body.innerHTML=h;body.scrollTop=0;
+      next.classList.toggle("loading",st.busy);
+      if(st.step===4){syncNext();renderTurnstile()}
+      if(st.step===5)loadVideo();
+    }
+    function loadVideo(){
+      var box=$(".jf-video",body),v=$(".js-jf-video",body);if(!box||!v)return;
+      fetch(VIDEO,{method:"HEAD",cache:"no-store"}).then(function(r){
+        if(!r.ok)return;
+        v.src=VIDEO;box.hidden=false;
+        v.addEventListener("loadeddata",function(){box.classList.add("ready")});
+        v.addEventListener("error",function(){box.hidden=true});
+        v.addEventListener("play",function(){track("video_explicacion","VideoExplicacion",{},false,true)});
+      }).catch(function(){});
+    }
+    body.addEventListener("click",function(e){
+      if(e.target.closest(".js-jf-retry")){loadSlots();return}
+      var b=e.target.closest(".jf-opt");if(!b)return;
+      var v=b.getAttribute("data-v");
+      if(b.classList.contains("js-day")){st.day=v;st.hour=FIXED_HOUR;render();setTimeout(function(){st.step=3;render()},180);return}
+      if(b.classList.contains("js-hour")){st.hour=v;render();setTimeout(function(){st.step=3;render()},180);return}
+      if(b.classList.contains("js-proc")){st.proc=v;render()}
+    });
+    body.addEventListener("input",function(e){
+      var t=e.target;
+      if(t.classList.contains("js-f-name"))st.name=t.value;
+      else if(t.classList.contains("js-f-phone")){t.value=t.value.replace(/[^\d ]/g,"");st.phone=t.value}
+      else if(t.classList.contains("js-f-dni")){t.value=t.value.replace(/\D/g,"").slice(0,8);st.dni=t.value}
+      else return;
+      syncNext();
+    });
+    function failMsg(e){
+      var c=e&&e.code;
+      if(c==="JORNADA_ALREADY_BOOKED")return "Ya tienes un día de jornada separado con este celular. Escríbenos por WhatsApp si quieres cambiarlo.";
+      if(c==="TURNSTILE_FAILED"||c==="TURNSTILE_REQUIRED"||c==="TURNSTILE_HOSTNAME_MISMATCH"||c==="TURNSTILE_ACTION_MISMATCH"||c==="TURNSTILE_UNAVAILABLE")return "No se pudo validar la verificación de seguridad. Inténtalo otra vez.";
+      return (e&&e.message)||"No se pudo separar tu día. Inténtalo otra vez.";
+    }
+    function submit(){
+      st.busy=true;st.err="";next.disabled=true;next.classList.add("loading");
+      var phone=st.phone.replace(/\D/g,"");
+      track("separar_dia_intento","SepararDiaIntento",{});
+      api({action:"book_jornada",service_code:"jornada",date:st.day,time:st.hour,name:st.name.trim(),phone:phone,dni:st.dni,procedure:st.proc,device_id:deviceId(),turnstile_token:st.tsToken}).then(function(d){
+        var b=d.booking||{};
+        st.done={day:st.day,hour:st.hour,proc:st.proc};
+        saveTk({t:b.jornada_token,day:st.day,hour:st.hour,proc:st.proc,code:b.code||""});
+        try{sessionStorage.setItem("olanoJornadaPref",JSON.stringify({day:st.day,hour:st.hour,proc:st.proc,label:when(st.day,st.hour)}))}catch(e){}
+        st.name="";st.phone="";st.dni="";st.busy=false;st.tsToken="";
+        track("separar_dia","SepararDia",{dia:st.day});
+        st.step=5;render();
+      }).catch(function(e){
+        st.busy=false;st.err=failMsg(e);
+        if(e.code==="SLOT_BUSY"||e.code==="BLOCKED_SLOT"||e.code==="OUTSIDE_SCHEDULE"){st.step=1;render();return}
+        var el=$(".jf-err",body);if(el){el.textContent=st.err;el.hidden=false}
+        next.classList.remove("loading");
+        try{if(window.turnstile&&st.tsId!==null)window.turnstile.reset(st.tsId)}catch(x){}
+        st.tsToken="";syncNext();
+      });
+    }
+    next.addEventListener("click",function(){
+      if(next.disabled||st.busy)return;
+      if(st.step===2){st.step=3;render();return}
+      if(st.step===3){st.step=4;render();return}
+      if(st.step===4){submit();return}
+      if(st.step===1){st.hour=FIXED_HOUR;st.step=3;render();return}
+      // Paso 5: primero un aviso corto («esto no se repite, es necesario antes de tu operación»).
+      var vid=$(".js-jf-video",body);if(vid)try{vid.pause()}catch(e){}
+      showNote(true);
+    });
+    var note=$(".js-jf-pop",dlg),noteGo=$(".js-jf-pop-go",dlg);
+    function showNote(on){
+      note.hidden=!on;
+      if(on)try{noteGo.focus()}catch(e){}
+    }
+    $(".js-jf-pop-back",dlg).addEventListener("click",function(){showNote(false)});
+    noteGo.addEventListener("click",function(){
+      // Ir a la reserva 2 (evaluación) con los UTM del anuncio. El token va por almacenamiento, no por URL.
+      noteGo.classList.add("loading");
+      track("clic_reservar","ClicReservar",{lugar:"video"});
+      var url=new URL("/reserva-s?servicio=evaluacion-jornada",location.origin);
+      keep.forEach(function(k){if(params.has(k))url.searchParams.set(k,params.get(k))});
+      if(!url.searchParams.has("utm_campaign"))url.searchParams.set("utm_campaign",ORIGEN);
+      location.href=url.pathname+url.search;
+    });
+    // Esc cierra primero el aviso y no todo el flujo.
+    dlg.addEventListener("cancel",function(e){if(!note.hidden){e.preventDefault();showNote(false)}});
+    back.addEventListener("click",function(){
+      if(st.step===4){st.step=3;render()}
+      else if(st.step===3){st.step=1;render()}
+      else if(st.step===2){st.step=1;render()}
+    });
+    $(".js-jf-close",dlg).addEventListener("click",function(){dlg.close()});
+    dlg.addEventListener("close",function(){doc.classList.remove("lb-open");var v=$(".js-jf-video",body);if(v)try{v.pause()}catch(e){}});
+    window.addEventListener("pageshow",function(){next.classList.remove("loading");if(noteGo)noteGo.classList.remove("loading");if(note)note.hidden=true});
+    window.__jornadaOpen=function(dayId){
+      if(dlg.open)return;
+      var tk=readTk();
+      var pick=(typeof dayId==="string"&&dayOf(dayId))?dayId:null;
+      if(tk){st.done={day:tk.day,hour:tk.hour,proc:tk.proc};st.step=5;render()}
+      else if(pick){
+        // Tocar 18, 19 o 20 en la portada ya es elegir el día: se salta al paso de la hora.
+        st.done=null;
+        st.day=pick;st.hour=FIXED_HOUR;st.step=3;render();
+      }
+      else{st.step=1;st.done=null;render()}
+      try{var lb=$("#afiche");if(lb&&lb.open)lb.close();var of=$("#oferta");if(of&&of.open)of.close()}catch(e){}
+      if(note)note.hidden=true;
+      dlg.showModal();doc.classList.add("lb-open");
+      track("abrir_eleccion","AbrirEleccion",{},false,true);
+      if(tk)api({action:"jornada_estado",jornada_token:tk.t}).catch(function(e){
+        // Si el servidor ya no reconoce la reserva, se empieza de nuevo.
+        if(e.status===404){clearTk();st.done=null;st.step=1;render()}
+      });
+    };
+    // Tocar el 18, 19 o 20 de la portada abre el flujo ya en la hora de ese día.
+    $$(".js-day-pick").forEach(function(b){b.addEventListener("click",function(){
+      window.__jornadaOpen(b.getAttribute("data-day"));
+    })});
+    // Todos los botones «Elegir mi día» abren este flujo en vez de ir directo a la reserva.
+    $$(".js-book").forEach(function(a){a.addEventListener("click",function(e){
+      e.preventDefault();
+      setTimeout(function(){a.classList.remove("loading")},0);
+      window.__jornadaOpen();
+    })});
+  })();
 
   // ---------- Medición: qué toca y hasta dónde llega (GA4 + Meta, nombres neutros) ----------
   // Meta recibe solo el nombre del evento, sin parámetros. GA4 recibe además dónde ocurrió.
