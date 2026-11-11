@@ -1224,6 +1224,9 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
         try{sessionStorage.setItem("olanoJornadaPref",JSON.stringify({day:st.day,hour:st.hour,proc:st.proc,label:when(st.day,st.hour)}))}catch(e){}
         st.name="";st.phone="";st.dni="";st.busy=false;st.tsToken="";
         track("separar_dia","SepararDia",{dia:st.day});
+        // Meta: «Lead» estándar, sin parámetros, una vez por visita. Sirve para optimizar el anuncio a quien
+        // separa su día y para excluir del remarketing a quien ya lo separó (la reserva 2 sigue enviando «Schedule»).
+        try{if(typeof window.olanoMeta==="function")window.olanoMeta("Lead",true,true)}catch(e){}
         // Atribución: registra en el embudo la reserva 1 (con la etiqueta del anuncio y el id de la cita).
         try{if(b.id&&typeof window.olanoFunnelTrack==="function")window.olanoFunnelTrack("booking_registered",{booking_id:b.id})}catch(e){}
         st.step=5;render();
@@ -1356,7 +1359,9 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
     var seen=0,last=Date.now(),sent={};
     setInterval(function(){
       var now=Date.now();if(document.visibilityState==="visible")seen+=now-last;last=now;
-      [30,60].forEach(function(t){if(seen>=t*1000&&!sent[t]){sent[t]=1;track("permanencia","Permanencia"+t,{segundos:t},false,true)}});
+      [30,60].forEach(function(t){if(seen>=t*1000&&!sent[t]){sent[t]=1;track("permanencia","Permanencia"+t,{segundos:t},false,true);
+        // Visita de calidad (30 s leyendo): «ViewContent» estándar, sin parámetros, una vez por visita.
+        if(t===30){try{if(typeof window.olanoMeta==="function")window.olanoMeta("ViewContent",true,true)}catch(e){}}}});
     },1000);
   })();
 })();
