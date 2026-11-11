@@ -38,6 +38,7 @@
     }
     let jornada=false;try{jornada=sessionStorage.getItem('olanoOrigen')==='jornada-cirugia-nov-2026'}catch{}
     if(jornada)lines.push('🏥 *Evaluación para la Jornada de cirugía facial (18, 19 y 20 de noviembre)*');
+    if(jornada){try{const pref=JSON.parse(sessionStorage.getItem('olanoJornadaPref')||'null');if(pref&&pref.label){lines.push(`🗓️ Día que prefiero en la jornada: *${pref.label}*`);if(pref.proc)lines.push(`💬 Procedimiento de interés: ${pref.proc} (lo define el médico)`)}}catch{}}
     lines.push('> ℹ️ El valor final está sujeto a evaluación médica.','',`📅 Fecha: ${fmtDate(state.date)}`,`🕐 Hora: ${state.time||''}`);
     if(state.manageUrl)lines.push('',`🔗 Gestionar / reprogramar / cancelar: ${state.manageUrl}`);
     if(jornada)lines.push('','💳 Para separar tu horario: envía *S/ 20* por Yape (981 214 007) o BCP (191-90200628044) y la constancia en este chat. Se descuentan de tu evaluación y aseguran tu *50 % de descuento* en la jornada.');

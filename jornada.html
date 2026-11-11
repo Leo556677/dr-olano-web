@@ -299,6 +299,47 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
 @keyframes stamp{0%{opacity:0;transform:scale(2.3) rotate(-42deg)}55%{opacity:1}100%{opacity:1;transform:rotate(-12deg)}}
 
 
+
+/* Flujo «Elegir mi día de jornada» */
+.jf{border:0;padding:0;margin:0;width:100vw;max-width:100vw;height:100vh;height:100dvh;max-height:none;background:var(--mist);color:var(--ink);overflow:hidden}
+.jf::backdrop{background:rgba(6,29,51,.75)}
+.jf-in{position:absolute;inset:0;display:flex;flex-direction:column;max-width:560px;margin:0 auto;background:#fff}
+.jf-top{flex:none;display:flex;align-items:center;gap:10px;padding:10px 10px 10px var(--pad);border-bottom:1px solid var(--line);background:#fff}
+.jf-top b{flex:1;font-family:Fraunces,Georgia,serif;font-size:1.12rem;color:var(--navy)}
+.jf-step{font-size:.78rem;font-weight:700;color:var(--teal2);white-space:nowrap}
+.jf-x{width:44px;height:44px;border:0;border-radius:50%;background:var(--mist);color:var(--navy);display:grid;place-items:center;cursor:pointer}
+.jf-x .ico,.jf-back .ico{width:20px;height:20px}
+.jf-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:18px var(--pad) 24px}
+.jf-body h3{font-size:1.35rem;margin:0 0 6px}
+.jf-help{margin:0 0 16px;color:var(--muted);font-size:.95rem}
+.jf-days{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.jf-hours{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.jf-proc{display:grid;gap:8px}
+.jf-opt{position:relative;min-height:56px;padding:12px 10px;border:2px solid var(--line);border-radius:16px;background:#fff;color:var(--navy);font:inherit;font-weight:700;font-size:1.05rem;cursor:pointer;text-align:center;transition:border-color .2s,background .2s,transform .1s}
+.jf-opt small{display:block;font-weight:600;font-size:.8rem;color:var(--muted)}
+.jf-opt b{display:block;font-family:Fraunces,Georgia,serif;font-size:2rem;line-height:1.1}
+.jf-proc .jf-opt{text-align:left;padding-left:16px}
+.jf-opt:active{transform:scale(.98)}
+.jf-opt.sel{border-color:var(--teal);background:#e8f8f6}
+.jf-opt.sel::after{content:"";position:absolute;top:8px;right:10px;width:10px;height:10px;border-radius:50%;background:var(--teal)}
+.jf-note{margin:14px 0 0;padding:12px 14px;border-radius:14px;background:var(--mist);font-size:.88rem;color:var(--muted)}
+.jf-foot{flex:none;display:flex;gap:10px;padding:12px var(--pad) calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:#fff}
+.jf-back{flex:none;width:52px;min-height:54px;border:1px solid var(--line);border-radius:16px;background:#fff;color:var(--navy);display:grid;place-items:center;cursor:pointer}
+.jf-next{position:relative;flex:1;min-height:54px;border:0;border-radius:999px;background:linear-gradient(135deg,#9af3ea,#45cdc1);color:var(--ink);font:inherit;font-weight:800;font-size:1.05rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none}
+.jf-next[disabled]{opacity:.45;cursor:not-allowed}
+.jf-next.loading{pointer-events:none;color:transparent}
+.jf-next.loading::after{content:"";position:absolute;width:20px;height:20px;border:2.5px solid rgba(6,29,51,.25);border-top-color:var(--ink);border-radius:50%;animation:jfspin .7s linear infinite}
+@keyframes jfspin{to{transform:rotate(360deg)}}
+.jf-card{padding:16px;border-radius:18px;background:var(--navy);color:#fff}
+.jf-card small{display:block;color:var(--aqua);font-weight:700;font-size:.78rem;letter-spacing:.04em;text-transform:uppercase}
+.jf-card p{margin:6px 0 0;font-size:1rem}
+.jf-video{position:relative;margin:14px auto 0;width:min(100%,340px);aspect-ratio:9/16;border-radius:18px;overflow:hidden;background:#0b2e4f}
+.jf-video video{width:100%;height:100%;object-fit:cover;display:block}
+.jf-steps{margin:14px 0 0;padding:0;list-style:none;display:grid;gap:10px}
+.jf-steps li{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start;font-size:.95rem}
+.jf-steps li span{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:#e8f8f6;color:var(--teal2);font-weight:800}
+@media(min-width:600px){.jf-in{top:24px;bottom:24px;border-radius:24px;overflow:hidden}}
+
 /* Ventana «Asegura tu 50 %» */
 .offer{border:0;padding:0;margin:auto auto 0;width:100%;max-width:440px;max-height:100dvh;background:transparent;overflow:visible}
 .offer::backdrop{background:rgba(6,29,51,.62);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
@@ -428,7 +469,7 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
 
     <p class="when"><svg class="ico"><use href="#i-clock"/></svg>Noviembre de 2026, de 9:00 a. m. a 7:00 p. m.</p>
 
-    <a class="cta js-book" href="/reserva-s?servicio=consulta"><svg class="ico"><use href="#i-calok"/></svg><span class="lbl">Reservar mi evaluación</span></a>
+    <a class="cta js-book" href="/reserva-s?servicio=consulta"><svg class="ico"><use href="#i-calok"/></svg><span class="lbl">Elegir mi día de jornada</span></a>
 
     <p class="hero-note"><b id="plazo">Reservas hasta el 17 de noviembre.</b> La evaluación médica cuesta S/&nbsp;70. En el consultorio del Dr. Olano, Carabayllo. Solo mayores de 18 años.</p>
   </div>
@@ -610,9 +651,9 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
 </div></footer>
 
 <!-- Botón flotante -->
-<a class="fab right js-book" id="fab" href="/reserva-s?servicio=consulta" aria-label="Reservar evaluación">
+<a class="fab right js-book" id="fab" href="/reserva-s?servicio=consulta" aria-label="Elegir mi día de jornada">
   <span class="fab-ico" aria-hidden="true"><svg class="ico"><use href="#i-calok"/></svg></span>
-  <span class="fab-lbl lbl">Reservar evaluación</span>
+  <span class="fab-lbl lbl">Elegir mi día</span>
 </a>
 
 <!-- Afiche completo -->
@@ -620,10 +661,19 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
   <div class="lb-bar"><span>Afiche de la jornada</span><button class="lb-x js-lb-close" type="button" aria-label="Cerrar"><svg class="ico"><use href="#i-x"/></svg></button></div>
   <div class="lb-body">
     <div class="lb-fig js-media"><img data-src="/assets/jornada-cirugia-nov-2026.webp" data-fallback="/assets/jornada-cirugia-nov-2026.jpg" alt="Afiche: Jornada de cirugía facial con el Dr. Aldo Ronquillo y el Dr. Olano, 18, 19 y 20 de noviembre de 2026" width="1024" height="1536"><div class="fallback"><span>No se pudo cargar el afiche.</span><button class="lb-retry js-lb-retry" type="button">Reintentar</button></div></div>
-    <a class="lb-cta js-book" href="/reserva-s?servicio=consulta"><svg class="ico"><use href="#i-calok"/></svg><span class="lbl">Reservar mi evaluación</span></a>
+    <a class="lb-cta js-book" href="/reserva-s?servicio=consulta"><svg class="ico"><use href="#i-calok"/></svg><span class="lbl">Elegir mi día de jornada</span></a>
   </div>
 </dialog>
 
+
+<!-- Flujo «Elegir mi día de jornada»: preferencia de día, hora y procedimiento de interés -->
+<dialog class="jf" id="jflow" aria-label="Elegir mi día de jornada">
+  <div class="jf-in">
+    <div class="jf-top"><b class="js-jf-title">Elige tu día</b><span class="jf-step js-jf-step">Paso 1 de 3</span><button class="jf-x js-jf-close" type="button" aria-label="Cerrar"><svg class="ico"><use href="#i-x"/></svg></button></div>
+    <div class="jf-body js-jf-body"></div>
+    <div class="jf-foot"><button class="jf-back js-jf-back" type="button" aria-label="Volver"><svg class="ico" style="transform:rotate(90deg)"><use href="#i-chev"/></svg></button><button class="jf-next js-jf-next" type="button" disabled>Continuar</button></div>
+  </div>
+</dialog>
 
 <!-- Ventana «Asegura tu 50 %»: aparece una vez, a los 40 s, si aún no tocó «Reservar» -->
 <dialog class="offer" id="oferta" aria-labelledby="oferta-t">
@@ -979,6 +1029,123 @@ html:has(dialog[open]),html.lb-open{overflow:hidden}
     window.addEventListener("resize",fabApply);
     $$("details").forEach(function(d){d.addEventListener("toggle",fabApply)});
   }else if(fab){fab.classList.add("show")}
+
+
+  // ---------- Flujo «Elegir mi día de jornada» ----------
+  // 1) Día 18/19/20 · 2) Hora · 3) Procedimiento de interés · 4) Video + «Reservar mi evaluación».
+  // El día elegido es una PREFERENCIA: no ocupa agenda. Se guarda en sessionStorage y viaja
+  // a la reserva de evaluación (nota interna y mensaje de WhatsApp). A GA4 y Meta solo van
+  // nombres neutros: nunca el procedimiento.
+  (function(){
+    var dlg=$("#jflow");if(!dlg||!dlg.showModal)return;
+    var body=$(".js-jf-body",dlg),next=$(".js-jf-next",dlg),back=$(".js-jf-back",dlg),title=$(".js-jf-title",dlg),stepEl=$(".js-jf-step",dlg);
+    var VIDEO="/assets/jornada-explicacion-v1.mp4";
+    var DAYS=[{id:"2026-11-18",dow:"Miércoles",n:"18"},{id:"2026-11-19",dow:"Jueves",n:"19"},{id:"2026-11-20",dow:"Viernes",n:"20"}];
+    var HOURS=["9:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00","18:00"];
+    var PROCS=["Blefaroplastia superior","Blefaroplastia inferior","Rinoplastia","Otoplastia","Lip lift","Lipopapada","Lifting facial","Bichectomía","Injerto de grasa facial","Aún no sé, que me oriente el médico"];
+    var st={step:1,day:null,hour:null,proc:null};
+    try{var sv=JSON.parse(sessionStorage.getItem("olanoJornadaPref")||"null");if(sv){st.day=sv.day||null;st.hour=sv.hour||null;st.proc=sv.proc||null}}catch(e){}
+    function esc(t){return String(t).replace(/[&<>"]/g,function(m){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]})}
+    function dayOf(id){for(var i=0;i<DAYS.length;i++)if(DAYS[i].id===id)return DAYS[i];return null}
+    function hourLabel(h){var p=h.split(":"),n=+p[0];return (n>12?n-12:n)+":"+p[1]+(n<12?" a. m.":" p. m.")}
+    function save(){try{
+      var d=dayOf(st.day);
+      sessionStorage.setItem("olanoJornadaPref",JSON.stringify({day:st.day,hour:st.hour,proc:st.proc,label:d?d.dow+" "+d.n+" de noviembre, "+hourLabel(st.hour):""}));
+    }catch(e){}}
+    function opt(cls,val,inner,sel){return '<button type="button" class="jf-opt '+cls+(sel?" sel":"")+'" data-v="'+esc(val)+'">'+inner+'</button>'}
+    function render(){
+      var h="";
+      back.style.visibility=st.step===1?"hidden":"visible";
+      if(st.step===1){
+        title.textContent="Elige tu día";stepEl.textContent="Paso 1 de 3";
+        h='<h3>¿Qué día prefieres?</h3><p class="jf-help">Jornada de cirugía facial con el Dr. Aldo Ronquillo, en el consultorio del Dr. Olano.</p><div class="jf-days">';
+        DAYS.forEach(function(d){h+=opt("js-day",d.id,'<small>'+d.dow+'</small><b>'+d.n+'</b><small>noviembre</small>',st.day===d.id)});
+        h+='</div>';
+        next.textContent="Continuar";next.disabled=!st.day;
+      }else if(st.step===2){
+        var d=dayOf(st.day);
+        title.textContent="Elige la hora";stepEl.textContent="Paso 2 de 3";
+        h='<h3>¿A qué hora?</h3><p class="jf-help">'+esc(d.dow+" "+d.n+" de noviembre")+'. La hora exacta se confirma en tu evaluación.</p><div class="jf-hours">';
+        HOURS.forEach(function(x){h+=opt("js-hour",x,hourLabel(x),st.hour===x)});
+        h+='</div>';
+        next.textContent="Continuar";next.disabled=!st.hour;
+      }else if(st.step===3){
+        title.textContent="Procedimiento de interés";stepEl.textContent="Paso 3 de 3";
+        h='<h3>¿Qué te interesa?</h3><p class="jf-help">Elige uno. El médico define cuál te corresponde en tu evaluación.</p><div class="jf-proc">';
+        PROCS.forEach(function(x){h+=opt("js-proc",x,esc(x),st.proc===x)});
+        h+='</div>';
+        next.textContent="Separar mi día";next.disabled=!st.proc;
+      }else{
+        var dd=dayOf(st.day);
+        title.textContent="Tu día quedó separado";stepEl.textContent="Último paso";
+        h='<div class="jf-card"><small>Tu preferencia</small><p><b>'+esc(dd.dow+" "+dd.n+" de noviembre · "+hourLabel(st.hour))+'</b><br>'+esc(st.proc)+'<br>Consultorio del Dr. Olano · Av. Pacayal 1243, Carabayllo</p></div>';
+        h+='<div class="jf-video js-media" hidden><video class="js-jf-video" playsinline controls preload="metadata"></video></div>';
+        h+='<ol class="jf-steps js-jf-steps">'+
+           '<li><span>1</span><div>Antes de tu día, pasa por una <b>evaluación médica (S/ 70)</b>. El médico revisa tu caso y decide si el procedimiento es adecuado para ti.</div></li>'+
+           '<li><span>2</span><div>Asegura tu cupo y tu <b>50 % de descuento</b> pagando <b>S/ 20</b> por Yape o BCP. Se descuentan de los S/ 70 de la evaluación.</div></li>'+
+           '<li><span>3</span><div>Toca <b>Reservar mi evaluación</b>, elige día y hora (hasta el 17 de noviembre) y envía tu constancia por WhatsApp.</div></li>'+
+           '</ol><p class="jf-note">El procedimiento y el resultado se definen en la evaluación médica. Solo para mayores de 18 años.</p>';
+        next.textContent="Reservar mi evaluación";next.disabled=false;
+      }
+      body.innerHTML=h;body.scrollTop=0;
+      if(st.step===4)loadVideo();
+    }
+    function loadVideo(){
+      var box=$(".jf-video",body),v=$(".js-jf-video",body);if(!box||!v)return;
+      fetch(VIDEO,{method:"HEAD",cache:"no-store"}).then(function(r){
+        if(!r.ok)return;
+        v.src=VIDEO;box.hidden=false;
+        v.addEventListener("loadeddata",function(){box.classList.add("ready")});
+        v.addEventListener("error",function(){box.hidden=true});
+        v.addEventListener("play",function(){track("video_explicacion","VideoExplicacion",{},false,true)});
+      }).catch(function(){});
+    }
+    body.addEventListener("click",function(e){
+      var b=e.target.closest(".jf-opt");if(!b)return;
+      var v=b.getAttribute("data-v");
+      if(b.classList.contains("js-day"))st.day=v;
+      else if(b.classList.contains("js-hour"))st.hour=v;
+      else if(b.classList.contains("js-proc"))st.proc=v;
+      render();
+      // Avanza solo al tocar una opción: menos toques para el paciente.
+      if(st.step<3)setTimeout(function(){st.step++;render()},180);
+    });
+    next.addEventListener("click",function(){
+      if(next.disabled)return;
+      if(st.step<3){st.step++;render();return}
+      if(st.step===3){
+        save();
+        track("separar_dia","SepararDia",{dia:st.day});
+        st.step=4;render();return;
+      }
+      // Paso 4: ir a la reserva de evaluación con los UTM del anuncio.
+      next.classList.add("loading");
+      track("clic_reservar","ClicReservar",{lugar:"video"});
+      var url=new URL("/reserva-s?servicio=consulta",location.origin);
+      keep.forEach(function(k){if(params.has(k))url.searchParams.set(k,params.get(k))});
+      if(!url.searchParams.has("utm_campaign"))url.searchParams.set("utm_campaign",ORIGEN);
+      location.href=url.pathname+url.search;
+    });
+    back.addEventListener("click",function(){if(st.step>1){st.step--;render()}});
+    $(".js-jf-close",dlg).addEventListener("click",function(){dlg.close()});
+    dlg.addEventListener("close",function(){doc.classList.remove("lb-open");var v=$(".js-jf-video",body);if(v)try{v.pause()}catch(e){}});
+    window.addEventListener("pageshow",function(){next.classList.remove("loading")});
+    window.__jornadaOpen=function(){
+      if(dlg.open)return;
+      st.step=st.day&&st.hour&&st.proc?4:1;
+      if(st.step===4)save();
+      render();
+      try{var lb=$("#afiche");if(lb&&lb.open)lb.close();var of=$("#oferta");if(of&&of.open)of.close()}catch(e){}
+      dlg.showModal();doc.classList.add("lb-open");
+      track("abrir_eleccion","AbrirEleccion",{},false,true);
+    };
+    // Todos los botones «Elegir mi día» abren este flujo en vez de ir directo a la reserva.
+    $$(".js-book").forEach(function(a){a.addEventListener("click",function(e){
+      e.preventDefault();
+      setTimeout(function(){a.classList.remove("loading")},0);
+      window.__jornadaOpen();
+    })});
+  })();
 
   // ---------- Medición: qué toca y hasta dónde llega (GA4 + Meta, nombres neutros) ----------
   // Meta recibe solo el nombre del evento, sin parámetros. GA4 recibe además dónde ocurrió.
