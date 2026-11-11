@@ -343,8 +343,7 @@ export default {
       const phoneHash = await hmacHex(secret, `phone|${phone}`);
       const ipHash = await hmacHex(secret, `ip|${ip || "unavailable"}`);
       const deviceHash = await hmacHex(secret, `device|${deviceId}|${ua}|${lang}`);
-      if (body?.deposit_flow !== true) return json({ok:false,code:"UPDATE_REQUIRED",message:"Actualiza la página para enviar la solicitud de cita."},409,origin);
-      const { data: booking, error: bookingErr } = await ctx.supabaseAdmin.rpc("crear_solicitud_web_con_adelanto", {
+      const { data: booking, error: bookingErr } = await ctx.supabaseAdmin.rpc("crear_cita_web_segura_v6", {
         p_negocio_id: negocio.id, p_servicio_id: service.id, p_recurso_id: resource.id, p_nombre: name, p_telefono_e164: phone,
         p_inicio: localStart.toUTC().toISO(), p_phone_hash: phoneHash, p_ip_hash: ipHash, p_device_hash: deviceHash,
         p_modalidad: service.requiere_consulta_previa === true ? modality : null, p_motivo_consulta: note || null,
@@ -365,7 +364,7 @@ export default {
       } catch {}
 
       return json({ ok: true, booking: {
-        deposit_pending: true, id: row.cita_id, code: row.codigo_web, cupo_hora: row.cupo_hora, service_code: serviceCode, service_name: service.nombre,
+        deposit_pending: false, id: row.cita_id, code: row.codigo_web, cupo_hora: row.cupo_hora, service_code: serviceCode, service_name: service.nombre,
         date: dateIso, time, timezone: zone, modality: service.requiere_consulta_previa === true ? modality : "presencial",
         appointment_type: service.requiere_consulta_previa === true ? "consulta_previa" : "servicio",
         price_pen: service.requiere_consulta_previa === true ? Number(service.precio_consulta_pen) : null,
