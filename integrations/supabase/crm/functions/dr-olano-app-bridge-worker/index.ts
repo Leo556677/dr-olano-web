@@ -44,6 +44,13 @@ Deno.serve(async (req) => {
     let ok = false;
     let errorCode: string | null = null;
     try {
+      // Fetch only the display name attached to this already-linked booking.
+      const { data: booking, error: bookingError } = await admin.from('citas')
+        .select('contactos(nombre,telefono_e164)').eq('id', job.cita_id).single();
+      const contact = Array.isArray(booking?.contactos) ? booking.contactos[0] : booking?.contactos;
+      const patientName = typeof contact?.nombre === 'string' ? contact.nombre.trim().slice(0, 160) : '';
+      if (bookingError) throw Error('DISPLAY_NAME_LOOKUP_FAILED');
+      if (!patientName) throw Error('DISPLAY_NAME_EMPTY');
       const remote = await fetch(APP_EDGE_URL, {
         method: 'POST',
         headers: {
@@ -54,6 +61,8 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           booking_id: job.cita_id,
           patient_user_id: job.patient_user_id,
+          patient_name: patientName,
+          ...(/^\+[1-9][0-9]{7,14}$/.test(contact?.telefono_e164 ?? '') ? { patient_phone: contact.telefono_e164 } : {}),
           starts_at: job.starts_at,
           ends_at: job.ends_at,
           state: job.state,
@@ -70,7 +79,7 @@ Deno.serve(async (req) => {
       failed++;
       // Nunca registrar email, celular, nombre de servicio o detalles médicos.
       const code = String((err as Error)?.message ?? 'BRIDGE_FAILED');
-      errorCode = /^APP_HTTP_\d{3}$/.test(code) ? code : 'APP_REQUEST_FAILED';
+      errorCode = /^(APP_HTTP_\d{3}|DISPLAY_NAME_LOOKUP_FAILED|DISPLAY_NAME_EMPTY)$/.test(code) ? code : 'APP_REQUEST_FAILED';
     }
 
     const { error: finishError } = await admin.rpc('dr_olano_app_bridge_finish', {
