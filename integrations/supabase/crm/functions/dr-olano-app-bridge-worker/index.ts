@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     try {
       // Fetch only the display name attached to this already-linked booking.
       const { data: booking, error: bookingError } = await admin.from('citas')
-        .select('contactos(nombre)').eq('id', job.cita_id).single();
+        .select('contactos(nombre,telefono_e164)').eq('id', job.cita_id).single();
       const contact = Array.isArray(booking?.contactos) ? booking.contactos[0] : booking?.contactos;
       const patientName = typeof contact?.nombre === 'string' ? contact.nombre.trim().slice(0, 160) : '';
       if (bookingError) throw Error('DISPLAY_NAME_LOOKUP_FAILED');
@@ -62,6 +62,7 @@ Deno.serve(async (req) => {
           booking_id: job.cita_id,
           patient_user_id: job.patient_user_id,
           patient_name: patientName,
+          ...(/^\+[1-9][0-9]{7,14}$/.test(contact?.telefono_e164 ?? '') ? { patient_phone: contact.telefono_e164 } : {}),
           starts_at: job.starts_at,
           ends_at: job.ends_at,
           state: job.state,
